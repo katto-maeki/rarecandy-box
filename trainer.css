@@ -1,0 +1,525 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+/* ==== Mismo fondo y marco que la caja ==== */
+.bg-main {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* color base por si tarda en cargar la imagen */
+  background-color: #12122a;
+
+  /* patrón */
+  background-image: url("https://i.ibb.co/GfZTxGcp/CRUZZZZZ.png");
+  background-repeat: repeat;
+  background-size: 20px 20px; /* ajusta el tamaño del patrón a tu gusto */
+}
+
+.screen-frame {
+  width: min(100%, 1150px);
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, #ffeef5 0%, #ffe4f2 35%, #fde2dc 100%);
+  border-radius: 20px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* ==== Barra superior como cajapkm ==== */
+.top-bar {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  background: rgba(201, 87, 176, 0.8);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  gap: 8px; /* 👈 espacio entre título y lado derecho */
+  flex-wrap: wrap; /* 👈 permite que se vaya a 2 filas si no cabe */
+}
+
+.top-bar-title {
+  font-weight: 700;
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.top-bar-trainer {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* pestañas Caja / Entrenador */
+.top-nav-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.1s ease, transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.top-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+
+.top-nav-btn-active {
+  background: #f3ca3b;
+  color: #2a2511;
+}
+
+/* ==== Layout general trainer ==== */
+.trainer-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 6px 8px;
+  gap: 10px;
+}
+
+/* Tarjeta de encabezado interno */
+.trainer-header-card {
+  background: rgb(250, 250, 250);
+  border-radius: 14px;
+  padding: 10px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(175, 175, 175, 0.18);
+}
+
+.trainer-name {
+  font-family: "Press Start 2P", system-ui, sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: #232542;
+}
+
+.trainer-sub {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  color: #444873;
+}
+
+/* Contenedor de columnas (igual vibe que la caja) */
+.trainer-columns {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.1fr 1.3fr 1.1fr;
+  gap: 8px;
+}
+
+/* Tarjetas de columna */
+.trainer-column {
+  background: rgb(250, 250, 250);
+  border-radius: 14px;
+  padding: 10px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(175, 175, 175, 0.18);
+}
+
+.column-title {
+  font-size: 0.9rem;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #373b5c;
+  margin-bottom: 12px;
+}
+
+/* Recursos */
+.resources-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.resource-group {
+  text-align: center;
+}
+
+.resource-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #40435f;
+  margin-bottom: 4px;
+}
+
+.resource-value {
+  font-family: "Press Start 2P", system-ui, sans-serif;
+  font-size: 1.3rem;
+}
+
+.resource-value.money {
+  color: #0fb86b;
+}
+
+.resource-value.xp {
+  color: #7a47ff;
+}
+
+.resource-value.evo {
+  color: #2563eb;
+}
+
+/* Inventario y Pokébolas */
+.inventory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.inv-item {
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 14px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #dac6f0;
+}
+
+.inv-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inv-icon {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #f3f4ff;
+  font-size: 1.1rem;
+}
+
+.inv-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3a3f63;
+}
+
+.inv-count {
+  font-family: "Press Start 2P", system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: #4c4f87;
+}
+
+/* Barra inferior igual estilo que cajapkm */
+.bottom-bar {
+  height: 44px;
+  margin-top: 6px;
+  background: rgba(201, 87, 176, 0.8);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.bottom-hint {
+  color: #ffffff;
+  font-size: 0.78rem;
+}
+
+.btn-edit {
+  padding: 5px 16px;
+  border-radius: 999px;
+  border: none;
+  background: #f3ca3b;
+  color: #2a2511;
+  font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
+}
+
+.btn-edit:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+}
+
+/* Modales – mismos estilos base que en cajapkm */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 23, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal {
+  width: min(100% - 32px, 560px);
+  background: rgb(250, 250, 250);
+  border-radius: 18px;
+  padding: 16px 18px 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #232542;
+  margin-bottom: 4px;
+}
+
+.modal-body {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-row-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px 10px;
+}
+
+.modal-subtitle {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #4b5563;
+}
+
+/* Inputs */
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.input {
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 10px;
+  border: 2px solid #dac6f0;
+  font-size: 0.85rem;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.25);
+}
+
+/* Botones modal */
+.modal-footer {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-secondary,
+.btn-primary {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 700;
+  background: #dac6f0; /* gris-violeta claro, como "Actualizar" */
+  color: #252849; /* texto gris oscuro */
+  font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  transition: filter;
+}
+
+.btn-primary {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: #f3ca3b;
+  color: #2a2511;
+  font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
+}
+
+/* Utilidad */
+.hidden {
+  display: none !important;
+}
+
+/* Responsivo */
+@media (max-width: 960px) {
+  .bg-main {
+    align-items: flex-start;
+    padding: 12px 0;
+  }
+
+  .screen-frame {
+    width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    aspect-ratio: auto;
+    min-height: 100vh;
+    height: auto;
+  }
+
+  /* Barra superior en dos filas si hace falta */
+  .top-bar {
+    height: auto;
+    padding: 6px 10px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .top-bar-right {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 0.75rem;
+  }
+
+  .top-nav-btn {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+  }
+
+  /* Layout interno de trainer */
+  .trainer-layout {
+    padding: 10px 6px 12px;
+    gap: 10px;
+  }
+
+  /* 2 columnas en tablets/anchos medios */
+  .trainer-columns {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .trainer-column {
+    min-height: auto;
+  }
+
+  .bottom-bar {
+    height: auto;
+    min-height: 40px;
+    padding: 6px 10px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .bottom-hint {
+    font-size: 0.75rem;
+  }
+}
+
+/* En móviles chicos: una sola columna */
+@media (max-width: 640px) {
+  .trainer-columns {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .trainer-header-card {
+    padding-inline: 12px;
+  }
+}
+
+/* Iconos de pokébolas (sprites) */
+.ball-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+#achievements-value {
+  color: #3b4cca; /* azul Pokémon */
+}
+
+#pokedex-value {
+  color: #ff64c4; /* rosa Pokédex */
+}
+
+.nav-btn-icon {
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  font-size: 1.2rem; /* tamaño del icono */
+  cursor: pointer;
+  color: #fff; /* ajusta al color de tu navbar */
+}
+
+.nav-btn-icon:hover {
+  opacity: 0.7;
+}

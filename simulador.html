@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Simulador de Experiencia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <!-- Estilos generales (caja / layout Scarlet) -->
+    <link rel="stylesheet" href="cajapkm.css" />
+    <!-- Estilos específicos del simulador -->
+    <link rel="stylesheet" href="simulador.css" />
+  </head>
+  <body class="bg-main">
+    <div class="screen-frame">
+      <!-- HEADER -->
+      <header class="top-bar">
+        <span class="top-bar-title">Simulador de Experiencia</span>
+
+        <div class="top-bar-right">
+          <span class="top-bar-trainer" id="trainer-label">
+            Entrenador: ???
+          </span>
+
+          <a class="top-nav-btn" href="cajapkm.html">Caja</a>
+          <a class="top-nav-btn" href="trainer.html">Entrenador</a>
+          <a class="top-nav-btn top-nav-btn-active" href="simulador.html"
+            >Simulador</a
+          >
+          <a class="top-nav-btn" href="tablas.html">EVOL</a>
+          <button
+            id="btn-logout"
+            class="nav-btn nav-btn-icon"
+            title="Cerrar sesión"
+          >
+            <i class="fa fa-sign-out"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- MAIN -->
+      <main class="main-layout">
+        <!-- Panel de explicación -->
+        <section class="panel panel-intro">
+          <h1 class="page-title">Calcula tu experiencia</h1>
+          <p class="page-text">
+            Este simulador te ayuda a calcular cuánta
+            <strong>experiencia (EXP)</strong> generaste a partir de tus actividades.
+          </p>
+          <p class="page-text">
+            Elige cuántas veces realizaste cada tipo de actividad y revisa el
+            total acumulado al final.
+          </p>
+        </section>
+
+        <!-- Panel del simulador -->
+        <section class="panel panel-sim">
+          <h2 class="section-title">Actividades y experiencia</h2>
+
+          <div class="sim-table-wrap">
+            <div class="sim-header-row">
+              <span class="col-activity">Actividad</span>
+              <span class="col-exp">EXP por post</span>
+              <span class="col-count">Cantidad</span>
+              <span class="col-subtotal">Subtotal EXP</span>
+            </div>
+
+            <div class="sim-rows" id="sim-rows">
+              <!-- Filas generadas por JS -->
+            </div>
+          </div>
+
+          <div class="sim-footer">
+            <button class="btn-secondary" id="btn-reset">Limpiar campos</button>
+
+            <div class="sim-summary">
+              <div class="total-box">
+                <span class="total-label">Total de experiencia:</span>
+                <span class="total-value" id="total-exp">0 EXP</span>
+              </div>
+
+              <div class="total-box">
+                <span class="total-label">Experiencia en trainer card:</span>
+                <span class="total-value" id="trainer-exp">0 EXP</span>
+              </div>
+
+              <div class="total-box">
+                <span class="total-label">Experiencia por asignar:</span>
+                <span class="total-value" id="assign-exp">0 EXP</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- FOOTER -->
+      <footer class="bottom-bar">
+        <div class="bottom-hint">
+          Usa el simulador como guía; si tienes alguna duda acércate a un poke-guía ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧
+        </div>
+      </footer>
+    </div>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Core compartido (crea window.supabase, currentUserId, renderTrainerLabelFromGame, setupLogoutButton, etc.) -->
+    <script src="core.js"></script>
+
+    <!-- Lógica específica del simulador -->
+    <script src="simulador.js"></script>
+  </body>
+</html>
+
+  </body>
+</html>

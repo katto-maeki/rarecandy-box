@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tablas de Experiencia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link rel="stylesheet" href="cajapkm.css" />
+    <link rel="stylesheet" href="simulador.css" />
+  </head>
+  <body class="bg-main">
+    <div class="screen-frame">
+      <!-- HEADER -->
+      <header class="top-bar">
+        <span class="top-bar-title">EVOL</span>
+
+        <div class="top-bar-right">
+          <span class="top-bar-trainer" id="trainer-label">
+            Entrenador: ???
+          </span>
+
+          <a class="top-nav-btn" href="cajapkm.html">Caja</a>
+          <a class="top-nav-btn" href="trainer.html">Entrenador</a>
+          <a class="top-nav-btn" href="simulador.html">Simulador</a>
+          <a class="top-nav-btn top-nav-btn-active" href="tablas.html">EVOL</a>
+          <button
+            id="btn-logout"
+            class="nav-btn nav-btn-icon"
+            title="Cerrar sesión"
+          >
+            <i class="fa fa-sign-out"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- MAIN -->
+      <main class="main-layout">
+        <!-- Panel de explicación corto -->
+        <section class="panel panel-intro">
+          <h1 class="page-title">Tablas informativas</h1>
+          <p class="page-text">
+            Consulta aquí las tablas de referencia de evolución y experiencia
+            para tus Pokémon capturados. Si tienes duda sobre la clase de algún
+            pokémon, consúltalo con un poke-guía.
+          </p>
+        </section>
+
+        <!-- Panel con tablas -->
+        <section class="panel panel-info">
+          <div class="info-header">
+            <h2 class="section-title">Tablas informativas</h2>
+
+            <!-- Botones para elegir tabla -->
+            <div class="info-tab-buttons">
+              <button
+                class="info-tab-btn info-tab-btn-active"
+                id="btn-tabla-rareza"
+              >
+                Evolución por rareza
+              </button>
+              <button class="info-tab-btn" id="btn-tabla-xp">
+                XP por nivel
+              </button>
+            </div>
+          </div>
+
+          <div class="info-grid">
+            <!-- TABLA 1: Evolución por rareza -->
+            <div class="info-card" id="tabla-rareza">
+              <h3 class="info-title">Evolución por rareza</h3>
+              <table class="info-table">
+                <thead>
+                  <tr>
+                    <th>Clase</th>
+                    <th>Nivel de evolución</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Huevo</td>
+                    <td><strong>Eclosión:</strong> Nivel 1<br /></td>
+                  </tr>
+                  <tr>
+                    <td>Baby pokémon</td>
+                    <td><strong>1era evolución:</strong> Nivel 12<br /></td>
+                  </tr>
+                  <tr>
+                    <td>Común</td>
+                    <td>
+                      <strong>1ra evolución:</strong> Nivel 16<br />
+                      <strong>2da evolución:</strong> Nivel 32
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Raro / Infrecuente</td>
+                    <td>
+                      <strong>1ra evolución:</strong> Nivel 19<br />
+                      <strong>2da evolución:</strong> Nivel 38
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Especial / Pseudolegendario</td>
+                    <td>
+                      <strong>1ra evolución:</strong> Nivel 21<br />
+                      <strong>2da evolución:</strong> Nivel 42
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- TABLA 2: XP por nivel -->
+            <div class="info-card hidden" id="tabla-xp">
+              <h3 class="info-title">Tabla de niveles y XP</h3>
+              <table class="info-table">
+                <thead>
+                  <tr>
+                    <th>Bloques de niveles</th>
+                    <th>XP por nivel</th>
+                    <th>Total XP por bloque</th>
+                    <th>Total XP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1 a 5</td>
+                    <td>10 XP</td>
+                    <td>50 XP</td>
+                    <td>50 XP</td>
+                  </tr>
+                  <tr>
+                    <td>6 a 10</td>
+                    <td>15 XP</td>
+                    <td>75 XP</td>
+                    <td>125 XP</td>
+                  </tr>
+                  <tr>
+                    <td>11 a 15</td>
+                    <td>20 XP</td>
+                    <td>100 XP</td>
+                    <td>225 XP</td>
+                  </tr>
+                  <tr>
+                    <td>16 a 20</td>
+                    <td>25 XP</td>
+                    <td>125 XP</td>
+                    <td>350 XP</td>
+                  </tr>
+                  <tr>
+                    <td>21 a 30</td>
+                    <td>35 XP</td>
+                    <td>350 XP</td>
+                    <td>700 XP</td>
+                  </tr>
+                  <tr>
+                    <td>31 a 40</td>
+                    <td>45 XP</td>
+                    <td>450 XP</td>
+                    <td>1,150 XP</td>
+                  </tr>
+                  <tr>
+                    <td>41 a 50</td>
+                    <td>55 XP</td>
+                    <td>550 XP</td>
+                    <td>1,700 XP</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- FOOTER -->
+      <footer class="bottom-bar">
+        <div class="bottom-hint">
+          Usa estas tablas como referencia para planear la progresión de nivel
+          de tus Pokémon. Si tienes alguna duda, acércate a algún poke-guía ᕙ( •̀
+          ᗜ •́ )ᕗ.
+        </div>
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="core.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        // 1) Proteger la página y obtener al usuario
+        const user = await initProtectedPage();
+        if (!user) return; // si no hay usuario, core ya redirigió a index
+
+        // 2) Pintar nombre del entrenador desde user_game_data
+        await renderTrainerLabelFromGame();
+
+        // 3) Configurar botón de logout común
+        setupLogoutButton("btn-logout");
+
+        // 4) Alternar entre las dos tablas
+        const btnRareza = document.getElementById("btn-tabla-rareza");
+        const btnXp = document.getElementById("btn-tabla-xp");
+        const tablaRareza = document.getElementById("tabla-rareza");
+        const tablaXp = document.getElementById("tabla-xp");
+
+        if (!btnRareza || !btnXp || !tablaRareza || !tablaXp) return;
+
+        function activateRareza() {
+          btnRareza.classList.add("info-tab-btn-active");
+          btnXp.classList.remove("info-tab-btn-active");
+          tablaRareza.classList.remove("hidden");
+          tablaXp.classList.add("hidden");
+        }
+
+        function activateXp() {
+          btnXp.classList.add("info-tab-btn-active");
+          btnRareza.classList.remove("info-tab-btn-active");
+          tablaXp.classList.remove("hidden");
+          tablaRareza.classList.add("hidden");
+        }
+
+        btnRareza.addEventListener("click", activateRareza);
+        btnXp.addEventListener("click", activateXp);
+
+        // Estado inicial
+        activateRareza();
+      });
+    </script>
+  </body>
+</html>

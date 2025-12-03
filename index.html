@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>rare-candy!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Fuente redondeada tipo consola -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="bg-main">
+    <div class="screen-frame">
+      <header class="top-bar">
+        <span class="top-bar-title">Caja pokémon - rare candy!</span>
+      </header>
+
+      <main class="center-panel">
+        <section class="login-card">
+          <!-- Logo -->
+          <div class="logo-area">
+            <img
+              src="https://i.ibb.co/tPBCxF1N/logo3.png"
+              alt="Logo del sitio"
+              class="logo-img"
+            />
+          </div>
+
+          <div class="login-content">
+            <label for="email" class="label">Usuario (correo)</label>
+            <input
+              type="email"
+              id="email"
+              class="input"
+              placeholder="ej. pikachu@rarecandy.rp"
+              autocomplete="off"
+            />
+
+            <label for="password" class="label">Contraseña</label>
+            <input
+              type="password"
+              id="password"
+              class="input"
+              placeholder="Escribe tu contraseña"
+              autocomplete="off"
+            />
+
+            <button id="btn-enter" class="btn-primary">Ingresar</button>
+
+            <p class="helper-text">
+              Inicia sesión con el usuario y contraseña otorgada. Si tienes
+              dudas, consulta a un poke-guía.
+            </p>
+
+            <p id="error-message" class="error-message"></p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="bottom-bar">
+        <div class="bottom-buttons">
+          <span class="bottom-hint">
+            ▶ Presiona <strong>Ingresar</strong> para continuar ദ്ദി◝ ⩊ ◜.ᐟ
+          </span>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Importante: ahora el script es type="module" -->
+    <script type="module" src="script.js"></script>
+  </body>
+</html>

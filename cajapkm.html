@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Caja Pokémon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Fuente principal del sitio -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Íconos de Font Awesome (requerido para fa-sign-out) -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+
+    <!-- Estilos del proyecto -->
+    <link rel="stylesheet" href="cajapkm.css" />
+  </head>
+
+  <body class="bg-main">
+    <div class="screen-frame">
+      <header class="top-bar">
+        <span class="top-bar-title">rare candy! - caja pokémon</span>
+
+        <div class="top-bar-right">
+          <span class="top-bar-trainer" id="trainer-label">
+            Entrenador: ???
+          </span>
+
+          <!-- Navegación principal -->
+          <a class="top-nav-btn top-nav-btn-active" href="cajapkm.html">Caja</a>
+          <a class="top-nav-btn" href="trainer.html">Entrenador</a>
+          <a class="top-nav-btn" href="simulador.html">Simulador</a>
+          <a class="top-nav-btn" href="tablas.html">EVOL</a>
+          <button
+            id="btn-logout"
+            class="nav-btn nav-btn-icon"
+            title="Cerrar sesión"
+          >
+            <i class="fa fa-sign-out"></i>
+          </button>
+        </div>
+      </header>
+
+      <main class="main-layout">
+        <!-- Columna izquierda: Party -->
+        <section class="column party-column">
+          <h2 class="column-title">Equipo Actual</h2>
+          <div id="party-list" class="party-list">
+            <!-- Slots de party (6) se llenan por JS -->
+          </div>
+        </section>
+
+        <!-- Columna central: Caja -->
+        <section class="column box-column">
+          <div class="box-header">
+            <button class="nav-btn" id="btn-prev-box">◀</button>
+            <span class="box-title" id="box-title">Caja 1</span>
+            <button class="nav-btn" id="btn-next-box">▶</button>
+          </div>
+
+          <div class="box-grid" id="box-grid">
+            <!-- 6 x 5 = 30 slots, se generan por JS -->
+          </div>
+
+          <div class="box-footer">
+            <button class="btn-primary" id="btn-add-pokemon">
+              Añadir Pokémon a la caja
+            </button>
+          </div>
+        </section>
+
+        <!-- Columna derecha - Detalle -->
+        <section class="column detail-column">
+          <div class="detail-card" id="detail-card">
+            <div class="detail-empty" id="detail-empty">
+              <p>Selecciona un Pokémon para ver sus detalles.</p>
+            </div>
+
+            <div class="detail-content hidden" id="detail-content">
+              <div class="detail-header">
+                <div class="detail-sprite-wrap">
+                  <img
+                    id="detail-sprite"
+                    src=""
+                    alt="Sprite Pokémon"
+                    class="detail-sprite"
+                  />
+                </div>
+                <div class="detail-main-text">
+                  <div class="detail-number-name" id="detail-number-name">
+                    <!-- #001 Bulbasaur -->
+                  </div>
+                  <div class="detail-types" id="detail-types">
+                    <!-- etiquetas de tipo -->
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-fields">
+                <div class="detail-field">
+                  <span class="detail-label">Apodo:</span>
+                  <span class="detail-value" id="detail-apodo"></span>
+                </div>
+                <div class="detail-field">
+                  <span class="detail-label">Clase:</span>
+                  <span class="detail-value" id="detail-clase"></span>
+                </div>
+                <div class="detail-field">
+                  <span class="detail-label">Nivel:</span>
+                  <span class="detail-value" id="detail-nivel"></span>
+                </div>
+                <div class="detail-field">
+                  <span class="detail-label">Personalidad:</span>
+                  <span class="detail-value" id="detail-personalidad"></span>
+                </div>
+                <div class="detail-field">
+                  <span class="detail-label">Capturado como:</span>
+                  <span class="detail-value" id="detail-capturado-como"></span>
+                </div>
+              </div>
+
+              <div class="detail-actions">
+                <button id="btn-update-pokemon" class="btn-action btn-update">
+                  Actualizar
+                </button>
+                <button id="btn-move-to-party" class="btn-action btn-move-team">
+                  Mover a equipo actual
+                </button>
+                <button id="btn-release-pokemon" class="btn-action btn-release">
+                  Liberar Pokémon
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="bottom-bar">
+        <div class="bottom-hint">
+          Usa la caja central para gestionar tus Pokémon y el panel derecho para
+          ver y actualizar detalles ( • ̀ω•́ )✧.
+        </div>
+      </footer>
+    </div>
+
+    <!-- Modal: Añadir Pokémon -->
+    <div class="modal-backdrop hidden" id="modal-add">
+      <div class="modal">
+        <h3 class="modal-title">Añadir Pokémon a la caja</h3>
+        <div class="modal-body">
+          <label class="label">Pokémon</label>
+          <input
+            type="text"
+            id="add-species-input"
+            class="input"
+            placeholder="Ej. pikachu, 25"
+          />
+          <ul class="suggest-list" id="add-suggest-list"></ul>
+
+          <label class="label">Apodo (opcional)</label>
+          <input
+            type="text"
+            id="add-nickname-input"
+            class="input"
+            placeholder="Ej. Sparky"
+          />
+
+          <label class="label">Nivel</label>
+          <input
+            type="number"
+            min="1"
+            max="100"
+            id="add-level-input"
+            class="input"
+            value="1"
+          />
+
+          <label class="label">Personalidad</label>
+          <select id="add-personality-select" class="input">
+            <option value="">(Sin definir)</option>
+            <option value="Alegre">Alegre</option>
+            <option value="Serio">Serio</option>
+            <option value="Travieso">Travieso</option>
+            <option value="Tímido">Tímido</option>
+            <option value="Osado">Osado</option>
+            <option value="Firme">Firme</option>
+            <option value="Miedoso">Miedoso</option>
+            <option value="Modesto">Modesto</option>
+            <option value="Plácido">Plácido</option>
+          </select>
+        </div>
+
+        <!-- NUEVO: Clase de Pokémon -->
+        <label class="label">Clase de Pokémon</label>
+        <select id="add-class-select" class="input">
+          <option value="">Selecciona una clase</option>
+          <option value="Común">Común</option>
+          <option value="Raro">Raro</option>
+          <option value="Especial">Especial</option>
+          <option value="Baby Pokémon">Baby Pokémon</option>
+        </select>
+
+        <div class="modal-footer">
+          <button class="btn-secondary" id="btn-add-cancel">Cancelar</button>
+          <button class="btn-primary" id="btn-add-confirm">Añadir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Actualizar Pokémon -->
+    <div class="modal-backdrop hidden" id="modal-edit">
+      <div class="modal">
+        <h3 class="modal-title">Actualizar Pokémon</h3>
+        <div class="modal-body">
+          <label class="label">Apodo</label>
+          <input type="text" id="edit-nickname-input" class="input" />
+
+          <label class="label">Nivel</label>
+          <input
+            type="number"
+            min="1"
+            max="100"
+            id="edit-level-input"
+            class="input"
+          />
+
+          <div class="evolution-group">
+            <label class="label">Evolución</label>
+            <select id="edit-evolution-select" class="input">
+              <option value="">No evolucionar</option>
+            </select>
+            <p class="modal-helper">
+              Si eliges una evolución que necesite piedra o pulsera de amistad,
+              asegúrate de tenerlo en tu inventario.
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="btn-edit-cancel">Cancelar</button>
+          <button class="btn-primary" id="btn-edit-confirm">
+            Guardar cambios
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Core compartido (crea supabase y define initProtectedPage) -->
+    <script src="core.js"></script>
+
+    <!-- Lógica específica de la caja -->
+    <script src="cajapkm.js"></script>
+  </body>
+</html>

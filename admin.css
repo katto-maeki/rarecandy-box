@@ -1,0 +1,255 @@
+/* ==========================
+   Layout base del panel admin
+   ========================== */
+
+.admin-main {
+  padding: 18px 22px 24px;
+}
+
+/* Tarjeta grande que envuelve todo el contenido del panel */
+.admin-panel {
+  background: #fafafa;
+  border-radius: 20px;
+  padding: 18px 20px 22px;
+  box-shadow: 0 8px 18px rgba(160, 160, 160, 0.12);
+}
+
+/* Título + subtítulo */
+.admin-header-row {
+  margin-bottom: 16px;
+}
+
+.admin-page-title {
+  margin: 0 0 4px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #312e81;
+}
+
+.admin-page-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+/* ==========================
+     Dos columnas principales
+     ========================== */
+
+.admin-columns {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+/* Cada columna como tarjeta interna */
+.admin-col {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 10px rgba(170, 170, 170, 0.07);
+}
+
+/* ==========================
+     Columna izquierda: listado
+     ========================== */
+
+.admin-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.admin-section-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #312e81;
+}
+
+.admin-search-input {
+  flex: 1;
+  max-width: 260px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.admin-search-input:focus {
+  outline: 2px solid #a855f7;
+  outline-offset: 1px;
+}
+
+/* Encabezado del listado */
+.admin-list-header-row {
+  display: grid;
+  grid-template-columns: 2.2fr 0.9fr;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: #ffe6f5;
+  color: #312e81;
+  padding: 6px 10px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+
+.admin-list-header-name {
+  padding-left: 2px;
+}
+
+.admin-list-header-status {
+  text-align: center;
+}
+
+/* Lista de jugadores */
+.admin-player-list {
+  border-radius: 12px;
+  border: 1px solid #f2d3f5;
+  background: rgba(255, 255, 255, 0.8);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+/* Una fila de jugador */
+.admin-player-row {
+  display: grid;
+  grid-template-columns: 2.2fr 0.9fr;
+  align-items: center;
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.admin-player-row:nth-child(odd) {
+  background: #ffffff;
+}
+
+.admin-player-row:nth-child(even) {
+  background: #fff7ff;
+}
+
+.admin-player-row:hover {
+  background: #ffe4fa;
+}
+
+.admin-player-row-selected {
+  background: #f472b6;
+  color: #ffffff;
+}
+
+/* Estado */
+.admin-player-status {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+/* ==========================
+     Columna derecha: detalle
+     ========================== */
+
+.admin-detail-empty {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.admin-detail {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #111827;
+}
+
+.admin-detail-block {
+  padding: 10px 0;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.admin-detail-block:last-child {
+  border-bottom: none;
+}
+
+.admin-detail-title {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #312e81;
+}
+
+.admin-detail p {
+  margin: 2px 0;
+}
+
+.admin-detail-note {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* Listas simples (party, inventario) */
+.admin-simple-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding-left: 0;
+  font-size: 0.85rem;
+}
+
+.admin-simple-list li {
+  padding: 2px 0;
+}
+
+/* Utilidad para ocultar */
+.hidden {
+  display: none;
+}
+
+/* ==========================
+   Responsive para panel admin
+   ========================== */
+
+@media (max-width: 960px) {
+  /* El fondo deja de centrar verticalmente,
+       así el contenido puede crecer y hacer scroll */
+  .bg-main {
+    align-items: flex-start;
+    padding: 12px 0;
+  }
+
+  .screen-frame {
+    width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+
+    /* Clave para que el scroll funcione bien en móvil */
+    aspect-ratio: auto;
+    min-height: 100vh;
+    height: auto;
+  }
+
+  /* Contenido del admin más pegado a los bordes */
+  .admin-main {
+    padding: 16px 12px 20px;
+  }
+
+  /* Columnas una debajo de la otra */
+  .admin-columns {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .admin-col {
+    padding: 12px 12px;
+    min-height: auto; /* que no intente ocupar toda la altura */
+  }
+
+  /* Listado un poco más bajito para que quepa mejor */
+  .admin-player-list {
+    max-height: 220px;
+  }
+}

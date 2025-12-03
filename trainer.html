@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Perfil de entrenador</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link rel="stylesheet" href="trainer.css" />
+  </head>
+  <body class="bg-main">
+    <div class="screen-frame">
+      <header class="top-bar">
+        <span class="top-bar-title">Trainer Card</span>
+
+        <div class="top-bar-right">
+          <span class="top-bar-trainer" id="trainer-label">
+            Entrenador: ???
+          </span>
+
+          <a class="top-nav-btn" href="cajapkm.html">Caja</a>
+          <a class="top-nav-btn top-nav-btn-active" href="trainer.html"
+            >Entrenador</a
+          >
+          <a class="top-nav-btn" href="simulador.html">Simulador</a>
+          <a class="top-nav-btn" href="tablas.html">EVOL</a>
+          <button
+            id="btn-logout"
+            class="nav-btn nav-btn-icon"
+            title="Cerrar sesión"
+          >
+            <i class="fa fa-sign-out"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Contenido principal -->
+      <main class="trainer-layout">
+        <!-- Header interno con nombre grande + stats -->
+        <section class="trainer-header-card">
+          <div class="trainer-name" id="trainer-name-display">ENTRENADOR</div>
+          <div class="trainer-sub">
+            <span
+              >Pokémon capturados: <strong id="captured-count">0</strong></span
+            >
+            <span>Última edición: <strong id="last-updated">—</strong></span>
+          </div>
+        </section>
+
+        <!-- Tres columnas -->
+        <section class="trainer-columns">
+          <!-- Columna izquierda: Recursos -->
+          <div class="trainer-column">
+            <h2 class="column-title">Recursos</h2>
+            <div class="resources-box">
+              <div class="resource-group">
+                <span class="resource-label">Dinero disponible</span>
+                <span class="resource-value money">
+                  ₽<span id="money-value">0</span>
+                </span>
+              </div>
+
+              <div class="resource-group">
+                <span class="resource-label">Experiencia por usar</span>
+                <span class="resource-value xp">
+                  <span id="xp-value">0</span> XP
+                </span>
+              </div>
+
+              <div class="resource-group">
+                <span class="resource-label">Logros obtenidos</span>
+                <span class="resource-value" id="achievements-value">0</span>
+              </div>
+
+              <div class="resource-group">
+                <span class="resource-label">Pokédex comunitaria</span>
+                <span class="resource-value" id="pokedex-value">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="trainer-column">
+            <h2 class="column-title">Inventario</h2>
+            <div class="inventory-list" id="inventory-list"></div>
+          </div>
+
+          <!-- Columna derecha: Pokébolas -->
+          <div class="trainer-column">
+            <h2 class="column-title">Pokébolas</h2>
+            <div class="inventory-list">
+              <article class="inv-item">
+                <div class="inv-left">
+                  <img
+                    class="inv-icon ball-icon"
+                    src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png"
+                    alt="Poké Ball"
+                  />
+                  <span class="inv-name">Poké Ball</span>
+                </div>
+                <span class="inv-count">×<span id="ball-poke">0</span></span>
+              </article>
+
+              <article class="inv-item">
+                <div class="inv-left">
+                  <img
+                    class="inv-icon ball-icon"
+                    src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png"
+                    alt="Super Ball"
+                  />
+                  <span class="inv-name">Super Ball</span>
+                </div>
+                <span class="inv-count">×<span id="ball-super">0</span></span>
+              </article>
+
+              <article class="inv-item">
+                <div class="inv-left">
+                  <img
+                    class="inv-icon ball-icon"
+                    src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png"
+                    alt="Ultra Ball"
+                  />
+                  <span class="inv-name">Ultra Ball</span>
+                </div>
+                <span class="inv-count">×<span id="ball-ultra">0</span></span>
+              </article>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Barra inferior -->
+      <footer class="bottom-bar">
+        <div class="bottom-hint">
+          Administra tus recursos e inventario. Usa la Caja para gestionar a tus
+          Pokémon (˶ᵔ ᵕ ᵔ˶).
+        </div>
+        <button class="btn-edit" id="btn-edit-profile">Editar Perfil</button>
+      </footer>
+    </div>
+
+    <!-- Modal de edición (igual funcionalidad, nuevo estilo) -->
+    <div class="modal-backdrop hidden" id="modal-edit">
+      <div class="modal">
+        <h3 class="modal-title">Editar Perfil del Entrenador</h3>
+        <div class="modal-body">
+          <div class="modal-row">
+            <label class="label">Nombre del entrenador</label>
+            <input type="text" id="input-trainer-name" class="input" />
+          </div>
+
+          <!-- Recursos principales -->
+          <div class="modal-row-grid">
+            <div>
+              <label class="label">Dinero (₽)</label>
+              <input type="number" min="0" id="input-money" class="input" />
+            </div>
+            <div>
+              <label class="label">Experiencia acumulada (XP)</label>
+              <input type="number" min="0" id="input-xp" class="input" />
+            </div>
+          </div>
+
+          <!-- NUEVO BLOQUE: Logros y Pokédex -->
+          <div class="modal-row-grid">
+            <div>
+              <label class="label">Logros obtenidos</label>
+              <input
+                type="text"
+                id="input-achievements"
+                class="input"
+                placeholder="Ej. 1"
+              />
+            </div>
+            <div>
+              <label class="label">Pokédex comunitaria</label>
+              <input
+                type="text"
+                id="input-pokedex"
+                class="input"
+                placeholder="Ej. 1"
+              />
+            </div>
+          </div>
+
+          <h4 class="modal-subtitle">Inventario</h4>
+          <div class="modal-row-grid">
+            <div>
+              <label class="label">Huevos</label>
+              <input type="number" min="0" id="input-egg" class="input" />
+            </div>
+            <div>
+              <label class="label">Rare Candy</label>
+              <input
+                type="number"
+                min="0"
+                id="input-rare-candy"
+                class="input"
+              />
+            </div>
+            <div>
+              <label class="label">Tokens intercambio</label>
+              <input
+                type="number"
+                min="0"
+                id="input-trade-token"
+                class="input"
+              />
+            </div>
+            <div>
+              <label class="label">Piedras evolutivas</label>
+              <input type="number" min="0" id="input-evo-stone" class="input" />
+            </div>
+            <div>
+              <label class="label">Pulseras amistad</label>
+              <input
+                type="number"
+                min="0"
+                id="input-friendship"
+                class="input"
+              />
+            </div>
+          </div>
+
+          <h4 class="modal-subtitle">Pokébolas</h4>
+          <div class="modal-row-grid">
+            <div>
+              <label class="label">Poké Ball</label>
+              <input type="number" min="0" id="input-ball-poke" class="input" />
+            </div>
+            <div>
+              <label class="label">Super Ball</label>
+              <input
+                type="number"
+                min="0"
+                id="input-ball-super"
+                class="input"
+              />
+            </div>
+            <div>
+              <label class="label">Ultra Ball</label>
+              <input
+                type="number"
+                min="0"
+                id="input-ball-ultra"
+                class="input"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-secondary" id="btn-cancel-edit">Cancelar</button>
+          <button class="btn-primary" id="btn-save-edit">
+            Guardar cambios
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Núcleo compartido (mismo que en cajapkm/simulador/admin) -->
+    <script src="core.js"></script>
+    <!-- Lógica específica de la página del entrenador -->
+    <script src="trainer.js"></script>
+  </body>
+</html>

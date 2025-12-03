@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Panel admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+
+    <link rel="stylesheet" href="cajapkm.css" />
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+
+  <body class="bg-main">
+    <div class="screen-frame">
+      <!-- Top bar igual que en las otras pantallas -->
+      <header class="top-bar">
+        <span class="top-bar-title">Panel admin</span>
+
+        <div class="top-bar-right">
+          <span class="top-bar-trainer" id="admin-email"> Admin: — </span>
+
+          <a class="top-nav-btn" href="cajapkm.html">CAJA</a>
+          <a class="top-nav-btn" href="trainer.html">ENTRENADOR</a>
+          <a class="top-nav-btn" href="simulador.html">SIMULADOR</a>
+          <a class="top-nav-btn" href="tablas.html">EVOL</a>
+
+          <button
+            id="btn-logout"
+            class="nav-btn nav-btn-icon"
+            title="Cerrar sesión"
+          >
+            <i class="fa fa-sign-out"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- MAIN -->
+      <main class="admin-main">
+        <div class="admin-panel">
+          <div class="admin-header-row">
+            <h1 class="admin-page-title">Panel administrativo</h1>
+            <p class="admin-page-subtitle">
+              Selecciona un jugador para revisar su estado, caja e inventario.
+            </p>
+          </div>
+
+          <!-- DOS COLUMNAS -->
+          <section class="admin-columns">
+            <!-- COLUMNA IZQUIERDA: DIRECTORIO DE JUGADORES -->
+            <div class="admin-col admin-col-list">
+              <div class="admin-section-header">
+                <h2 class="admin-section-title">Jugadores registrados</h2>
+                <input
+                  type="text"
+                  id="player-search"
+                  class="admin-search-input"
+                  placeholder="Buscar por nombre o email..."
+                />
+              </div>
+
+              <div class="admin-list-header-row">
+                <span class="admin-list-header-name">Entrenador</span>
+                <span class="admin-list-header-status">Estado</span>
+              </div>
+
+              <div class="admin-player-list" id="player-list">
+                <!-- filas generadas por admin.js -->
+                <!-- si hay error se muestra aquí -->
+              </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: DETALLE DEL JUGADOR -->
+            <div class="admin-col admin-col-detail">
+              <h2 class="admin-section-title">Detalle del jugador</h2>
+
+              <div id="player-detail-empty" class="admin-detail-empty">
+                Selecciona un jugador en la columna izquierda para ver su
+                resumen.
+              </div>
+
+              <div id="player-detail" class="admin-detail hidden">
+                <!-- BLOQUE: DATOS BÁSICOS -->
+                <section class="admin-detail-block">
+                  <h3 class="admin-detail-title">Datos básicos</h3>
+                  <p>
+                    <strong>Entrenador:</strong> <span id="detail-name">—</span>
+                  </p>
+                  <p>
+                    <strong>Registro:</strong>
+                    <span id="detail-created">—</span>
+                  </p>
+                  <p>
+                    <strong>Último login:</strong>
+                    <span id="detail-last-login">—</span>
+                  </p>
+                </section>
+
+                <!-- BLOQUE: TRAINER CARD / PARTY -->
+                <section class="admin-detail-block">
+                  <h3 class="admin-detail-title">
+                    Trainer card (equipo actual)
+                  </h3>
+                  <ul id="detail-party" class="admin-simple-list"></ul>
+                </section>
+
+                <!-- BLOQUE: CAJA -->
+                <section class="admin-detail-block">
+                  <h3 class="admin-detail-title">Caja Pokémon</h3>
+                  <p>
+                    <strong>Total capturados:</strong>
+                    <span id="detail-box-count">0</span>
+                  </p>
+                  <p class="admin-detail-note" id="detail-box-preview">—</p>
+                </section>
+
+                <!-- BLOQUE: INVENTARIO -->
+                <section class="admin-detail-block">
+                  <h3 class="admin-detail-title">Inventario</h3>
+                  <ul id="detail-inventory" class="admin-simple-list"></ul>
+                </section>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <!-- FOOTER -->
+      <footer class="bottom-bar">
+        <div class="bottom-hint">
+          Panel de uso interno. Usa estas herramientas con cuidado para no
+          afectar la experiencia de juego de los entrenadores.
+        </div>
+      </footer>
+    </div>
+
+    <!-- Supabase CDN + core compartido -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="core.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>
