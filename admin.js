@@ -5,8 +5,16 @@
 const PLAYERS_TABLE = "user_game_data";
 const INVENTORY_TABLE = "trainer_inventory";
 
+// 👇 Cliente Supabase (creado en core.js)
+const supabase = window.supabaseClient;
+if (!supabase) {
+  console.error(
+    "supabaseClient no está inicializado. Asegúrate de cargar primero el CDN de Supabase y luego core.js antes de admin.js."
+  );
+}
+
 // Campos esperados en user_game_data:
-// id (uuid PK), trainer_name, email, status, created_at, last_login_at,
+// id (uuid PK), trainer_name, email, status, created_at, last_login,
 // box_data (json), party_data (json)
 
 // Campos esperados en trainer_inventory:
@@ -331,7 +339,7 @@ async function loadPlayers() {
 
   try {
     const { data, error } = await supabase
-      .from(PLAYERS_TABLE) // "user_game_data"
+      .from(PLAYERS_TABLE)
       .select(
         `
         id,
