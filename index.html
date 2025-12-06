@@ -68,7 +68,14 @@
       </footer>
     </div>
 
-    <!-- Importante: ahora el script es type="module" -->
-    <script type="module" src="script.js"></script>
+<!-- Supabase CDN: primero -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<!-- Tu core común (crea window.supabaseClient) -->
+<script src="core.js"></script>
+
+<!-- Tu script de login (usa window.supabaseClient) -->
+<script src="script.js"></script>
+
   </body>
 </html>
