@@ -23,7 +23,7 @@ let dragSourceIndex = null; // índice del slot que se está arrastrando
 // =============================
 // AHORA async: primero intenta Supabase, luego fallback localStorage
 async function loadState() {
-  const supabase = window.supabase;
+  const supabase = window.supabaseClient;
   const userId = window.currentUserId;
 
   let loadedFromSupabase = false;
@@ -126,7 +126,7 @@ function saveState() {
     console.error("Error guardando en local", e);
   }
 
-  const supabase = window.supabase;
+  const supabase = window.supabaseClient;
   const userId = window.currentUserId;
 
   if (supabase && userId) {
@@ -1264,3 +1264,4 @@ const TYPE_META = {
   hada: { color: "#D685AD", label: "Hada" },
   fairy: { color: "#D685AD", label: "Hada" },
 };
+
