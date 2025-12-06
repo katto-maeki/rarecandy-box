@@ -6,11 +6,14 @@ const SUPABASE_URL = "https://gsxfoebmxxgxyghltyra.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzeGZvZWJteHhneHlnaGx0eXJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNjEwNzcsImV4cCI6MjA3OTgzNzA3N30.Xc0KHEWVNNrE9SKCQhCaLxmD162oYv17ApisorEPCAs";
 
-// Del objeto global 'supabase' que expone el CDN sacamos createClient
-const { createClient } = window.supabase;
-
-// Cliente global (el que usarán todas las páginas)
-window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// 👇 Ya NO sobreescribimos window.supabase
+if (!window.supabase || !window.supabase.createClient) {
+  console.error("Supabase CDN no se cargó correctamente.");
+} else {
+  const { createClient } = window.supabase;
+  // Cliente real que vamos a usar en la app
+  window.supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
 
 // ID del usuario logueado disponible para todos
 window.currentUserId = null;
@@ -22,7 +25,7 @@ window.initProtectedPage = async function initProtectedPage(options = {}) {
   const { redirectToLogin = "index.html" } = options;
 
   try {
-    const { data, error } = await window.supabase.auth.getUser();
+    const { data, error } = await window.supabaseClient.auth.getUser();
 
     if (error || !data.user) {
       window.location.href = redirectToLogin;
@@ -45,12 +48,12 @@ window.renderTrainerLabelFromGame =
   async function renderTrainerLabelFromGame() {
     try {
       if (!window.currentUserId) {
-        const { data } = await window.supabase.auth.getUser();
+        const { data } = await window.supabaseClient.auth.getUser();
         window.currentUserId = data.user?.id || null;
       }
       if (!window.currentUserId) return;
 
-      const { data, error } = await window.supabase
+      const { data, error } = await window.supabaseClient
         .from("user_game_data")
         .select("trainer_name")
         .eq("id", window.currentUserId)
@@ -67,7 +70,6 @@ window.renderTrainerLabelFromGame =
         label.textContent = `Entrenador: ${trainerName}`;
       }
 
-      // por si otras partes lo quieren usar
       window.currentTrainerName = trainerName;
     } catch (e) {
       console.error("Error en renderTrainerLabelFromGame:", e);
@@ -85,7 +87,7 @@ window.setupLogoutButton = function setupLogoutButton(buttonId = "btn-logout") {
     const confirmed = confirm("¿Estás seguro que deseas cerrar sesión?");
     if (!confirmed) return;
 
-    const { error } = await window.supabase.auth.signOut();
+    const { error } = await window.supabaseClient.auth.signOut();
     if (error) {
       alert("Ocurrió un error al cerrar sesión. Intenta nuevamente.");
       console.error(error);
