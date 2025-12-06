@@ -793,6 +793,7 @@ async function handleUpdatePokemon() {
   const nicknameInput = document.getElementById("edit-nickname-input");
   const levelInput = document.getElementById("edit-level-input");
   const evolutionSelect = document.getElementById("edit-evolution-select");
+  const classSelect = document.getElementById("edit-class-select"); // 👈 NUEVO
 
   if (!nicknameInput || !levelInput) {
     console.error("Faltan campos de edición.");
@@ -891,6 +892,13 @@ async function handleUpdatePokemon() {
   poke.apodo = newApodo;
   poke.nivel = Math.max(1, Math.min(100, newNivel));
   // Ya NO tocamos la personalidad (se queda fija)
+
+  // 👇 NUEVO: actualizar la clase desde el select
+  if (classSelect) {
+    const newClass = classSelect.value.trim();
+    poke.clase = newClass || poke.clase || "";
+  }
+  // 👆 NUEVO
 
   // (poke ya es referencia dentro de container[index], pero por claridad:)
   container[index] = poke;
@@ -1126,12 +1134,20 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("edit-nickname-input").value = poke.apodo || "";
         document.getElementById("edit-level-input").value = poke.nivel || 1;
 
+        // Si algún día vuelves a editar personalidad aquí, lo tienes listo:
         const personalitySelect = document.getElementById(
           "edit-personality-select"
         );
         if (personalitySelect) {
           personalitySelect.value = poke.personalidad || "";
         }
+
+        // 👇 NUEVO: prellenar clase
+        const classSelect = document.getElementById("edit-class-select");
+        if (classSelect) {
+          classSelect.value = poke.clase || "";
+        }
+        // 👆 NUEVO
 
         const evolutionGroup = document.querySelector(".evolution-group");
         const evolutionSelect = document.getElementById(
