@@ -10,6 +10,14 @@ const GAME_TABLE = "user_game_data"; // trainer_name vive aquí
 const BOX_TABLE = "user_game_data";
 const BOX_STATE_COLUMN = "box_data";
 
+// 👇 Cliente Supabase
+const supabase = window.supabaseClient || window.supabase;
+if (!supabase) {
+  console.error(
+    "Supabase no está inicializado. Asegúrate de cargar el CDN de Supabase y luego core.js antes de trainer.js."
+  );
+}
+
 let currentMeta = null;
 
 const defaultMeta = {
