@@ -794,6 +794,7 @@ async function handleUpdatePokemon() {
   const levelInput = document.getElementById("edit-level-input");
   const evolutionSelect = document.getElementById("edit-evolution-select");
   const classSelect = document.getElementById("edit-class-select"); // 👈 NUEVO
+  const personalitySelect = document.getElementById("edit-personality-select");
 
   if (!nicknameInput || !levelInput) {
     console.error("Faltan campos de edición.");
@@ -891,7 +892,11 @@ async function handleUpdatePokemon() {
   // Actualizar datos comunes
   poke.apodo = newApodo;
   poke.nivel = Math.max(1, Math.min(100, newNivel));
-  // Ya NO tocamos la personalidad (se queda fija)
+  // ✅ NUEVO: actualizar personalidad desde el select
+  if (personalitySelect) {
+    const newPersonality = personalitySelect.value.trim();
+    poke.personalidad = newPersonality || "";
+  }
 
   // 👇 NUEVO: actualizar la clase desde el select
   if (classSelect) {
@@ -1264,4 +1269,3 @@ const TYPE_META = {
   hada: { color: "#D685AD", label: "Hada" },
   fairy: { color: "#D685AD", label: "Hada" },
 };
-
