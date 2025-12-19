@@ -15,6 +15,10 @@ if (!window.supabase || !window.supabase.createClient) {
   window.supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
+if (!window.supabaseClient) {
+  console.error("No se pudo inicializar supabaseClient.");
+}
+
 // ID del usuario logueado disponible para todos
 window.currentUserId = null;
 
@@ -23,6 +27,12 @@ window.currentUserId = null;
 // =======================
 window.initProtectedPage = async function initProtectedPage(options = {}) {
   const { redirectToLogin = "index.html" } = options;
+
+  if (!window.supabaseClient) {
+    console.error("supabaseClient no está inicializado.");
+    window.location.href = redirectToLogin;
+    return null;
+  }
 
   try {
     const { data, error } = await window.supabaseClient.auth.getUser();
@@ -47,6 +57,8 @@ window.initProtectedPage = async function initProtectedPage(options = {}) {
 window.renderTrainerLabelFromGame =
   async function renderTrainerLabelFromGame() {
     try {
+      if (!window.supabaseClient) return;
+
       if (!window.currentUserId) {
         const { data } = await window.supabaseClient.auth.getUser();
         window.currentUserId = data.user?.id || null;
@@ -84,6 +96,11 @@ window.setupLogoutButton = function setupLogoutButton(buttonId = "btn-logout") {
   if (!logoutBtn) return;
 
   logoutBtn.addEventListener("click", async () => {
+    if (!window.supabaseClient) {
+      alert("Supabase no está inicializado.");
+      return;
+    }
+
     const confirmed = confirm("¿Estás seguro que deseas cerrar sesión?");
     if (!confirmed) return;
 
