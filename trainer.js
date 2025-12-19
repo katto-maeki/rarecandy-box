@@ -243,27 +243,32 @@ async function updateCapturedCountFromSupabase() {
     const userId = window.currentUserId;
     if (!userId || !window.supabaseClient) return;
 
+    // 🔥 Traer ambas columnas reales: box_data y party_data
     const { data, error } = await window.supabaseClient
-      .from(BOX_TABLE)
-      .select(BOX_STATE_COLUMN)
+      .from("user_game_data")
+      .select("box_data, party_data")
       .eq("id", userId)
       .maybeSingle();
 
     if (error) {
-      console.error("Error trayendo box_data desde Supabase:", error);
+      console.error("Error trayendo box_data/party_data:", error);
       return;
     }
 
-    const state = data?.[BOX_STATE_COLUMN];
     let total = 0;
 
-    if (state?.party && Array.isArray(state.party)) {
-      total += state.party.filter((p) => p != null).length;
+    // 1) PARTY desde party_data
+    if (Array.isArray(data?.party_data)) {
+      total += data.party_data.filter((p) => p != null).length;
     }
 
-    if (state?.boxes && Array.isArray(state.boxes)) {
-      state.boxes.forEach((box) => {
-        if (Array.isArray(box)) total += box.filter((p) => p != null).length;
+    // 2) BOXES desde box_data.boxes
+    const boxes = data?.box_data?.boxes;
+    if (Array.isArray(boxes)) {
+      boxes.forEach((box) => {
+        if (Array.isArray(box)) {
+          total += box.filter((p) => p != null).length;
+        }
       });
     }
 
@@ -435,3 +440,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("btn-cancel-edit")?.addEventListener("click", closeModal);
   $("btn-save-edit")?.addEventListener("click", handleSave);
 });
+
