@@ -5,7 +5,7 @@
 // Supabase se carga por CDN en el HTML y el cliente
 // se crea en core.js como window.supabaseClient.
 
-const supabase = window.supabaseClient;
+window.supabaseClient.auth.signInWithPassword(...)
 
 if (!supabase) {
   console.error(
@@ -104,3 +104,4 @@ btnEnter.addEventListener("click", async () => {
     btnEnter.textContent = "Ingresar";
   }
 });
+
