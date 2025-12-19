@@ -10,13 +10,31 @@ const GAME_TABLE = "user_game_data"; // trainer_name vive aquí
 const BOX_TABLE = "user_game_data";
 const BOX_STATE_COLUMN = "box_data";
 
-// ⚠️ NO redeclaramos supabase
+// ✅ NO redeclaramos supabase
 if (!window.supabaseClient) {
   console.error(
     "supabaseClient no está inicializado. Verifica que el CDN de Supabase y core.js carguen antes de trainer.js."
   );
 }
 
+// =============================
+// Helpers DOM seguros
+// =============================
+function $(id) {
+  return document.getElementById(id);
+}
+function setText(id, value) {
+  const el = $(id);
+  if (el) el.textContent = String(value ?? "");
+}
+function setValue(id, value) {
+  const el = $(id);
+  if (el) el.value = value ?? "";
+}
+
+// =============================
+// Estado
+// =============================
 let currentMeta = null;
 
 const defaultMeta = {
@@ -39,19 +57,95 @@ const defaultMeta = {
   lastUpdated: null,
 };
 
+// ========================
+// Inventario visual
+// ========================
+const INVENTORY_ITEMS = [
+  {
+    key: "egg",
+    label: "Huevo",
+    iconUrl: "https://i.ibb.co/zV0rqtqp/Huevo-DP.png",
+    countId: "item-egg",
+  },
+  {
+    key: "rareCandy",
+    label: "Rare Candy",
+    iconUrl: "https://i.ibb.co/qYWj4L1G/Caramelo-raro.png",
+    countId: "item-rare-candy",
+  },
+  {
+    key: "tradeToken",
+    label: "Token Intercambio",
+    iconUrl: "https://i.ibb.co/0yTnfxPN/Iris-ticket.png",
+    countId: "item-trade-token",
+  },
+  {
+    key: "evoStone",
+    label: "Piedra Evolución",
+    iconUrl: "https://i.ibb.co/Lyh4XR3/shiny-stone.png",
+    countId: "item-evo-stone",
+  },
+  {
+    key: "friendship",
+    label: "Pulsera Amistad",
+    iconUrl: "https://i.ibb.co/QF4xxhVY/Cascabel-alivio.png",
+    countId: "item-friendship",
+  },
+];
+
+function buildInventoryList() {
+  const list = $("inventory-list");
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  INVENTORY_ITEMS.forEach((item) => {
+    const article = document.createElement("article");
+    article.className = "inv-item";
+
+    const left = document.createElement("div");
+    left.className = "inv-left";
+
+    const icon = document.createElement("img");
+    icon.className = "inv-icon item-icon";
+    icon.src = item.iconUrl;
+    icon.alt = item.label;
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "inv-name";
+    nameSpan.textContent = item.label;
+
+    const countSpan = document.createElement("span");
+    countSpan.className = "inv-count";
+    countSpan.innerHTML = `×<span id="${item.countId}">0</span>`;
+
+    left.appendChild(icon);
+    left.appendChild(nameSpan);
+
+    article.appendChild(left);
+    article.appendChild(countSpan);
+
+    list.appendChild(article);
+  });
+}
+
 // ================================
 // Carga inicial desde Supabase
 // ================================
 async function initTrainerMeta() {
   try {
     const userId = window.currentUserId;
-    if (!userId) return;
+    if (!userId || !window.supabaseClient) return;
 
-    const { data: invRow } = await window.supabaseClient
+    const { data: invRow, error: invError } = await window.supabaseClient
       .from(TRAINER_TABLE)
       .select("inventory")
       .eq("user_id", userId)
       .maybeSingle();
+
+    if (invError) {
+      console.error("Error trayendo meta de Supabase:", invError);
+    }
 
     if (invRow?.inventory) {
       const parsed = invRow.inventory;
@@ -62,113 +156,158 @@ async function initTrainerMeta() {
         balls: { ...defaultMeta.balls, ...(parsed.balls || {}) },
       };
     } else {
-      currentMeta = {
-        ...defaultMeta,
-        lastUpdated: new Date().toISOString(),
-      };
+      currentMeta = { ...defaultMeta, lastUpdated: new Date().toISOString() };
 
-      await window.supabaseClient.from(TRAINER_TABLE).upsert(
-        {
-          user_id: userId,
-          inventory: currentMeta,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" }
-      );
+      const { error: upsertError } = await window.supabaseClient
+        .from(TRAINER_TABLE)
+        .upsert(
+          {
+            user_id: userId,
+            inventory: currentMeta,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (upsertError) {
+        console.error("Error creando meta inicial en Supabase:", upsertError);
+      }
     }
 
     localStorage.setItem(TRAINER_META_KEY, JSON.stringify(currentMeta));
   } catch (e) {
-    console.error("initTrainerMeta error:", e);
+    console.error("Error inesperado en initTrainerMeta:", e);
     currentMeta = { ...defaultMeta };
   }
 }
 
 function loadMeta() {
   if (!currentMeta) {
-    const raw = localStorage.getItem(TRAINER_META_KEY);
-    currentMeta = raw ? JSON.parse(raw) : { ...defaultMeta };
+    try {
+      const raw = localStorage.getItem(TRAINER_META_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+
+      currentMeta = {
+        ...defaultMeta,
+        ...(parsed || {}),
+        items: { ...defaultMeta.items, ...((parsed && parsed.items) || {}) },
+        balls: { ...defaultMeta.balls, ...((parsed && parsed.balls) || {}) },
+      };
+    } catch (e) {
+      console.error("Error cargando meta (fallback):", e);
+      currentMeta = { ...defaultMeta };
+    }
   }
-  return JSON.parse(JSON.stringify(currentMeta));
+
+  return {
+    ...currentMeta,
+    items: { ...currentMeta.items },
+    balls: { ...currentMeta.balls },
+  };
 }
 
+// Guarda en Supabase + copia local
 async function saveMeta(meta) {
   const userId = window.currentUserId;
-  if (!userId) return;
+  if (!userId || !window.supabaseClient) return;
 
-  currentMeta = meta;
+  currentMeta = {
+    ...meta,
+    items: { ...meta.items },
+    balls: { ...meta.balls },
+  };
+
   localStorage.setItem(TRAINER_META_KEY, JSON.stringify(currentMeta));
 
-  await window.supabaseClient.from(TRAINER_TABLE).upsert(
-    {
-      user_id: userId,
-      inventory: currentMeta,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id" }
-  );
+  try {
+    const { error } = await window.supabaseClient.from(TRAINER_TABLE).upsert(
+      {
+        user_id: userId,
+        inventory: currentMeta,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
+
+    if (error) console.error("Error guardando meta en Supabase:", error);
+  } catch (e) {
+    console.error("Error inesperado al guardar meta en Supabase:", e);
+  }
 }
 
 // ========================
 // Contador de Pokémon
 // ========================
 async function updateCapturedCountFromSupabase() {
-  const userId = window.currentUserId;
-  if (!userId) return;
+  try {
+    const userId = window.currentUserId;
+    if (!userId || !window.supabaseClient) return;
 
-  const { data } = await window.supabaseClient
-    .from(BOX_TABLE)
-    .select(BOX_STATE_COLUMN)
-    .eq("id", userId)
-    .maybeSingle();
+    const { data, error } = await window.supabaseClient
+      .from(BOX_TABLE)
+      .select(BOX_STATE_COLUMN)
+      .eq("id", userId)
+      .maybeSingle();
 
-  let total = 0;
-  const state = data?.[BOX_STATE_COLUMN];
+    if (error) {
+      console.error("Error trayendo box_data desde Supabase:", error);
+      return;
+    }
 
-  if (state?.party) total += state.party.filter(Boolean).length;
-  if (state?.boxes) {
-    state.boxes.forEach((box) => {
-      if (Array.isArray(box)) total += box.filter(Boolean).length;
-    });
+    const state = data?.[BOX_STATE_COLUMN];
+    let total = 0;
+
+    if (state?.party && Array.isArray(state.party)) {
+      total += state.party.filter((p) => p != null).length;
+    }
+
+    if (state?.boxes && Array.isArray(state.boxes)) {
+      state.boxes.forEach((box) => {
+        if (Array.isArray(box)) total += box.filter((p) => p != null).length;
+      });
+    }
+
+    setText("captured-count", total);
+  } catch (e) {
+    console.error("Error inesperado al contar pokémon:", e);
   }
-
-  const el = document.getElementById("captured-count");
-  if (el) el.textContent = total;
 }
 
 // ========================
 // Render
 // ========================
+function formatDate(date) {
+  if (!date) return "—";
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString();
+}
+
 function renderView() {
   const meta = loadMeta();
   const trainerName = window.currentTrainerName || "Entrenador";
 
-  document.getElementById("trainer-name-display").textContent =
-    trainerName.toUpperCase();
-  document.getElementById("trainer-label").textContent =
-    `Entrenador: ${trainerName}`;
+  setText("trainer-name-display", trainerName.toUpperCase());
+  setText("trainer-label", `Entrenador: ${trainerName}`);
 
-  document.getElementById("money-value").textContent = meta.money;
-  document.getElementById("xp-value").textContent = meta.xp;
-  document.getElementById("achievements-value").textContent =
-    meta.achievements || "—";
-  document.getElementById("pokedex-value").textContent = meta.pokedex || "—";
+  setText("money-value", meta.money);
+  setText("xp-value", meta.xp);
+  setText("achievements-value", meta.achievements || "—");
+  setText("pokedex-value", meta.pokedex || "—");
 
-  document.getElementById("item-egg").textContent = meta.items.egg;
-  document.getElementById("item-rare-candy").textContent = meta.items.rareCandy;
-  document.getElementById("item-trade-token").textContent =
-    meta.items.tradeToken;
-  document.getElementById("item-evo-stone").textContent = meta.items.evoStone;
-  document.getElementById("item-friendship").textContent =
-    meta.items.friendship;
+  // Inventario
+  setText("item-egg", meta.items.egg);
+  setText("item-rare-candy", meta.items.rareCandy);
+  setText("item-trade-token", meta.items.tradeToken);
+  setText("item-evo-stone", meta.items.evoStone);
+  setText("item-friendship", meta.items.friendship);
 
-  document.getElementById("ball-poke").textContent = meta.balls.poke;
-  document.getElementById("ball-super").textContent = meta.balls.super;
-  document.getElementById("ball-ultra").textContent = meta.balls.ultra;
+  // Pokébolas
+  setText("ball-poke", meta.balls.poke);
+  setText("ball-super", meta.balls.super);
+  setText("ball-ultra", meta.balls.ultra);
 
-  document.getElementById("last-updated").textContent = meta.lastUpdated
-    ? new Date(meta.lastUpdated).toLocaleDateString()
-    : "—";
+  setText("last-updated", formatDate(meta.lastUpdated));
 }
 
 // ========================
@@ -176,38 +315,91 @@ function renderView() {
 // ========================
 function openModal() {
   const meta = loadMeta();
-  document.getElementById("input-trainer-name").value =
-    window.currentTrainerName || "";
-  document.getElementById("input-money").value = meta.money;
-  document.getElementById("input-xp").value = meta.xp;
-  document.getElementById("input-achievements").value = meta.achievements || "";
-  document.getElementById("input-pokedex").value = meta.pokedex || "";
-  document.getElementById("modal-edit").classList.remove("hidden");
+
+  setValue("input-trainer-name", window.currentTrainerName || "");
+  setValue("input-money", meta.money);
+  setValue("input-xp", meta.xp);
+  setValue("input-achievements", meta.achievements || "");
+  setValue("input-pokedex", meta.pokedex || "");
+
+  setValue("input-egg", meta.items.egg);
+  setValue("input-rare-candy", meta.items.rareCandy);
+  setValue("input-trade-token", meta.items.tradeToken);
+  setValue("input-evo-stone", meta.items.evoStone);
+  setValue("input-friendship", meta.items.friendship);
+
+  setValue("input-ball-poke", meta.balls.poke);
+  setValue("input-ball-super", meta.balls.super);
+  setValue("input-ball-ultra", meta.balls.ultra);
+
+  $("modal-edit")?.classList.remove("hidden");
 }
 
 function closeModal() {
-  document.getElementById("modal-edit").classList.add("hidden");
+  $("modal-edit")?.classList.add("hidden");
+}
+
+function parseNonNegativeInt(value, fallback = 0) {
+  const n = parseInt(value, 10);
+  if (Number.isNaN(n) || n < 0) return fallback;
+  return n;
 }
 
 async function handleSave() {
   const meta = loadMeta();
-  meta.money = Number(document.getElementById("input-money").value) || 0;
-  meta.xp = Number(document.getElementById("input-xp").value) || 0;
-  meta.achievements =
-    document.getElementById("input-achievements").value.trim();
-  meta.pokedex = document.getElementById("input-pokedex").value.trim();
-  meta.lastUpdated = new Date().toISOString();
 
-  const newTrainerName =
-    document.getElementById("input-trainer-name").value.trim();
+  const userId = window.currentUserId;
 
-  if (newTrainerName && window.currentUserId) {
-    await window.supabaseClient.from(GAME_TABLE).upsert(
-      { id: window.currentUserId, trainer_name: newTrainerName },
+  const newTrainerName = ($("input-trainer-name")?.value || "").trim();
+  if (newTrainerName && userId && window.supabaseClient) {
+    const { error } = await window.supabaseClient.from(GAME_TABLE).upsert(
+      { id: userId, trainer_name: newTrainerName },
       { onConflict: "id" }
     );
-    window.currentTrainerName = newTrainerName;
+    if (error) {
+      console.error("Error guardando trainer_name:", error);
+    } else {
+      window.currentTrainerName = newTrainerName;
+    }
   }
+
+  meta.money = parseNonNegativeInt($("input-money")?.value, meta.money);
+  meta.xp = parseNonNegativeInt($("input-xp")?.value, meta.xp);
+  meta.achievements = ($("input-achievements")?.value || "").trim();
+  meta.pokedex = ($("input-pokedex")?.value || "").trim();
+
+  meta.items.egg = parseNonNegativeInt($("input-egg")?.value, meta.items.egg);
+  meta.items.rareCandy = parseNonNegativeInt(
+    $("input-rare-candy")?.value,
+    meta.items.rareCandy
+  );
+  meta.items.tradeToken = parseNonNegativeInt(
+    $("input-trade-token")?.value,
+    meta.items.tradeToken
+  );
+  meta.items.evoStone = parseNonNegativeInt(
+    $("input-evo-stone")?.value,
+    meta.items.evoStone
+  );
+  meta.items.friendship = parseNonNegativeInt(
+    $("input-friendship")?.value,
+    meta.items.friendship
+  );
+
+  meta.balls.poke = parseNonNegativeInt(
+    $("input-ball-poke")?.value,
+    meta.balls.poke
+  );
+  meta.balls.super = parseNonNegativeInt(
+    $("input-ball-super")?.value,
+    meta.balls.super
+  );
+  meta.balls.ultra = parseNonNegativeInt(
+    $("input-ball-ultra")?.value,
+    meta.balls.ultra
+  );
+
+  meta.lastUpdated = new Date().toISOString();
 
   await saveMeta(meta);
   renderView();
@@ -218,23 +410,28 @@ async function handleSave() {
 // Init
 // ========================
 document.addEventListener("DOMContentLoaded", async () => {
+  // ✅ Construir inventario visual ANTES de renderView
+  buildInventoryList();
+
+  // Proteger
   const user = await initProtectedPage();
   if (!user) return;
 
+  // Logout
   setupLogoutButton();
+
+  // Nombre entrenador desde Supabase
   await renderTrainerLabelFromGame();
 
+  // Cargar inventario (Supabase) + render
   await initTrainerMeta();
   renderView();
+
+  // Contador capturados
   await updateCapturedCountFromSupabase();
 
-  document
-    .getElementById("btn-edit-profile")
-    ?.addEventListener("click", openModal);
-  document
-    .getElementById("btn-cancel-edit")
-    ?.addEventListener("click", closeModal);
-  document
-    .getElementById("btn-save-edit")
-    ?.addEventListener("click", handleSave);
+  // Listeners modal
+  $("btn-edit-profile")?.addEventListener("click", openModal);
+  $("btn-cancel-edit")?.addEventListener("click", closeModal);
+  $("btn-save-edit")?.addEventListener("click", handleSave);
 });
