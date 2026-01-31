@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tablas de Referencia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="cajapkm.css" />
+    <link rel="stylesheet" href="tablas.css" />
+  </head>
+  <body class="bg-main">
+    <div class="screen-frame">
+      <header class="top-bar">
+        <span class="top-bar-title">Evoluciones por nivel y clase</span>
+        <div class="top-bar-right">
+          <span class="top-bar-trainer" id="trainer-label">Entrenador: ...</span>
+          <a class="top-nav-btn" href="cajapkm.html">Caja</a>
+          <a class="top-nav-btn" href="trainer.html">Entrenador</a>
+          <a class="top-nav-btn" href="pokedex.html">Sorelle</a>
+          <a class="top-nav-btn top-nav-btn-active" href="tablas.html">EVOL</a>
+          <button id="btn-logout" class="nav-btn nav-btn-icon" title="Cerrar sesión"><i class="fa fa-sign-out"></i></button>
+        </div>
+      </header>
+
+      <main class="main-layout">
+        
+        <div class="panel header-card">
+            <h1 class="page-title">Tablas Informativas</h1>
+            <p class="page-text">
+                Consulta aquí las tablas de referencia de evolución y experiencia para tus Pokémon capturados. Si tienes duda sobre la clase de algún Pokémon, consúltalo con un poke-guía.
+            </p>
+        </div>
+
+        <div class="panel content-card">
+            
+            <div class="tabs-header">
+                <button class="tab-btn active" data-target="tab-evo">Evolución por rareza</button>
+                <button class="tab-btn" data-target="tab-xp">XP por nivel</button>
+            </div>
+
+            <div class="tables-container">
+                
+                <div id="tab-evo" class="tab-content active">
+                    <h3 class="table-title">Evolución por rareza</h3>
+                    <div class="table-responsive">
+                        <table class="info-table">
+                            <thead>
+                                <tr>
+                                    <th>Clase</th>
+                                    <th>Nivel de evolución</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Huevo</td>
+                                    <td><strong>Eclosión:</strong> Nivel 1</td>
+                                </tr>
+                                <tr>
+                                    <td>Baby Pokémon</td>
+                                    <td><strong>1era evolución:</strong> Nivel 12</td>
+                                </tr>
+                                <tr>
+                                    <td>Común</td>
+                                    <td>
+                                        <strong>1ra evolución:</strong> Nivel 16<br>
+                                        <strong>2da evolución:</strong> Nivel 32
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Raro / Infrecuente</td>
+                                    <td>
+                                        <strong>1ra evolución:</strong> Nivel 19<br>
+                                        <strong>2da evolución:</strong> Nivel 38
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Especial / Pseudolegendario</td>
+                                    <td>
+                                        <strong>1ra evolución:</strong> Nivel 21<br>
+                                        <strong>2da evolución:</strong> Nivel 42
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="tab-xp" class="tab-content">
+                    <h3 class="table-title">Tabla de niveles y XP</h3>
+                    <div class="table-responsive">
+                        <table class="info-table">
+                            <thead>
+                                <tr>
+                                    <th>Bloques de niveles</th>
+                                    <th>XP por nivel</th>
+                                    <th>Total XP por bloque</th>
+                                    <th>Total XP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1 a 5</td>
+                                    <td>10 XP</td>
+                                    <td>50 XP</td>
+                                    <td>50 XP</td>
+                                </tr>
+                                <tr>
+                                    <td>6 a 10</td>
+                                    <td>15 XP</td>
+                                    <td>75 XP</td>
+                                    <td>125 XP</td>
+                                </tr>
+                                <tr>
+                                    <td>11 a 15</td>
+                                    <td>20 XP</td>
+                                    <td>100 XP</td>
+                                    <td>225 XP</td>
+                                </tr>
+                                <tr>
+                                    <td>16 a 20</td>
+                                    <td>25 XP</td>
+                                    <td>125 XP</td>
+                                    <td>350 XP</td>
+                                </tr>
+                                <tr>
+                                    <td>21 a 30</td>
+                                    <td>35 XP</td>
+                                    <td>350 XP</td>
+                                    <td>700 XP</td>
+                                </tr>
+                                <tr>
+                                    <td>31 a 40</td>
+                                    <td>45 XP</td>
+                                    <td>450 XP</td>
+                                    <td>1,150 XP</td>
+                                </tr>
+                                <tr>
+                                    <td>41 a 50</td>
+                                    <td>55 XP</td>
+                                    <td>550 XP</td>
+                                    <td>1,700 XP</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+      </main>
+
+      <footer class="bottom-bar">
+        <div class="bottom-hint">Usa estas tablas como referencia para planear la progresión de nivel de tus Pokémon. Si tienes alguna duda, acércate a algún poke-guía ᕙ( •̀ ᗜ •́ )ᕗ</div>
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="core.js"></script>
+    <script src="tablas.js"></script>
+  </body>
+</html>

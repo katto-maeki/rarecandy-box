@@ -1,0 +1,340 @@
+/* =========================================
+   ADMIN.CSS - Layout de Dashboard Fijo
+   ========================================= */
+
+/* 1. Bloqueamos el scroll de la página completa */
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden; /* Adiós al scroll de la ventana principal */
+}
+
+/* 2. El fondo ocupa toda la pantalla y centra el frame */
+.bg-main {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffeef5; /* Color de fondo base */
+  background-image: url("https://i.ibb.co/GfZTxGcp/CRUZZZZZ.png"); /* Tu patrón */
+  background-repeat: repeat;
+  background-size: 20px 20px;
+}
+
+/* 3. El marco principal tiene tamaño fijo relativo a la pantalla */
+.screen-frame {
+  width: 95%;
+  max-width: 1250px;
+  height: 92vh; /* Fijo al 92% de la altura de la pantalla */
+  display: flex;
+  flex-direction: column; /* Apila Header - Main - Footer */
+  background: linear-gradient(135deg, #ffeef5 0%, #ffe4f2 35%, #fde2dc 100%);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  overflow: hidden; /* Importante: nada se sale del marco */
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* Header y Footer fijos (no se encogen) */
+.top-bar, .bottom-bar {
+  flex-shrink: 0; 
+}
+
+/* 4. Área principal (ocupa el espacio sobrante) */
+.admin-main {
+  flex: 1; /* Ocupa todo el espacio vertical disponible entre header y footer */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Evita que este contenedor crezca */
+  padding: 10px 0; /* Espacio arriba y abajo */
+}
+
+/* 5. Tarjeta blanca contenedora */
+.admin-panel {
+  background: #fff;
+  border-radius: 16px;
+  padding: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Llena el admin-main */
+  overflow: hidden; /* Evita desbordes */
+}
+
+.admin-header-row {
+  flex-shrink: 0;
+  margin-bottom: 15px;
+}
+
+.admin-page-title {
+  margin: 0;
+  color: #a93b79;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.admin-page-subtitle {
+  margin: 0;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* 6. Grid de columnas */
+.admin-columns {
+  display: grid;
+  grid-template-columns: 320px 1fr; /* Izquierda fija, derecha flexible */
+  gap: 15px;
+  flex: 1; /* Ocupa el resto de la altura */
+  min-height: 0; /* TRUCO CSS: Permite que el grid haga scroll interno */
+  overflow: hidden;
+}
+
+/* --- COLUMNA IZQUIERDA (Directorio) --- */
+.admin-col-list {
+  background: #fdfdfd;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.admin-section-header {
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+.admin-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-family: inherit;
+}
+
+/* LISTA CON SCROLL */
+.admin-player-list {
+  flex: 1; /* Ocupa espacio restante */
+  overflow-y: auto; /* SCROLL AQUÍ */
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-right: 5px; /* Espacio para la barra de scroll */
+}
+
+/* Estilo de fila de jugador */
+.player-row {
+  padding: 10px;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.1s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.player-row:hover {
+  background: #ffeef5;
+  border-color: #f687b3;
+}
+
+.player-row.active {
+  background: #a93b79; /* Color activo fuerte */
+  color: white;
+  border-color: #a93b79;
+}
+
+.player-row-name { font-weight: 700; font-size: 0.9rem; }
+.player-row-id { font-size: 0.7rem; opacity: 0.8; }
+
+/* --- COLUMNA DERECHA (Detalle) --- */
+.admin-col-detail {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto; /* SCROLL AQUÍ si el detalle es muy largo */
+  position: relative;
+}
+
+.admin-detail-empty {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-style: italic;
+  font-size: 0.95rem;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Tarjetas internas del detalle */
+.admin-mini-card {
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.admin-mini-card h4 {
+  margin: 0 0 10px 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #888;
+  font-weight: 700;
+  border-bottom: 1px dashed #e0e0e0;
+  padding-bottom: 5px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.eco-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  color: #444;
+}
+
+/* Valores pixelados en detalle */
+.eco-val { font-family: 'Press Start 2P', cursive; font-size: 0.8rem; }
+.money { color: #0fb86b; }
+.text-blue { color: #3182ce; }
+.text-green { color: #38a169; }
+.text-red { color: #e53e3e; }
+
+/* Dropdowns de Pokémon */
+.admin-poke-dropdown {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  overflow: hidden;
+}
+
+.admin-poke-dropdown summary {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+  background: #fdfdfd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none;
+}
+
+.admin-poke-dropdown summary::-webkit-details-marker { display: none; }
+.admin-poke-dropdown summary::after { content: '+'; font-weight: 800; color: #aaa; }
+.admin-poke-dropdown[open] summary::after { content: '-'; }
+
+.poke-text-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border-top: 1px solid #eee;
+}
+
+.poke-text-list li {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  border-bottom: 1px solid #f9f9f9;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.poke-text-list li span.lvl { color: #888; font-size: 0.75rem; }
+
+/* MODAL TWEAKS */
+#adm-item-manager-container .item-manager-row {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* RESPONSIVE */
+@media (max-width: 850px) {
+  .screen-frame {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+  .admin-columns {
+    grid-template-columns: 1fr;
+    grid-template-rows: 40% 60%; /* En tablets/móviles, lista arriba detalle abajo */
+  }
+}
+
+/* =========================================
+   AUTOCOMPLETADO POKEAPI
+   ========================================= */
+
+/* Contenedor relativo para que la lista flote respecto al input */
+.autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* La lista flotante */
+.suggestions-list {
+  position: absolute;
+  top: 100%; /* Justo debajo del input */
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  display: none; /* Oculto por defecto */
+}
+
+/* Mostrar cuando tenga contenido activo */
+.suggestions-list.active {
+  display: block;
+}
+
+/* Items de la lista */
+.suggestion-item {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  color: #374151;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  text-transform: capitalize; /* Pone mayúscula inicial visualmente */
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background-color: #e0f2fe; /* Azulito claro al pasar mouse */
+  color: #0369a1;
+  font-weight: 600;
+}

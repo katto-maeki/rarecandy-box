@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Panel Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="trainer.css" />
+    <link rel="stylesheet" href="admin.css" />
+    <style>
+        /* Estilos específicos para el buscador API dentro del modal */
+        .api-search-box {
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+            background: #e0f2fe; 
+            padding: 10px; 
+            border-radius: 8px; 
+            border: 1px dashed #7dd3fc;
+            align-items: flex-start; /* Alineación superior para cuando sale la lista */
+        }
+        .btn-api {
+            background: #0284c7; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            padding: 0 12px; 
+            cursor: pointer;
+            font-weight: bold;
+            height: 38px; /* Altura fija para alinearse con el input */
+        }
+        .btn-api:hover { background: #0369a1; }
+        .btn-api:disabled { background: #94a3b8; cursor: not-allowed; }
+        
+        .preview-img {
+            width: 80px; 
+            height: 80px; 
+            object-fit: contain; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            background: #fff;
+            display: none; 
+        }
+        .preview-img.visible { display: block; }
+    </style>
+  </head>
+  <body class="bg-main">
+    <div class="screen-frame">
+      <header class="top-bar" style="background: #a93b79;">
+        <span class="top-bar-title">PANEL ADMIN</span>
+        <div class="top-bar-right">
+          <span class="top-bar-trainer" id="admin-label">Cargando...</span>
+          <a class="top-nav-btn" href="cajapkm.html">CAJA</a>
+          <a class="top-nav-btn" href="trainer.html">ENTRENADOR</a>
+          <a class="top-nav-btn" href="pokedex.html">SORELLE</a>
+          <a class="top-nav-btn" href="tablas.html">EVOL</a>
+          <a class="top-nav-btn top-nav-btn-active" href="admin.html">ADMIN</a>
+          <button id="btn-logout" class="nav-btn nav-btn-icon" title="Cerrar sesión"><i class="fa fa-sign-out"></i></button>
+        </div>
+      </header>
+
+      <main class="admin-main">
+        <div class="admin-panel">
+          <div class="admin-header-row" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h1 class="admin-page-title">Directorio de Entrenadores</h1>
+                <p class="admin-page-subtitle">Gestión de usuarios y Pokédex Global.</p>
+            </div>
+            <button id="btn-new-pokedex" class="btn-edit" style="background:#312e81; color:white; border:none; padding:8px 16px;">
+                <i class="fa fa-book"></i> Gestión Pokédex
+            </button>
+          </div>
+
+          <section class="admin-columns">
+            <div class="admin-col admin-col-list">
+              <div class="admin-section-header">
+                <input type="text" id="admin-search" class="admin-search-input" placeholder="Buscar jugador..." style="width: 100%;" />
+              </div>
+              <div class="admin-player-list" id="player-list"><div style="padding:10px;">Cargando...</div></div>
+            </div>
+
+            <div class="admin-col admin-col-detail">
+              <div id="player-detail-empty" class="admin-detail-empty">Selecciona un jugador...</div>
+              <div id="player-detail-content" class="hidden">
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+                    <div><h2 id="det-name" style="margin:0; color:#312e81; font-family: 'Press Start 2P'; font-size: 1rem;">NOMBRE</h2><span id="det-id" style="font-size: 0.7rem; color: #999;">ID: ...</span></div>
+                    <button id="btn-admin-edit" class="btn-edit" style="background-color: #e53e3e; color: white;">Modificar</button>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="admin-mini-card"><h4>Economía</h4><div class="eco-row"><span>Disp:</span> <span class="money" id="det-money">0</span></div><div class="eco-row"><span>Ahorro:</span> <span class="text-blue" id="det-savings">0</span></div><div class="eco-row"><span>Ingreso:</span> <span class="text-green" id="det-income">0</span></div></div>
+                    <div class="admin-mini-card"><h4>Progreso</h4><div class="eco-row"><span>XP:</span> <strong id="det-xp" style="color:#7a47ff;">0</strong></div><div class="eco-row"><span>Logros:</span> <strong id="det-achievements">0</strong></div><div class="eco-row"><span>Pokédex:</span> <strong id="det-pokedex">0</strong></div></div>
+                </div>
+
+                <div class="admin-mini-card"><h4>Pokémon</h4><details class="admin-poke-dropdown"><summary>Equipo (<span id="det-party-count">0</span>)</summary><ul id="det-party-list" class="poke-text-list"></ul></details><details class="admin-poke-dropdown"><summary>Caja (<span id="det-box-count">0</span>)</summary><ul id="det-box-list" class="poke-text-list"></ul></details></div>
+                <div class="admin-mini-card" style="margin-top:10px;"><h4>Inventario</h4><div id="det-inventory-list" class="admin-simple-list"></div></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+      <footer class="bottom-bar"><div class="bottom-hint">Modo Admin.</div></footer>
+    </div>
+
+    <div class="modal-backdrop hidden" id="modal-admin-edit">
+        <div class="modal" style="width: 600px; max-width: 95%;">
+          <h3 class="modal-title" style="color: #e53e3e;">Editar Usuario</h3>
+          <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+            <div class="modal-row"><label class="label">Nombre</label><input type="text" id="adm-input-name" class="input" /></div>
+            <h4 class="modal-subtitle">Finanzas</h4>
+            <div class="modal-row-grid">
+              <div><label class="label">Ingreso</label><input type="number" id="adm-input-income" class="input" /></div>
+              <div><label class="label">Ahorro</label><input type="number" id="adm-input-savings" class="input" /></div>
+              <div><label class="label">Gastado</label><input type="number" id="adm-input-spent" class="input" /></div>
+            </div>
+            <h4 class="modal-subtitle">Progreso</h4>
+            <div class="modal-row-grid">
+               <div><label class="label">XP</label><input type="number" id="adm-input-xp" class="input" /></div>
+               <div><label class="label">Logros</label><input type="text" id="adm-input-achievements" class="input" /></div>
+               <div><label class="label">Pokédex</label><input type="text" id="adm-input-pokedex" class="input" /></div>
+            </div>
+            <h4 class="modal-subtitle">Inventario</h4><div id="adm-item-manager-container"></div>
+          </div>
+          <div class="modal-footer"><button class="btn-secondary" id="btn-adm-cancel">Cancelar</button><button class="btn-primary" id="btn-adm-save" style="background:#e53e3e;">Guardar</button></div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop hidden" id="modal-new-poke">
+        <div class="modal" style="width: 600px; max-width: 95%;">
+          <h3 class="modal-title" style="color: #312e81;">Registrar en Pokédex Sorelle</h3>
+          <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+            
+            <div class="api-search-box">
+                <div style="flex:1;">
+                    <label class="label" style="margin-bottom:4px; display:block; color:#0369a1;">Autocompletar con PokeAPI</label>
+                    <div style="display:flex; gap:5px; align-items: flex-start;">
+                        
+                        <div class="autocomplete-wrapper">
+                            <input type="text" id="api-search-input" class="input" placeholder="Nombre (ej. Rowlet...)" autocomplete="off" />
+                            <ul id="api-suggestions" class="suggestions-list"></ul>
+                        </div>
+
+                        <button id="btn-api-search" class="btn-api">Buscar</button>
+                    </div>
+                </div>
+                <img id="api-preview-img" class="preview-img" src="" alt="Preview" />
+            </div>
+
+            <hr style="border:0; border-top:1px dashed #ccc; margin: 15px 0;">
+
+            <div class="modal-row-grid">
+                <div><label class="label">Especie (Nombre)</label><input type="text" id="poke-input-name" class="input" /></div>
+                <div><label class="label">Tipo(s)</label><input type="text" id="poke-input-type" class="input" /></div>
+            </div>
+            <div class="modal-row">
+                <label class="label">Región / Temporada</label>
+                <input type="text" id="poke-input-season" class="input" placeholder="Ej. Alola (Auto)" />
+            </div>
+            <div class="modal-row">
+                <label class="label">Imagen URL</label>
+                <input type="text" id="poke-input-img" class="input" />
+            </div>
+            <div class="modal-row">
+                <label class="label">Información Pokédex (Manual)</label>
+                <textarea id="poke-input-desc" class="input" rows="2" placeholder="Escribe aquí la descripción de la Pokédex..."></textarea>
+            </div>
+
+            <h4 class="modal-subtitle" style="margin-top:15px; border-top:1px dashed #ccc; padding-top:10px;">
+                Identificado por:
+            </h4>
+            <div id="poke-user-list" style="max-height: 150px; overflow-y: auto; background: #f9f9f9; border: 1px solid #ddd; padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                </div>
+
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" id="btn-poke-cancel">Cancelar</button>
+            <button class="btn-primary" id="btn-poke-save">Guardar Registro</button>
+          </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./core.js"></script>
+    <script src="./admin.js"></script>
+  </body>
+</html>

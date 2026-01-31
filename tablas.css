@@ -1,0 +1,154 @@
+/* tablas.css */
+
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 15px 20px;
+  height: 100%;
+  overflow-y: auto; /* Permite scroll general si las tablas son largas */
+}
+
+/* --- PANELES --- */
+.panel {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.header-card {
+  flex-shrink: 0;
+}
+
+.content-card {
+  flex: 1; /* Ocupa el espacio restante */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Textos */
+.page-title {
+  margin: 0 0 8px;
+  font-family: "Nunito", sans-serif;
+  font-weight: 800;
+  color: #312e81;
+  font-size: 1.5rem;
+}
+
+.page-text {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* --- PESTAÑAS (TABS) --- */
+.tabs-header {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  border-radius: 99px;
+  border: none;
+  font-family: "Nunito", sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #e0e7ff; /* Color inactivo (azulito gris) */
+  color: #4338ca;
+}
+
+.tab-btn:hover {
+  background: #c7d2fe;
+}
+
+/* Pestaña Activa (Amarillo) */
+.tab-btn.active {
+  background: #f3ca3b;
+  color: #1e1b4b; /* Texto oscuro para contraste */
+  box-shadow: 0 2px 5px rgba(243, 202, 59, 0.4);
+}
+
+/* --- TABLAS --- */
+.tables-container {
+  flex: 1;
+  overflow: hidden; /* Para contener el scroll de la tabla */
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-content {
+  display: none; /* Oculto por defecto */
+  height: 100%;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.table-title {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.table-responsive {
+  overflow-y: auto; /* Scroll dentro de la tabla si es muy larga */
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.info-table th {
+  background: #eff6ff; /* Azul muy clarito */
+  color: #1e3a8a;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 2px solid #dbeafe;
+  position: sticky;
+  top: 0;
+}
+
+.info-table td {
+  padding: 12px 15px;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+
+.info-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Alternar colores de fila */
+.info-table tbody tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.info-table strong {
+  color: #0f172a;
+}

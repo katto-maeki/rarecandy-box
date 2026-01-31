@@ -1,0 +1,765 @@
+// ==========================================
+// BASE DE DATOS DE CLASIFICACIÓN POKÉMON
+// ==========================================
+// Estrategia: Solo listamos "Raro", "Especial" y "Baby Pokémon".
+// Todos los que NO estén en esta lista serán tratados automáticamente como "Común".
+
+const POKEMON_CLASSES = {
+
+
+    // --- KALOS (Raros) ---
+    "amaura": "Raro",
+    "aromatisse": "Raro",
+    "avalugg": "Raro",
+    "barbaracle": "Raro",
+    "braixen": "Raro",
+    "carbink": "Raro",
+    "chesnaught": "Raro",
+    "chespin": "Raro",
+    "clawitzer": "Raro",
+    "delphox": "Raro",
+    "doublade": "Raro",
+    "dragalge": "Raro",
+    "fennekin": "Raro",
+    "florges": "Raro",
+    "froakie": "Raro",
+    "frogadier": "Raro",
+    "furfrou": "Raro",
+    "goomy": "Raro",
+    "gourgeist": "Raro",
+    "greninja": "Raro",
+    "hawlucha": "Raro",
+    "heliolisk": "Raro",
+    "honedge": "Raro",
+    "klefki": "Raro",
+    "malamar": "Raro",
+    "noibat": "Raro",
+    "pangoro": "Raro",
+    "pyroar": "Raro",
+    "quilladin": "Raro",
+    "slurpuff": "Raro",
+    "sylveon": "Raro",
+    "talonflame": "Raro",
+    "trevenant": "Raro",
+    "tyrunt": "Raro",
+    "vivillon": "Raro",
+
+    // --- KALOS (Especiales) ---
+    "aegislash": "Especial",
+    "aurorus": "Especial",
+    "goodra": "Especial",
+    "noivern": "Especial",
+    "sliggoo": "Especial",
+    "tyrantrum": "Especial",
+
+// --- KANTO (Raros) ---
+    "abra": "Raro",
+    "blastoise": "Raro",
+    "bulbasaur": "Raro",
+    "chansey": "Raro",
+    "charizard": "Raro",
+    "charmander": "Raro",
+    "charmeleon": "Raro",
+    "clefable": "Raro",
+    "clefairy": "Raro",
+    "cloyster": "Raro",
+    "ditto": "Raro",
+    "dratini": "Raro",
+    "electabuzz": "Raro",
+    "eevee": "Raro",
+    "exeggutor": "Raro",
+    "farfetch'd": "Raro",
+    "flareon": "Raro",
+    "gastly": "Raro",
+    "golem": "Raro",
+    "graveler": "Raro",
+    "growlithe": "Raro",
+    "gyarados": "Raro",
+    "haunter": "Raro",
+    "hitmonchan": "Raro",
+    "hitmonlee": "Raro",
+    "ivysaur": "Raro",
+    "jolteon": "Raro",
+    "jynx": "Raro",
+    "kabuto": "Raro",
+    "kabutops": "Raro",
+    "kadabra": "Raro",
+    "kangaskhan": "Raro",
+    "lapras": "Raro",
+    "lickitung": "Raro",
+    "machamp": "Raro",
+    "machoke": "Raro",
+    "magmar": "Raro",
+    "marowak": "Raro",
+    "mr. mime": "Raro",
+    "nidoking": "Raro",
+    "nidoqueen": "Raro",
+    "ninetales": "Raro",
+    "omanyte": "Raro",
+    "omastar": "Raro",
+    "onix": "Raro",
+    "pikachu": "Raro",
+    "pinsir": "Raro",
+    "poliwrath": "Raro",
+    "raichu": "Raro",
+    "rhydon": "Raro",
+    "scyther": "Raro",
+    "snorlax": "Raro",
+    "squirtle": "Raro",
+    "starmie": "Raro",
+    "tangela": "Raro",
+    "tauros": "Raro",
+    "vaporeon": "Raro",
+    "venusaur": "Raro",
+    "wartortle": "Raro",
+
+    // --- KANTO (Especiales) ---
+    "aerodactyl": "Especial",
+    "alakazam": "Especial",
+    "arcanine": "Especial",
+    "dragonair": "Especial",
+    "dragonite": "Especial",
+    "gengar": "Especial",
+    "porygon": "Especial",
+    
+    // --- JOHTO (Baby Pokémon) ---
+
+    "cleffa": "Baby Pokémon",
+    "elekid": "Baby Pokémon",
+    "igglybuff": "Baby Pokémon",
+    "magby": "Baby Pokémon",
+    "pichu": "Baby Pokémon",
+    "smoochum": "Baby Pokémon",
+    "togepi": "Baby Pokémon",
+    "tyrogue": "Baby Pokémon",
+
+    // --- JOHTO (Raros) ---
+
+    "aipom": "Raro",
+    "bayleef": "Raro",
+    "bellossom": "Raro",
+    "chikorita": "Raro",
+    "corsola": "Raro",
+    "crobat": "Raro",
+    "croconaw": "Raro",
+    "cyndaquil": "Raro",
+    "delibird": "Raro",
+    "dunsparce": "Raro",
+    "espeon": "Raro",
+    "feraligatr": "Raro",
+    "girafarig": "Raro",
+    "gligar": "Raro",
+    "heracross": "Raro",
+    "hitmontop": "Raro",
+    "houndoom": "Raro",
+    "houndour": "Raro",
+    "kingdra": "Raro",
+    "larvitar": "Raro",
+    "mantine": "Raro",
+    "meganium": "Raro",
+    "miltank": "Raro",
+    "misdreavus": "Raro",
+    "murkrow": "Raro",
+    "politoed": "Raro",
+    "porygon2": "Raro",
+    "quilava": "Raro",
+    "qwilfish": "Raro",
+    "scizor": "Raro",
+    "shuckle": "Raro",
+    "skarmory": "Raro",
+    "slowking": "Raro",
+    "smeargle": "Raro",
+    "sneasel": "Raro",
+    "stantler": "Raro",
+    "steelix": "Raro",
+    "sudowoodo": "Raro",
+    "togetic": "Raro",
+    "totodile": "Raro",
+    "typhlosion": "Raro",
+    "umbreon": "Raro",
+    "unown": "Raro",
+    "wobbuffet": "Raro",
+    "yanma": "Raro",
+
+    // --- JOHTO (Especiales) ---
+    "blissey": "Especial",
+    "pupitar": "Especial",
+    "tyranitar": "Especial",
+
+    // --- HOENN (Baby Pokémon) ---
+
+    "azurill": "Baby Pokémon",
+    "wynaut": "Baby Pokémon",
+
+    // --- HOENN (Raros) ---
+
+    "absol": "Raro",
+    "aggron": "Raro",
+    "altaria": "Raro",
+    "anorith": "Raro",
+    "armaldo": "Raro",
+    "bagon": "Raro",
+    "beldum": "Raro",
+    "blaziken": "Raro",
+    "breloom": "Raro",
+    "castform": "Raro",
+    "chimecho": "Raro",
+    "clamperl": "Raro",
+    "combusken": "Raro",
+    "cradily": "Raro",
+    "dusclops": "Raro",
+    "feebas": "Raro",
+    "flygon": "Raro",
+    "gorebyss": "Raro",
+    "grovyle": "Raro",
+    "huntail": "Raro",
+    "illumise": "Raro",
+    "kecleon": "Raro",
+    "kirlia": "Raro",
+    "lileep": "Raro",
+    "lunatone": "Raro",
+    "marshtomp": "Raro",
+    "mawile": "Raro",
+    "minun": "Raro",
+    "mudkip": "Raro",
+    "plusle": "Raro",
+    "ralts": "Raro",
+    "relicanth": "Raro",
+    "roselia": "Raro",
+    "sableye": "Raro",
+    "sceptile": "Raro",
+    "seviper": "Raro",
+    "sharpedo": "Raro",
+    "shiftry": "Raro",
+    "slakoth": "Raro",
+    "solrock": "Raro",
+    "spinda": "Raro",
+    "swablu": "Raro",
+    "swampert": "Raro",
+    "torkoal": "Raro",
+    "torchic": "Raro",
+    "trapinch": "Raro",
+    "treecko": "Raro",
+    "tropius": "Raro",
+    "vibrava": "Raro",
+    "vigoroth": "Raro",
+    "volbeat": "Raro",
+    "wailord": "Raro",
+    "zangoose": "Raro",
+
+    // --- HOENN (Especiales) ---
+    "gardevoir": "Especial",
+    "metagross": "Especial",
+    "metang": "Especial",
+    "milotic": "Especial",
+    "salamence": "Especial",
+    "shedinja": "Especial",
+    "shelgon": "Especial",
+    "slaking": "Especial",
+
+    // --- SINNOH (Baby Pokémon) ---
+
+    "bonsly": "Baby Pokémon",
+    "budew": "Baby Pokémon",
+    "chingling": "Baby Pokémon",
+    "happiny": "Baby Pokémon",
+    "mantyke": "Baby Pokémon",
+    "mime-jr": "Baby Pokémon", // Ojo: guion medio en la API
+    "munchlax": "Baby Pokémon",
+
+    // --- SINNOH (Raros) ---
+
+    "ambipom": "Raro",
+    "bastiodon": "Raro",
+    "carnivine": "Raro",
+    "chatot": "Raro",
+    "chimchar": "Raro",
+    "cranidos": "Raro",
+    "dusknoir": "Raro",
+    "electivire": "Raro",
+    "empoleon": "Raro",
+    "froslass": "Raro",
+    "gallade": "Raro",
+    "gible": "Raro",
+    "glaceon": "Raro",
+    "gliscor": "Raro",
+    "grotle": "Raro",
+    "honchkrow": "Raro",
+    "infernape": "Raro",
+    "leafeon": "Raro",
+    "lickilicky": "Raro",
+    "lucario": "Raro",
+    "magmortar": "Raro",
+    "magnezone": "Raro",
+    "mamoswine": "Raro",
+    "mismagius": "Raro",
+    "monferno": "Raro",
+    "pachirisu": "Raro",
+    "piplup": "Raro",
+    "porygon-z": "Raro", // Ojo: guion medio
+    "prinplup": "Raro",
+    "probopass": "Raro",
+    "rampardos": "Raro",
+    "rhyperior": "Raro",
+    "riolu": "Raro",
+    "roserade": "Raro",
+    "rotom": "Raro",
+    "shieldon": "Raro",
+    "spiritomb": "Raro",
+    "tangrowth": "Raro",
+    "togekiss": "Raro",
+    "torterra": "Raro",
+    "turtwig": "Raro",
+    "vespiquen": "Raro",
+    "weavile": "Raro",
+    "yanmega": "Raro",
+
+    // --- SINNOH (Especiales) ---
+
+    "gabite": "Especial",
+    "garchomp": "Especial",
+    
+    // --- UNOVA / TESELIA (Raros) ---
+
+    "accelgor": "Raro",
+    "alomomola": "Raro",
+    "archen": "Raro",
+    "archeops": "Raro",
+    "audino": "Raro",
+    "axew": "Raro",
+    "basculin": "Raro",
+    "bouffalant": "Raro",
+    "braviary": "Raro",
+    "carracosta": "Raro",
+    "chandelure": "Raro",
+    "cinccino": "Raro",
+    "conkeldurr": "Raro",
+    "cryogonal": "Raro",
+    "deino": "Raro",
+    "dewott": "Raro",
+    "druddigon": "Raro",
+    "durant": "Raro",
+    "emboar": "Raro",
+    "emolga": "Raro",
+    "escavalier": "Raro",
+    "gigalith": "Raro",
+    "heatmor": "Raro",
+    "larvesta": "Raro",
+    "lilligant": "Raro",
+    "mandibuzz": "Raro",
+    "maractus": "Raro",
+    "mienfoo": "Raro",
+    "mienshao": "Raro",
+    "oshawott": "Raro",
+    "panpour": "Raro",
+    "pansage": "Raro",
+    "pansear": "Raro",
+    "pignite": "Raro",
+    "rufflet": "Raro",
+    "samurott": "Raro",
+    "sawk": "Raro",
+    "serperior": "Raro",
+    "servine": "Raro",
+    "sigilyph": "Raro",
+    "simipour": "Raro",
+    "simisage": "Raro",
+    "simisear": "Raro",
+    "snivy": "Raro",
+    "stunfisk": "Raro",
+    "tepig": "Raro",
+    "throh": "Raro",
+    "tirtouga": "Raro",
+    "vullaby": "Raro",
+    "whimsicott": "Raro",
+    "zoroark": "Raro",
+    "zorua": "Raro",
+
+    // --- UNOVA / TESELIA (Especiales) ---
+    "fraxure": "Especial",
+    "haxorus": "Especial",
+    "hydreigon": "Especial",
+    "volcarona": "Especial",
+    "zweilous": "Especial",
+
+    // --- ALOLA (Raros) ---
+    "brionne": "Raro",
+    "bruxish": "Raro",
+    "comfey": "Raro",
+    "crabominable": "Raro",
+    "dartrix": "Raro",
+    "decidueye": "Raro",
+    "drampa": "Raro",
+    "exeggutor-alola": "Raro", // Ojo: variante regional
+    "golem-alola": "Raro",     // Ojo: variante regional
+    "incineroar": "Raro",
+    "jangmo-o": "Raro",
+    "komala": "Raro",
+    "litten": "Raro",
+    "lycanroc": "Raro",
+    "marowak-alola": "Raro",   // Ojo: variante regional
+    "meowth-alola": "Raro",    // Ojo: variante regional
+    "minior": "Raro",
+    "muk-alola": "Raro",       // Ojo: variante regional
+    "ninetales-alola": "Raro", // Ojo: variante regional
+    "oranguru": "Raro",
+    "oricorio": "Raro",
+    "passimian": "Raro",
+    "persian-alola": "Raro",   // Ojo: variante regional
+    "popplio": "Raro",
+    "primarina": "Raro",
+    "pyukumuku": "Raro",
+    "raichu-alola": "Raro",    // Ojo: variante regional
+    "ribombee": "Raro",
+    "rockruff": "Raro",
+    "rowlet": "Raro",
+    "salandit": "Raro",
+    "sandslash-alola": "Raro", // Ojo: variante regional
+    "shiinotic": "Raro",
+    "togedemaru": "Raro",
+    "torracat": "Raro",
+    "toxapex": "Raro",
+    "turtonator": "Raro",
+    "vikavolt": "Raro",
+    "vulpix-alola": "Raro",    // Ojo: variante regional
+    "wimpod": "Raro",
+    "wishiwashi": "Raro",
+
+    // --- ALOLA (Especiales) ---
+    "cosmoem": "Especial",
+    "cosmog": "Especial",
+    "dhelmise": "Especial",
+    "golisopod": "Especial",
+    "hakamo-o": "Especial",
+    "kommo-o": "Especial",
+    "mimikyu": "Especial",
+    "naganadel": "Especial",
+    "poipole": "Especial",
+    "salazzle": "Especial",
+    "silvally": "Especial",
+
+    // --- GALAR (Raros) ---
+
+    "alcremie": "Raro",
+    "appletun": "Raro",
+    "applin": "Raro",
+    "centiskorch": "Raro",
+    "cinderace": "Raro",
+    "coalossal": "Raro",
+    "copperajah": "Raro",
+    "corviknight": "Raro",
+    "corsola-galar": "Raro",   // Variante regional
+    "cramorant": "Raro",
+    "drednaw": "Raro",
+    "dreepy": "Raro",
+    "drizzile": "Raro",
+    "eiscue": "Raro",
+    "falinks": "Raro",
+    "farfetchd-galar": "Raro", // Sin apóstrofe + variante
+    "flapple": "Raro",
+    "grookey": "Raro",
+    "hatenna": "Raro",
+    "hattrem": "Raro",
+    "impidimp": "Raro",
+    "indeedee": "Raro",        // API suele devolver "indeedee-male" o "female", pero este cubre el base
+    "inteleon": "Raro",
+    "meowth-galar": "Raro",    // Variante regional
+    "milcery": "Raro",
+    "morgrem": "Raro",
+    "morpeko": "Raro",
+    "mr-mime-galar": "Raro",   // Variante regional
+    "mr-rime": "Raro",         // Guion en lugar de punto/espacio
+    "obstagoon": "Raro",
+    "orbeetle": "Raro",
+    "perrserker": "Raro",
+    "pincurchin": "Raro",
+    "polteageist": "Raro",
+    "ponyta-galar": "Raro",    // Variante regional
+    "raboot": "Raro",
+    "rapidash-galar": "Raro",  // Variante regional
+    "rillaboom": "Raro",
+    "runerigus": "Raro",
+    "scorbunny": "Raro",
+    "sinistea": "Raro",
+    "sirfetchd": "Raro",       // Sin apóstrofe
+    "snom": "Raro",
+    "sobble": "Raro",
+    "stonjourner": "Raro",
+    "stunfisk-galar": "Raro",  // Variante regional
+    "thwackey": "Raro",
+    "toxtricity": "Raro",
+    "toxel": "Raro",
+    "weezing-galar": "Raro",   // Variante regional
+    "yamask-galar": "Raro",    // Variante regional
+
+ 
+    // --- GALAR (Especiales) ---
+    "arctovish": "Especial",
+    "arctozolt": "Especial",
+    "cursola": "Especial",
+    "dracovish": "Especial",
+    "dracozolt": "Especial",
+    "dragapult": "Especial",
+    "drakloak": "Especial",
+    "duraludon": "Especial",
+    "frosmoth": "Especial",
+    "grimmsnarl": "Especial",
+    "hatterene": "Especial",
+
+    // --- PALDEA (Raros) ---
+    "bellibolt": "Raro",
+    "bombirdier": "Raro",
+    "cetitan": "Raro",
+    "charcadet": "Raro",
+    "clodsire": "Raro",
+    "crocalor": "Raro",
+    "cyclizar": "Raro",
+    "dondozo": "Raro",
+    "dudunsparce": "Raro",
+    "espathra": "Raro",
+    "farigiraf": "Raro",
+    "finizen": "Raro",
+    "flamigo": "Raro",
+    "floragato": "Raro",
+    "frigibax": "Raro",
+    "fuecoco": "Raro",
+    "garganacl": "Raro",
+    "gimmighoul": "Raro",
+    "glimmora": "Raro",
+    "grafaiai": "Raro",
+    "klawf": "Raro",
+    "lokix": "Raro",
+    "meowscarada": "Raro",
+    "orthworm": "Raro",
+    "pawmot": "Raro",
+    "quaquaval": "Raro",
+    "quaxly": "Raro",
+    "quaxwell": "Raro",
+    "rabsca": "Raro",
+    "revavroom": "Raro",
+    "scovillain": "Raro",
+    "skeledirge": "Raro",
+    "sprigatito": "Raro",
+    "squawkabilly": "Raro",
+    "tatsugiri": "Raro",
+    "tinkatink": "Raro",
+    "tinkatuff": "Raro",
+    "toedscool": "Raro",
+    "toedscruel": "Raro",
+    "veluza": "Raro",
+
+    // --- PALDEA (Especiales) ---
+    "annihilape": "Especial",
+    "arctibax": "Especial",
+    "armarouge": "Especial",
+    "baxcalibur": "Especial",
+    "brute-bonnet": "Especial", // Paradoja: lleva guion
+    "ceruledge": "Especial",
+    "flutter-mane": "Especial", // Paradoja: lleva guion
+    "gholdengo": "Especial",
+    "great-tusk": "Especial",   // Paradoja: lleva guion
+    "iron-bundle": "Especial",  // Paradoja: lleva guion
+    "iron-hands": "Especial",   // Paradoja: lleva guion
+    "iron-jugulis": "Especial", // Paradoja: lleva guion
+    "iron-moth": "Especial",    // Paradoja: lleva guion
+    "iron-thorns": "Especial",  // Paradoja: lleva guion
+    "iron-treads": "Especial",  // Paradoja: lleva guion
+    "kingambit": "Especial",
+    "palafin": "Especial",
+    "sandy-shocks": "Especial", // Paradoja: lleva guion
+    "scream-tail": "Especial",  // Paradoja: lleva guion
+    "slither-wing": "Especial", // Paradoja: lleva guion
+    "tinkaton": "Especial",
+
+    // --- HISUI (Raros) ---
+    "arcanine-hisui": "Raro",
+    "avalugg-hisui": "Raro",
+    "braviary-hisui": "Raro",
+    "decidueye-hisui": "Raro",
+    "electrode-hisui": "Raro",
+    "growlithe-hisui": "Raro",
+    "lilligant-hisui": "Raro",
+    "qwilfish-hisui": "Raro",
+    "samurott-hisui": "Raro",
+    "sneasel-hisui": "Raro",
+    "typhlosion-hisui": "Raro",
+    "zorua-hisui": "Raro",
+
+    // --- HISUI (Especiales) ---
+    "basculegion": "Especial",
+    "basculegion-female": "Especial", // Variante hembra
+    "goodra-hisui": "Especial",
+    "kleavor": "Especial",
+    "overqwil": "Especial",
+    "sliggoo-hisui": "Especial",
+    "sneasler": "Especial",
+    "ursaluna": "Especial",
+    "wyrdeer": "Especial",
+    "zoroark-hisui": "Especial",
+
+    // ==========================================
+    // --- LEGENDARIOS Y MÍTICOS (Todas las regiones) ---
+    // ==========================================
+
+    // KANTO
+    "articuno": "Especial",
+    "zapdos": "Especial",
+    "moltres": "Especial",
+    "mewtwo": "Especial",
+    "mew": "Especial",
+
+    // JOHTO
+    "raikou": "Especial",
+    "entei": "Especial",
+    "suicune": "Especial",
+    "lugia": "Especial",
+    "ho-oh": "Especial",
+    "celebi": "Especial",
+
+    // HOENN
+    "regirock": "Especial",
+    "regice": "Especial",
+    "registeel": "Especial",
+    "latias": "Especial",
+    "latios": "Especial",
+    "kyogre": "Especial",
+    "groudon": "Especial",
+    "rayquaza": "Especial",
+    "jirachi": "Especial",
+    "deoxys-normal": "Especial",
+    "deoxys-attack": "Especial",
+    "deoxys-defense": "Especial",
+    "deoxys-speed": "Especial",
+
+    // SINNOH
+    "uxie": "Especial",
+    "mesprit": "Especial",
+    "azelf": "Especial",
+    "dialga": "Especial",
+    "palkia": "Especial",
+    "heatran": "Especial",
+    "regigigas": "Especial",
+    "giratina-altered": "Especial",
+    "giratina-origin": "Especial",
+    "cresselia": "Especial",
+    "phione": "Especial",
+    "manaphy": "Especial",
+    "darkrai": "Especial",
+    "shaymin-land": "Especial",
+    "shaymin-sky": "Especial",
+    "arceus": "Especial",
+
+    // UNOVA / TESELIA
+    "victini": "Especial",
+    "cobalion": "Especial",
+    "terrakion": "Especial",
+    "virizion": "Especial",
+    "tornadus-incarnate": "Especial",
+    "tornadus-therian": "Especial",
+    "thundurus-incarnate": "Especial",
+    "thundurus-therian": "Especial",
+    "reshiram": "Especial",
+    "zekrom": "Especial",
+    "landorus-incarnate": "Especial",
+    "landorus-therian": "Especial",
+    "kyurem": "Especial",
+    "kyurem-black": "Especial",
+    "kyurem-white": "Especial",
+    "keldeo-ordinary": "Especial",
+    "keldeo-resolute": "Especial",
+    "meloetta-aria": "Especial",
+    "meloetta-pirouette": "Especial",
+    "genesect": "Especial",
+
+    // KALOS
+    "xerneas": "Especial",
+    "yveltal": "Especial",
+    "zygarde": "Especial", // Cubre 50%
+    "zygarde-10": "Especial", // Zygarde 10%
+    "zygarde-complete": "Especial", // Zygarde 100%
+    "diancie": "Especial",
+    "hoopa": "Especial",
+    "volcanion": "Especial",
+
+    // ALOLA (Ultraentes y Deidades)
+    // Nota: Cosmog, Cosmoem, Solgaleo, Lunala, Necrozma, etc. 
+    // Si ya los pusiste en la lista de Alola, el último valor sobrescribe, así que no hay problema.
+    "tapu-koko": "Especial",
+    "tapu-lele": "Especial",
+    "tapu-bulu": "Especial",
+    "tapu-fini": "Especial",
+    "solgaleo": "Especial",
+    "lunala": "Especial",
+    "nihilego": "Especial",
+    "buzzwole": "Especial",
+    "pheromosa": "Especial",
+    "xurkitree": "Especial",
+    "celesteela": "Especial",
+    "kartana": "Especial",
+    "guzzlord": "Especial",
+    "necrozma": "Especial",
+    "magearna": "Especial",
+    "marshadow": "Especial",
+    "stakataka": "Especial",
+    "blacephalon": "Especial",
+    "zeraora": "Especial",
+    "meltan": "Especial",
+    "melmetal": "Especial",
+
+    // GALAR
+    "zacian": "Especial", // Cubre forma base
+    "zacian-crowned": "Especial",
+    "zamazenta": "Especial",
+    "zamazenta-crowned": "Especial",
+    "eternatus": "Especial",
+    "kubfu": "Especial",
+    "urshifu-single-strike": "Especial",
+    "urshifu-rapid-strike": "Especial",
+    "zarude": "Especial",
+    "regieleki": "Especial",
+    "regidrago": "Especial",
+    "glastrier": "Especial",
+    "spectrier": "Especial",
+    "calyrex": "Especial",
+    "enamorus-incarnate": "Especial", // De Hisui, pero gen 8
+    "enamorus-therian": "Especial",
+
+    // PALDEA
+    "wo-chien": "Especial",
+    "chien-pao": "Especial",
+    "ting-lu": "Especial",
+    "chi-yu": "Especial",
+    "koraidon": "Especial",
+    "miraidon": "Especial",
+    "walking-wake": "Especial",
+    "iron-leaves": "Especial",
+    "okidogi": "Especial",
+    "munkidori": "Especial",
+    "fezandipiti": "Especial",
+    "ogerpon": "Especial",
+    "gouging-fire": "Especial",
+    "raging-bolt": "Especial",
+    "iron-boulder": "Especial",
+    "iron-crown": "Especial",
+    "terapagos": "Especial",
+    "pecharunt": "Especial"
+
+};
+
+// ==========================================
+// FUNCIÓN DE LÓGICA (No tocar)
+// ==========================================
+
+function getPokemonClass(nombre) {
+    // 1. Si no hay nombre, devolvemos Común por seguridad
+    if (!nombre) return "Común";
+
+    // 2. Normalizamos: convertimos a minúsculas y quitamos espacios extra
+    // IMPORTANTE: Si la PokeAPI devuelve "flabebe" sin acento, asegúrate
+    // de que tu lista arriba tampoco tenga acento en la llave (izquierda).
+    const key = nombre.toLowerCase().trim();
+
+    // 3. Buscamos en el diccionario. 
+    // Si existe, devuelve la clase (ej. "Raro").
+    // Si es undefined (no está en la lista), devuelve "Común".
+    return POKEMON_CLASSES[key] || "Común";
+}

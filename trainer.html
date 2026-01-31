@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Perfil de entrenador</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link rel="stylesheet" href="trainer.css" />
+  </head>
+  <body class="bg-main">
+    <div class="screen-frame">
+      <header class="top-bar">
+        <span class="top-bar-title">Inventario y comunidad Sorelle</span>
+
+        <div class="top-bar-right">
+          <span class="top-bar-trainer" id="trainer-label">
+            Entrenador: ???
+          </span>
+
+          <a class="top-nav-btn" href="cajapkm.html">Caja</a>
+          <a class="top-nav-btn top-nav-btn-active" href="trainer.html">Entrenador</a>
+          <a class="top-nav-btn" href="pokedex.html">Pokédex</a>
+          <a class="top-nav-btn" href="tablas.html">EVOL</a>
+          <button id="btn-logout" class="nav-btn nav-btn-icon" title="Cerrar sesión">
+            <i class="fa fa-sign-out"></i>
+          </button>
+        </div>
+      </header>
+
+      <main class="trainer-layout">
+        <section class="trainer-header-card">
+          <div class="trainer-name" id="trainer-name-display">ENTRENADOR</div>
+          <div class="trainer-sub">
+            <span>Pokémon capturados: <strong id="captured-count">0</strong></span>
+            <span>Última edición: <strong id="last-updated">—</strong></span>
+          </div>
+        </section>
+
+        <section class="trainer-columns">
+          
+          <div class="trainer-column">
+            <h2 class="column-title">Finanzas y Nivel</h2>
+            <div class="resources-box">
+              
+              <div class="resource-group">
+                <span class="resource-label">Dinero Disponible</span>
+                <span class="resource-value money">
+                  ₽<span id="money-available">0</span>
+                </span>
+              </div>
+
+              <div class="resource-group">
+                <span class="resource-label">Ingreso Bimestral</span>
+                <span class="resource-value text-green">
+                  ₽<span id="money-bi-income">0</span>
+                </span>
+              </div>
+
+              <div class="resource-group">
+                <span class="resource-label">Ahorro</span>
+                <span class="resource-value text-blue">
+                  ₽<span id="money-savings">0</span>
+                </span>
+              </div>
+
+              <div class="resource-group">
+                <span class="resource-label">Gastado este mes</span>
+                <span class="resource-value text-red">
+                  ₽<span id="money-spent">0</span>
+                </span>
+              </div>
+
+              <div style="width: 80%; border-top: 2px dashed #e2e8f0; margin: 5px 0;"></div>
+
+              <div class="resource-group">
+                <span class="resource-label">Experiencia por usar</span>
+                <span class="resource-value xp">
+                  <span id="xp-value">0</span> XP
+                </span>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="trainer-column">
+            <h2 class="column-title">Inventario</h2>
+            <div class="inventory-list" style="gap: 8px;">
+                <div id="inventory-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                
+                <article class="inv-item">
+                    <div class="inv-left">
+                    <img class="inv-icon ball-icon" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" alt="Poké Ball" />
+                    <span class="inv-name">Poké Ball</span>
+                    </div>
+                    <span class="inv-count">×<span id="ball-poke">0</span></span>
+                </article>
+
+                <article class="inv-item">
+                    <div class="inv-left">
+                    <img class="inv-icon ball-icon" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png" alt="Super Ball" />
+                    <span class="inv-name">Super Ball</span>
+                    </div>
+                    <span class="inv-count">×<span id="ball-super">0</span></span>
+                </article>
+
+                <article class="inv-item">
+                    <div class="inv-left">
+                    <img class="inv-icon ball-icon" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png" alt="Ultra Ball" />
+                    <span class="inv-name">Ultra Ball</span>
+                    </div>
+                    <span class="inv-count">×<span id="ball-ultra">0</span></span>
+                </article>
+            </div>
+          </div>
+
+          <div class="trainer-column">
+            <h2 class="column-title">Comunidad Sorelle</h2>
+            <div class="resources-box">
+              <div class="resource-group">
+                <span class="resource-label">Logros obtenidos</span>
+                <span class="resource-value" id="achievements-value">0</span>
+              </div>
+
+              <div class="resource-group" style="margin-top: 20px;">
+                <span class="resource-label">Pokédex comunitaria</span>
+                <span class="resource-value" id="pokedex-value" style="color: #ff64c4;">0</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="bottom-bar">
+        <div class="bottom-hint">
+          Administra tus recursos. ¡Cuidado con los gastos! (˶ᵔ ᵕ ᵔ˶).
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button id="btn-close-period" class="btn-secondary" style="font-size: 0.8rem; padding: 6px 14px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4);">
+                Cerrar Bimestre
+            </button>
+            <button class="btn-edit" id="btn-edit-profile">Editar inventario</button>
+        </div>
+      </footer>
+    </div>
+
+    <div class="modal-backdrop hidden" id="modal-edit">
+      <div class="modal" style="width: 600px; max-width: 95%;">
+        <h3 class="modal-title">Gestión de Entrenador</h3>
+        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+          
+          <h4 class="modal-subtitle">Datos Básicos</h4>
+          <div class="modal-row">
+            <label class="label">Nombre</label>
+            <input type="text" id="input-trainer-name" class="input" />
+          </div>
+          
+          <h4 class="modal-subtitle">Finanzas del Bimestre</h4>
+          <div class="modal-row-grid">
+            <div>
+              <label class="label">Ingreso Bimestral (Sueldo)</label>
+              <input type="number" min="0" id="input-bi-income" class="input" placeholder="Ej. 700" />
+            </div>
+            <div>
+              <label class="label">Ahorro (Solo lectura)</label>
+              <input type="number" id="input-savings-readonly" class="input" disabled style="background: #f7fafc;" />
+            </div>
+          </div>
+
+          <h4 class="modal-subtitle">Recursos</h4>
+          <div class="modal-row-grid">
+             <div>
+               <label class="label">Experiencia (XP)</label>
+               <input type="number" id="input-xp" class="input" />
+             </div>
+             <div>
+               <label class="label">Logros</label>
+               <input type="text" id="input-achievements" class="input" />
+             </div>
+             <div>
+               <label class="label">Pokédex Com.</label>
+               <input type="text" id="input-pokedex" class="input" />
+             </div>
+          </div>
+
+          <h4 class="modal-subtitle" style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+            Gestión de Ítems (Compra / Obtención)
+          </h4>
+          <p style="font-size: 0.8em; color: #718096; margin-bottom: 10px;">
+            Selecciona la acción. "Comprar" restará dinero automáticamente. "Obtener" es gratis.
+          </p>
+          <div id="item-management-container"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-secondary" id="btn-cancel-edit">Cancelar</button>
+          <button class="btn-primary" id="btn-save-edit">Guardar Cambios</button>
+        </div>
+      </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./core.js"></script>
+    <script src="./trainer.js"></script>
+  </body>
+</html>

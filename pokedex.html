@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pokédex de Sorelle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="cajapkm.css" />
+    <link rel="stylesheet" href="pokedex.css" />
+  </head>
+  <body class="bg-main">
+    <div class="screen-frame">
+      <header class="top-bar">
+        <span class="top-bar-title">Pokédex Sorelle</span>
+        <div class="top-bar-right">
+          <span class="top-bar-trainer" id="trainer-label">Entrenador: ...</span>
+          <a class="top-nav-btn" href="cajapkm.html">Caja</a>
+          <a class="top-nav-btn" href="trainer.html">Entrenador</a>
+          <a class="top-nav-btn top-nav-btn-active" href="pokedex.html">Pokédex</a>
+          <a class="top-nav-btn" href="tablas.html">EVOL</a>
+          <button id="btn-logout" class="nav-btn nav-btn-icon" title="Cerrar sesión"><i class="fa fa-sign-out"></i></button>
+        </div>
+      </header>
+
+      <main class="main-layout">
+        
+        <div class="panel pokedex-header-card">
+            <div class="header-left">
+                <h1 class="page-title">Pokédex Comunitaria</h1>
+                <p class="page-text">Registro de especies migratorias avistadas por nuestra comunidad.</p>
+            </div>
+            
+            <div class="header-filter">
+                <label for="region-filter" class="filter-label"><i class="fa fa-filter"></i> Región:</label>
+                <select id="region-filter" class="pokedex-filter">
+                    <option value="all">Todas las regiones</option>
+                    </select>
+            </div>
+        </div>
+
+        <section class="pokedex-columns">
+            
+            <div class="panel pokedex-grid-panel">
+                <div id="pokedex-grid" class="pokedex-mosaic">
+                    <div class="loading-msg">Cargando avistamientos...</div>
+                </div>
+            </div>
+
+            <div class="pokedex-detail-container">
+                <div id="detail-empty" class="detail-empty-state">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="opacity:0.3; width:50px;" />
+                    <p>Selecciona un Pokémon para ver sus detalles.</p>
+                </div>
+
+                <div id="detail-content" class="detail-card hidden">
+                    <div class="detail-header-box">
+                        <div class="detail-img-wrapper">
+                            <img id="detail-img" src="" alt="Pokemon" />
+                        </div>
+                        <div class="detail-info-right">
+                            <div class="detail-meta-top">
+                                <span id="detail-region" class="meta-tag region-tag">REGION</span>
+                            </div>
+                            <h2 id="detail-name" class="detail-name">NOMBRE</h2>
+                            <div id="detail-types-container" class="types-row"></div>
+                        </div>
+                    </div>
+
+                    <div class="detail-body-box">
+                        <div class="disc-block">
+                            <h4 class="mini-label">Avistado por:</h4>
+                            <div id="detail-users" class="user-chips"></div>
+                        </div>
+
+                        <hr style="border: 0; border-top: 1px dashed #e2e8f0; margin: 5px 0;">
+
+                        <div class="desc-block">
+                            <h4 class="mini-label">Información de Pokédex</h4>
+                            <p id="detail-desc">...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+      </main>
+
+      <footer class="bottom-bar">
+        <div class="bottom-hint">¡Explora la isla para registrar nuevos hallazgos! ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧</div>
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="core.js"></script>
+    <script src="pokedex.js"></script>
+  </body>
+</html>
