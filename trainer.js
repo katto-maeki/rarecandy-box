@@ -65,7 +65,9 @@ async function initTrainerMeta() {
     const userId = window.currentUserId;
     if (!userId) return;
 
-    // 1. Traemos SIEMPRE lo último de Supabase
+    // ELIMINAR el cache local para obligar a leer la base de datos
+    localStorage.removeItem(TRAINER_META_KEY); 
+
     const { data: invRow } = await window.supabaseClient
       .from(TRAINER_TABLE)
       .select("inventory")
@@ -86,11 +88,13 @@ async function initTrainerMeta() {
       await saveMeta(currentMeta);
     }
     
-    // 2. Actualizamos el LocalStorage con lo que diga la Nube
+    // Guardar la versión fresca de la DB en el local
     localStorage.setItem(TRAINER_META_KEY, JSON.stringify(currentMeta));
   } catch (e) { 
     console.error("Error initTrainerMeta:", e); 
-    currentMeta = loadMeta(); // Si falla el internet, usa el local
+    // Solo si falla la red, intenta cargar del local
+    const raw = localStorage.getItem(TRAINER_META_KEY);
+    currentMeta = raw ? JSON.parse(raw) : { ...defaultMeta };
   }
 }
 
@@ -126,8 +130,10 @@ async function openProfileModal() {
 
 function loadMeta() {
   const raw = localStorage.getItem(TRAINER_META_KEY);
-  currentMeta = raw ? JSON.parse(raw) : (currentMeta || { ...defaultMeta });
-  return currentMeta;
+  if (raw) {
+      currentMeta = JSON.parse(raw);
+  }
+  return currentMeta || { ...defaultMeta };
 }
 
 async function saveMeta(meta) {
