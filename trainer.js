@@ -57,11 +57,15 @@ function formatDate(date) {
 // SINCRONIZACIÓN CON SUPABASE
 // ================================
 
+// trainer.js
+
+// Modifica initTrainerMeta para que siempre mande la Nube
 async function initTrainerMeta() {
   try {
     const userId = window.currentUserId;
     if (!userId) return;
 
+    // 1. Traemos SIEMPRE lo último de Supabase
     const { data: invRow } = await window.supabaseClient
       .from(TRAINER_TABLE)
       .select("inventory")
@@ -81,8 +85,43 @@ async function initTrainerMeta() {
       currentMeta = { ...defaultMeta, lastUpdated: new Date().toISOString() };
       await saveMeta(currentMeta);
     }
+    
+    // 2. Actualizamos el LocalStorage con lo que diga la Nube
     localStorage.setItem(TRAINER_META_KEY, JSON.stringify(currentMeta));
-  } catch (e) { console.error("Error initTrainerMeta:", e); currentMeta = { ...defaultMeta }; }
+  } catch (e) { 
+    console.error("Error initTrainerMeta:", e); 
+    currentMeta = loadMeta(); // Si falla el internet, usa el local
+  }
+}
+
+// Modifica openProfileModal para refrescar antes de mostrar
+async function openProfileModal() {
+  // CLAVE: Antes de mostrar el modal, descargamos la corrección del Admin
+  await initTrainerMeta(); 
+  
+  currentStep = 3; 
+  if ($("section-basic-data")) $("section-basic-data").style.display = "block";
+  if ($("section-item-management")) $("section-item-management").style.display = "none";
+  
+  await updatePokedexCountFromDiscoveries();
+
+  // Ahora los inputs tendrán lo que puso el Admin (la corrección)
+  setValue("input-trainer-name", window.currentTrainerName || "");
+  setValue("input-bi-income", currentMeta.economy.biIncome);
+  setValue("input-savings-readonly", currentMeta.economy.savings);
+  setValue("input-xp", currentMeta.xp);
+  setValue("input-achievements", currentMeta.achievements || ""); // Añade esto si no estaba
+  
+  const px = $("input-pokedex");
+  if (px) { 
+    px.value = currentMeta.pokedex || "0"; 
+    px.readOnly = true; 
+    px.style.backgroundColor = "#edf2f7"; 
+  }
+
+  $("btn-save-edit").textContent = "Guardar Perfil";
+  $("btn-cancel-edit").textContent = "Cancelar";
+  $("modal-edit")?.classList.remove("hidden");
 }
 
 function loadMeta() {
