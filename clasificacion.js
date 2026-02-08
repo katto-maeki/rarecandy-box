@@ -395,14 +395,19 @@ const POKEMON_CLASSES = {
     "jangmo-o": "Raro",
     "komala": "Raro",
     "litten": "Raro",
-    "lycanroc": "Raro",
+    "lycanroc-midday": "Raro",
+    "lycanroc-midnight": "Raro",
+    "lycanroc-dusk": "Raro",
     "marowak-alola": "Raro",   // Ojo: variante regional
     "meowth-alola": "Raro",    // Ojo: variante regional
     "minior": "Raro",
     "muk-alola": "Raro",       // Ojo: variante regional
     "ninetales-alola": "Raro", // Ojo: variante regional
     "oranguru": "Raro",
-    "oricorio": "Raro",
+    "oricorio-baile": "Raro",
+    "oricorio-pom-pom": "Raro",
+    "oricorio-pau": "Raro",
+    "oricorio-sensu": "Raro",
     "passimian": "Raro",
     "persian-alola": "Raro",   // Ojo: variante regional
     "popplio": "Raro",
@@ -410,19 +415,24 @@ const POKEMON_CLASSES = {
     "pyukumuku": "Raro",
     "raichu-alola": "Raro",    // Ojo: variante regional
     "ribombee": "Raro",
+    "ribombee-totem": "Raro",
     "rockruff": "Raro",
+    "rockruff-own-tempo": "Raro",
     "rowlet": "Raro",
     "salandit": "Raro",
     "sandslash-alola": "Raro", // Ojo: variante regional
     "shiinotic": "Raro",
     "togedemaru": "Raro",
+    "togedemaru-totem": "Raro",
     "torracat": "Raro",
     "toxapex": "Raro",
     "turtonator": "Raro",
     "vikavolt": "Raro",
+    "vikavolt-totem": "Raro",
     "vulpix-alola": "Raro",    // Ojo: variante regional
     "wimpod": "Raro",
-    "wishiwashi": "Raro",
+    "wishiwashi-solo": "Raro",
+    "wishiwashi-school": "Raro",
 
     // --- ALOLA (Especiales) ---
     "cosmoem": "Especial",
@@ -431,10 +441,15 @@ const POKEMON_CLASSES = {
     "golisopod": "Especial",
     "hakamo-o": "Especial",
     "kommo-o": "Especial",
-    "mimikyu": "Especial",
+    "kommo-o-totem": "Especial",
+    "mimikyu-disguised": "Especial",
+    "mimikyu-busted": "Especial",
+    "mimikyu-totem-disquised": "Especial",
+    "mimikyu-totem-busted": "Especial",
     "naganadel": "Especial",
     "poipole": "Especial",
     "salazzle": "Especial",
+    "salazzle-totem": "Especial",
     "silvally": "Especial",
 
     // --- GALAR (Raros) ---

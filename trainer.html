@@ -141,11 +141,12 @@
         <div class="bottom-hint">
           Administra tus recursos. ¡Cuidado con los gastos! (˶ᵔ ᵕ ᵔ˶).
         </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
+<div style="display: flex; gap: 10px; align-items: center;">
             <button id="btn-close-period" class="btn-secondary" style="font-size: 0.8rem; padding: 6px 14px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4);">
                 Cerrar Bimestre
             </button>
-            <button class="btn-edit" id="btn-edit-profile">Editar inventario</button>
+            <button class="btn-edit" id="btn-edit-profile">Editar Perfil</button>
+            <button class="btn-edit" id="btn-edit-inventory">Editar Inventario</button>
         </div>
       </footer>
     </div>
@@ -153,54 +154,50 @@
     <div class="modal-backdrop hidden" id="modal-edit">
       <div class="modal" style="width: 600px; max-width: 95%;">
         <h3 class="modal-title">Gestión de Entrenador</h3>
-        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-          
-          <h4 class="modal-subtitle">Datos Básicos</h4>
-          <div class="modal-row">
-            <label class="label">Nombre</label>
-            <input type="text" id="input-trainer-name" class="input" />
-          </div>
-          
-          <h4 class="modal-subtitle">Finanzas del Bimestre</h4>
-          <div class="modal-row-grid">
-            <div>
-              <label class="label">Ingreso Bimestral (Sueldo)</label>
-              <input type="number" min="0" id="input-bi-income" class="input" placeholder="Ej. 700" />
-            </div>
-            <div>
-              <label class="label">Ahorro (Solo lectura)</label>
-              <input type="number" id="input-savings-readonly" class="input" disabled style="background: #f7fafc;" />
-            </div>
-          </div>
+<div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+  
+  <div id="section-basic-data">
+    <h4 class="modal-subtitle">Datos Básicos</h4>
+    <div class="modal-row">
+      <label class="label">Nombre</label>
+      <input type="text" id="input-trainer-name" class="input" />
+    </div>
+    
+    <h4 class="modal-subtitle">Finanzas del Bimestre</h4>
+    <div class="modal-row-grid">
+      <div>
+        <label class="label">Ingreso Bimestral (Pokecoins totales)</label>
+        <input type="number" min="0" id="input-bi-income" class="input" placeholder="Ej. 700" />
+      </div>
+      <div>
+        <label class="label">Ahorro (Solo lectura)</label>
+        <input type="number" id="input-savings-readonly" class="input" disabled style="background: #f7fafc;" />
+      </div>
+    </div>
 
-          <h4 class="modal-subtitle">Recursos</h4>
-          <div class="modal-row-grid">
-             <div>
-               <label class="label">Experiencia (XP)</label>
-               <input type="number" id="input-xp" class="input" />
-             </div>
-             <div>
-               <label class="label">Logros</label>
-               <input type="text" id="input-achievements" class="input" />
-             </div>
-             <div>
-               <label class="label">Pokédex Com.</label>
-               <input type="text" id="input-pokedex" class="input" />
-             </div>
-          </div>
+    <h4 class="modal-subtitle">Recursos</h4>
+    <div class="modal-row-grid">
+       <div>
+         <label class="label">Experiencia (XP)</label>
+         <input type="number" id="input-xp" class="input" />
+       </div>
+    </div>
+  </div>
 
-          <h4 class="modal-subtitle" style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-            Gestión de Ítems (Compra / Obtención)
-          </h4>
-          <p style="font-size: 0.8em; color: #718096; margin-bottom: 10px;">
-            Selecciona la acción. "Comprar" restará dinero automáticamente. "Obtener" es gratis.
-          </p>
-          <div id="item-management-container"></div>
-        </div>
+  <div id="section-item-management">
+    <h4 class="modal-subtitle" style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+      Gestión de Ítems (Consumo / Compra / Regalo)
+    </h4>
+    <p id="item-help-text" style="font-size: 0.8em; color: #718096; margin-bottom: 10px;">
+      Selecciona la acción. "-" Restará un item de tu inventario si está en cero. "Comprar" restará dinero automáticamente. "Regalo" es gratis.
+    </p>
+    <div id="item-management-container"></div>
+  </div>
+</div>
 
         <div class="modal-footer">
           <button class="btn-secondary" id="btn-cancel-edit">Cancelar</button>
-          <button class="btn-primary" id="btn-save-edit">Guardar Cambios</button>
+          <button class="btn-primary" id="btn-save-edit">Siguiente</button>
         </div>
       </div>
     </div>
