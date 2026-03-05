@@ -89,6 +89,12 @@
                   <span class="detail-label">Capturado como:</span>
                   <span class="detail-value" id="detail-capturado-como"></span>
                 </div>
+                <div class="detail-field">
+                <span class="detail-label">Notas:</span>
+                <span class="detail-value" id="detail-notas">
+                  (Sin notas)
+                </span>
+              </div>
               </div>
               <div class="detail-actions">
                 <button id="btn-train-pokemon" class="btn-action hidden" style="background-color: #6b46c1; color: white;">
@@ -209,6 +215,13 @@
             <option value="Impaciente">Impaciente (Hasty)</option>
           </select>
         </div>
+        <label class="label" style="margin-top: 15px;">Notas del Pokémon (Máx. 60 palabras)</label>
+      <textarea id="edit-notes-input" class="input" rows="4" 
+        placeholder="Escribe aquí información relevante..."
+        style="resize: none; font-family: inherit; padding: 10px;"></textarea>
+      <div id="word-count-display" style="text-align: right; font-size: 0.75em; color: #718096; margin-top: 5px;">
+        Palabras: 0 / 60
+      </div>
         <div class="modal-footer">
           <button class="btn-secondary" id="btn-edit-cancel">Cancelar</button>
           <button class="btn-primary" id="btn-edit-confirm">Guardar cambios</button>

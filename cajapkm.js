@@ -583,6 +583,11 @@ function renderDetail() {
   document.getElementById("detail-clase").textContent = claseMostrar;
   document.getElementById("detail-capturado-como").textContent = poke.capturadoComo || poke.nombre;
 
+const detailNotas = document.getElementById("detail-notas");
+  if (detailNotas) {
+    detailNotas.textContent = poke.notes || "(Sin notas)";
+  }
+
   // Género detallado
   const generoEl = document.getElementById("detail-genero");
   if (generoEl) {
@@ -915,7 +920,8 @@ async function handleAddPokemon() {
     capturadoComo: basic.nombre,
     isShiny: isShiny,
     gender: gender,
-    storedXP: initialXP
+    storedXP: initialXP,
+    notes: ""
   };
 
   box[emptyIndex] = newPoke;
@@ -943,7 +949,7 @@ async function handleUpdatePokemon() {
   let container = null;
   let index = null;
 
-  // Identificar el origen del Pokémon (Equipo o Caja)
+  // 1. Identificar el origen del Pokémon (Equipo o Caja)
   if (state.detailSource === "party" && state.selectedPartyIndex != null && state.party[state.selectedPartyIndex]) {
     container = state.party;
     index = state.selectedPartyIndex;
@@ -957,49 +963,60 @@ async function handleUpdatePokemon() {
   const poke = container[index];
   if (!poke) return;
 
-  // Referencias a los inputs del modal de edición
+  // 2. Referencias a los inputs del modal
   const nicknameInput = document.getElementById("edit-nickname-input");
   const levelInput = document.getElementById("edit-level-input");
   const personalitySelect = document.getElementById("edit-personality-select");
+  const notesInput = document.getElementById("edit-notes-input");
 
-  if (!nicknameInput || !levelInput) { 
-    console.error("Faltan campos esenciales en el modal de edición."); 
-    return; 
+  // 3. Validación de límite de palabras (Máx 60)
+  if (notesInput) {
+    const text = notesInput.value.trim();
+    const words = text.split(/\s+/).filter(w => w.length > 0);
+    
+    if (words.length > 60) {
+      alert(`Has superado el límite de palabras (${words.length}/60). Por favor, resume tus notas.`);
+      return;
+    }
+    // Guardar la nota en el objeto
+    poke.notes = text;
   }
 
-  // Actualizar Apodo
-  const newApodo = nicknameInput.value.trim();
-  poke.apodo = newApodo;
-
-  // Actualizar Nivel y XP
-  let newNivel = parseInt(levelInput.value, 10);
-  if (Number.isNaN(newNivel)) newNivel = poke.nivel || 1;
-  if (newNivel < 1 || newNivel > 100) { 
-    alert("El nivel debe estar entre 1 y 100"); 
-    return; 
+  // 4. Actualizar datos básicos (Apodo, Nivel, Personalidad)
+  if (nicknameInput) {
+    poke.apodo = nicknameInput.value.trim();
   }
 
-  if (newNivel !== poke.nivel) {
-    poke.nivel = newNivel;
-    // Función definida previamente en tu código para recalcular XP base
-    poke.storedXP = getTotalXpForLevel(newNivel);
+  if (levelInput) {
+    let newNivel = parseInt(levelInput.value, 10);
+    if (!Number.isNaN(newNivel) && newNivel >= 1 && newNivel <= 100) {
+      if (newNivel !== poke.nivel) {
+        poke.nivel = newNivel;
+        // Recalcular XP base si el nivel cambió manualmente
+        if (typeof getTotalXpForLevel === 'function') {
+          poke.storedXP = getTotalXpForLevel(newNivel);
+        }
+      }
+    }
   }
-  
-  // --- ACTUALIZACIÓN DE PERSONALIDAD ---
-  // Guardamos el valor exacto seleccionado para mantener la paridad con el modal 'Add'
+
   if (personalitySelect) {
     poke.personalidad = personalitySelect.value; 
   }
 
-  // Guardar en el contenedor correspondiente
+  // 5. Persistencia y actualización de la interfaz
   container[index] = poke;
 
-  // Persistencia y actualización de la interfaz
-  await saveState(); // Aseguramos que se guarde en Supabase/LocalStorage
-  renderParty();
-  renderBox();
-  renderDetail();
-  closeModal("modal-edit");
+  try {
+    await saveState(); // Guarda en Supabase y LocalStorage
+    renderParty();
+    renderBox();
+    renderDetail();
+    closeModal("modal-edit");
+  } catch (error) {
+    console.error("Error al guardar los cambios:", error);
+    alert("Hubo un error al conectar con la base de datos.");
+  }
 }
 
 function handleReleasePokemon() {
@@ -1162,12 +1179,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnEditCancel = document.getElementById("btn-edit-cancel");
     const btnEditConfirm = document.getElementById("btn-edit-confirm");
 
- if (btnUpdate) {
+    if (btnUpdate) {
   btnUpdate.addEventListener("click", () => {
     const box = state.boxes[state.currentBoxIndex];
     let poke = null;
     
-    // Detectar de dónde viene el Pokémon seleccionado
     if (state.detailSource === "party" && state.selectedPartyIndex != null) {
       poke = state.party[state.selectedPartyIndex];
     } else if (state.selectedBoxSlotIndex != null) {
@@ -1176,15 +1192,28 @@ document.addEventListener("DOMContentLoaded", () => {
     
     if (!poke) return;
 
-    // Sincronizar campos de texto
     document.getElementById("edit-nickname-input").value = poke.apodo || "";
     document.getElementById("edit-level-input").value = poke.nivel || 1;
+    if (document.getElementById("edit-personality-select")) {
+      document.getElementById("edit-personality-select").value = poke.personalidad || "";
+    }
 
-    // Sincronizar Personalidad
-    const personalitySelect = document.getElementById("edit-personality-select");
-    if (personalitySelect) {
-      // Forzamos que el valor del select coincida con el del objeto poke
-      personalitySelect.value = poke.personalidad || "";
+    // --- NUEVO: Cargar notas y configurar contador ---
+    const notesInput = document.getElementById("edit-notes-input");
+    const wordCountDisplay = document.getElementById("word-count-display");
+    
+    if (notesInput) {
+      notesInput.value = poke.notes || "";
+      
+      const updateWordCount = () => {
+        const words = notesInput.value.trim().split(/\s+/).filter(w => w.length > 0);
+        const count = words.length;
+        wordCountDisplay.textContent = `Palabras: ${count} / 60`;
+        wordCountDisplay.style.color = count > 60 ? "#e53e3e" : "#718096";
+      };
+
+      notesInput.oninput = updateWordCount;
+      updateWordCount(); // Ejecutar al abrir
     }
     
     openModal("modal-edit");

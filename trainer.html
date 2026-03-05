@@ -132,6 +132,16 @@
                 <span class="resource-label">Pokédex comunitaria</span>
                 <span class="resource-value" id="pokedex-value" style="color: #ff64c4;">0</span>
               </div>
+              <div class="inventory-notes-section" style="margin-top: 30px; border-top: 2px dashed #dac6f0; padding-top: 15px;">
+      <h3 class="column-title" style="font-size: 0.85rem; margin-bottom: 10px;">Notas de inventario</h3>
+      <textarea 
+        id="inventory-notes-area" 
+        class="input" 
+        placeholder="(Sin anotaciones)"
+        style="min-height: 180px; resize: none; background: #fff6ff; border: 1px solid #ffdbfc; font-family: 'Nunito', sans-serif; font-size: 0.85rem; line-height: 1.4; padding: 10px;"
+      ></textarea>
+      <div id="save-indicator" style="font-size: 0.7rem; color: #718096; text-align: right; margin-top: 5px; height: 1em;"></div>
+    </div>
             </div>
           </div>
         </section>
@@ -182,6 +192,15 @@
          <input type="number" id="input-xp" class="input" />
        </div>
     </div>
+    <div class="modal-row" style="margin-top: 15px;">
+  <label class="label">Notas de Inventario (Máx. 60 palabras)</label>
+  <textarea id="input-inventory-notes" class="input" 
+    placeholder="Escribe aquí tus recordatorios o notas de ítems..."
+    style="min-height: 120px; resize: none;"></textarea>
+  <div id="word-count-notes" style="text-align: right; font-size: 0.75rem; color: #718096;">
+    Palabras: 0 / 60
+  </div>
+</div>
   </div>
 
   <div id="section-item-management">

@@ -153,6 +153,65 @@ function renderDetailPanel(data) {
         let v = ["poke","super","ultra"].includes(k) ? (balls[k]||0) : (items[k]||0);
         if(v>0) iList.innerHTML += `<div style="display:flex; justify-content:space-between"><span>${LABELS[k]}</span><strong>${v}</strong></div>`;
     });
+
+    // --- Pokémon: Equipo y Caja ---
+const partyListEl = document.getElementById("det-party-list");
+const boxListEl = document.getElementById("det-box-list");
+const partyCountEl = document.getElementById("det-party-count");
+const boxCountEl = document.getElementById("det-box-count");
+
+if (partyListEl) partyListEl.innerHTML = "";
+if (boxListEl) boxListEl.innerHTML = "";
+
+const getPokeName = (p) => {
+  if (!p) return null;
+  if (typeof p === "string") return p;
+
+  // Tu estructura real
+  if (p.apodo) return p.apodo;
+
+  // Fallbacks por si cambia el formato
+  return (
+    p.nickname ||
+    p.name ||
+    p.species ||
+    p.pokemon?.name ||
+    p.species?.name ||
+    null
+  );
+};
+
+
+// Equipo
+const partyRaw = Array.isArray(game.party_data) ? game.party_data : [];
+const party = partyRaw.filter(Boolean);
+if (partyCountEl) partyCountEl.textContent = String(party.length);
+
+if (partyListEl) {
+  party.forEach((p) => {
+    const li = document.createElement("li");
+    li.textContent = getPokeName(p) || "Pokémon";
+    partyListEl.appendChild(li);
+  });
+}
+
+// Caja
+let boxAll = [];
+if (game.box_data && Array.isArray(game.box_data.boxes)) {
+  game.box_data.boxes.forEach((box) => {
+    if (Array.isArray(box)) boxAll.push(...box.filter(Boolean));
+  });
+}
+if (boxCountEl) boxCountEl.textContent = String(boxAll.length);
+
+if (boxListEl) {
+  boxAll.forEach((p) => {
+    const li = document.createElement("li");
+    li.textContent = getPokeName(p) || "Pokémon";
+    boxListEl.appendChild(li);
+  });
+}
+
 }
 
 // --- MODAL EDICIÓN ---
@@ -181,44 +240,63 @@ function openAdminEditModal() {
 }
 
 async function saveTargetData() {
-    if (!selectedPlayerFullData) return;
-    const targetId = selectedPlayerFullData.id;
-    const inv = JSON.parse(JSON.stringify(selectedPlayerFullData.inventoryData));
-    const newName = document.getElementById("adm-input-name").value.trim();
+  if (!selectedPlayerFullData) return;
+  const targetId = selectedPlayerFullData.id;
+  const inv = JSON.parse(JSON.stringify(selectedPlayerFullData.inventoryData));
+  const newName = document.getElementById("adm-input-name").value.trim();
 
-    // 1. Economía
-    if (!inv.economy) inv.economy = { biIncome: 0, savings: 0, spent: 0 };
-    inv.economy.biIncome = parseInt(document.getElementById("adm-input-income").value) || 0;
-    inv.economy.savings = parseInt(document.getElementById("adm-input-savings").value) || 0;
-    inv.economy.spent = parseInt(document.getElementById("adm-input-spent").value) || 0;
+  // 1. Economía
+  if (!inv.economy) inv.economy = { biIncome: 0, savings: 0, spent: 0 };
+  inv.economy.biIncome = parseInt(document.getElementById("adm-input-income").value) || 0;
+  inv.economy.savings = parseInt(document.getElementById("adm-input-savings").value) || 0;
+  inv.economy.spent = parseInt(document.getElementById("adm-input-spent").value) || 0;
 
-    // 2. Progreso
-    inv.xp = parseInt(document.getElementById("adm-input-xp").value) || 0;
-    inv.achievements = document.getElementById("adm-input-achievements").value.trim();
+  // 2. Progreso
+  inv.xp = parseInt(document.getElementById("adm-input-xp").value) || 0;
+  inv.achievements = document.getElementById("adm-input-achievements").value.trim();
 
-    // 3. Sincronizar Pokédex automáticamente al guardar
-    const realCount = await syncPokedexCount(targetId);
-    inv.pokedex = String(realCount || 0);
+  // 3. Sincronizar Pokédex automáticamente al guardar
+  const realCount = await syncPokedexCount(targetId);
+  inv.pokedex = String(realCount || 0);
 
-    // 4. Inventario
-    if (!inv.items) inv.items = {}; if (!inv.balls) inv.balls = {};
-    Object.keys(LABELS).forEach(k => {
-        const val = parseInt(document.getElementById(`adm-qty-${k}`).value) || 0;
-        if (["poke", "super", "ultra"].includes(k)) inv.balls[k] = val;
-        else inv.items[k] = val;
-    });
+  // 4. Inventario
+  if (!inv.items) inv.items = {};
+  if (!inv.balls) inv.balls = {};
+  Object.keys(LABELS).forEach(k => {
+    const val = parseInt(document.getElementById(`adm-qty-${k}`).value) || 0;
+    if (["poke", "super", "ultra"].includes(k)) inv.balls[k] = val;
+    else inv.items[k] = val;
+  });
 
-    try {
-        await window.supabaseClient.from(GAME_TABLE).update({ trainer_name: newName }).eq("id", targetId);
-        await window.supabaseClient.from(TRAINER_TABLE).upsert({ user_id: targetId, inventory: inv });
-        
-        alert("¡Guardado y Sincronizado!");
-        closeModal("modal-admin-edit");
-        await fetchPlayerList();
-        // Refrescar panel derecho con datos nuevos
-        await selectPlayer(targetId, document.querySelector(".player-row.active"));
-    } catch (e) { alert("Error al guardar"); }
+  try {
+    // Update nombre (y valida error real)
+    const { error: nameErr } = await window.supabaseClient
+      .from(GAME_TABLE)
+      .update({ trainer_name: newName })
+      .eq("id", targetId);
+
+    if (nameErr) throw nameErr;
+
+    // Upsert inventario con onConflict para evitar 409
+    const { error: invErr } = await window.supabaseClient
+      .from(TRAINER_TABLE)
+      .upsert(
+        { user_id: targetId, inventory: inv, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+
+    if (invErr) throw invErr;
+
+    alert("¡Guardado y Sincronizado!");
+    closeModal("modal-admin-edit");
+    await fetchPlayerList();
+    await selectPlayer(targetId, document.querySelector(".player-row.active"));
+  } catch (e) {
+    console.error("Error al guardar:", e);
+    alert(`Error al guardar: ${e?.message || e}`);
+  }
 }
+
 
 async function syncPokedexCount(targetId) {
     try {

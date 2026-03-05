@@ -25,7 +25,7 @@ let tempGifts = {};
 let currentStep = 1; // 1: Inventario, 2: Resumen, 3: Perfil
 
 const defaultMeta = {
-  xp: 0, achievements: "", pokedex: "0",
+  xp: 0, achievements: "", pokedex: "0", notes: "",
   economy: { biIncome: 0, savings: 0, spent: 0 },
   items: { egg: 0, rareCandy: 0, tradeToken: 0, evoStone: 0, friendship: 0, passport: 0 },
   balls: { poke: 0, super: 0, ultra: 0 },
@@ -116,6 +116,19 @@ async function openProfileModal() {
   setValue("input-xp", currentMeta.xp);
   setValue("input-achievements", currentMeta.achievements || ""); // Añade esto si no estaba
   
+// NUEVO: Cargar notas y configurar contador
+  const notesInput = $("input-inventory-notes");
+  if (notesInput) {
+    notesInput.value = currentMeta.notes || "";
+    const updateCount = () => {
+      const words = notesInput.value.trim().split(/\s+/).filter(w => w.length > 0).length;
+      $("word-count-notes").textContent = `Palabras: ${words} / 60`;
+      $("word-count-notes").style.color = words > 60 ? "#e53e3e" : "#718096";
+    };
+    notesInput.oninput = updateCount;
+    updateCount();
+  }
+
   const px = $("input-pokedex");
   if (px) { 
     px.value = currentMeta.pokedex || "0"; 
@@ -150,39 +163,6 @@ async function saveMeta(meta) {
 // ========================
 // LÓGICA DE MODALES
 // ========================
-
-async function openProfileModal() {
-  loadMeta();
-  currentStep = 3; 
-  
-  // 1. Alternar visibilidad: Mostrar Perfil, ocultar Inventario
-  if ($("section-basic-data")) $("section-basic-data").style.display = "block";
-  if ($("section-item-management")) $("section-item-management").style.display = "none";
-  
-  // 2. Sincronizar Pokédex desde la base de datos antes de mostrar
-  await updatePokedexCountFromDiscoveries();
-
-  // 3. Poblar datos de perfil (Logros se omiten para edición manual)
-  setValue("input-trainer-name", window.currentTrainerName || "");
-  setValue("input-bi-income", currentMeta.economy.biIncome);
-  setValue("input-savings-readonly", currentMeta.economy.savings);
-  setValue("input-xp", currentMeta.xp);
-  
-  // 4. Configurar campo automático de Pokédex
-  const px = $("input-pokedex");
-  if (px) { 
-    px.value = currentMeta.pokedex || "0"; 
-    px.readOnly = true; 
-    px.style.backgroundColor = "#edf2f7"; 
-    px.style.cursor = "not-allowed";
-  }
-
-  // 5. Ajustar botones del footer
-  $("btn-save-edit").textContent = "Guardar Perfil";
-  $("btn-cancel-edit").textContent = "Cancelar";
-  
-  $("modal-edit")?.classList.remove("hidden");
-}
 
 function openInventoryModal() {
   loadMeta();
@@ -344,24 +324,39 @@ async function handleSave() {
       meta.economy.spent += total;
     } 
     else if (currentStep === 3) {
+      // 1. Validar el límite de palabras en las notas antes de proceder
+      const notesInput = $("input-inventory-notes");
+      const notesVal = notesInput ? notesInput.value.trim() : "";
+      const wordCount = notesVal.split(/\s+/).filter(w => w.length > 0).length;
+      
+      if (wordCount > 60) {
+        alert(`Las notas exceden el límite permitido (${wordCount}/60 palabras).`);
+        return; 
+      }
+
+      // 2. Actualizar el nombre del entrenador en la tabla user_game_data
       const newName = ($("input-trainer-name")?.value || "").trim();
       if (newName && window.currentUserId) {
-        await window.supabaseClient.from(GAME_TABLE).upsert({ id: window.currentUserId, trainer_name: newName }, { onConflict: "id" });
+        await window.supabaseClient.from(GAME_TABLE).upsert({ 
+          id: window.currentUserId, 
+          trainer_name: newName 
+        }, { onConflict: "id" });
         window.currentTrainerName = newName;
       }
+
+      // 3. Mapear los datos del modal al objeto meta de inventario
       meta.economy.biIncome = parseInt($("input-bi-income")?.value) || 0;
       meta.xp = parseInt($("input-xp")?.value) || 0;
-      meta.achievements = ($("input-achievements")?.value || "").trim();
-      // NO leemos pokedex del input para evitar el error del "1"
+      meta.notes = notesVal; // Guardar la nota en el JSONB de inventario
     }
     
+    // Guardar cambios finales en Supabase
     meta.lastUpdated = new Date().toISOString();
     await saveMeta(meta);
     renderView();
     closeModal();
   }
 }
-
 function renderView() {
   const meta = loadMeta();
   const trainerName = window.currentTrainerName || "Entrenador";
@@ -378,6 +373,13 @@ function renderView() {
   setText("xp-value", meta.xp);
   setText("achievements-value", meta.achievements || "—");
   setText("pokedex-value", meta.pokedex || "0");
+
+  // --- CORRECCIÓN: Actualizar el Notepad en la vista principal ---
+  const notesDisplay = $("inventory-notes-area");
+  if (notesDisplay) {
+    notesDisplay.value = meta.notes || ""; // Carga la nota guardada
+    notesDisplay.readOnly = true;        // Asegura que sea solo lectura en la vista principal
+  }
 
   INVENTORY_ITEMS_VISUAL.forEach(i => setText(i.countId, meta.items[i.key]));
   setText("ball-poke", meta.balls.poke);

@@ -530,11 +530,21 @@ select.input {
   width: min(100% - 32px, 420px);
   background: rgb(250, 250, 250);
   border-radius: 18px;
-  padding: 16px 18px 12px;
+  padding: 20px; 
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  display: flex !important;
+  flex-direction: column !important; 
+  gap: 12px;
+  position: relative;
+  height: auto !important; 
+  max-height: 90vh; 
+  overflow-y: auto; 
+}
+
+.notes-container {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  width: 100%;
 }
 
 .modal-title {
@@ -550,10 +560,12 @@ select.input {
 }
 
 .modal-footer {
-  margin-top: 6px;
+  margin-top: auto; /* Empuja los botones al final si el modal tiene altura fija */
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 10px;
+  width: 100%;
+  padding-top: 10px;
 }
 
 .modal-helper {
@@ -762,4 +774,24 @@ select.input {
 
 .nav-btn-icon:hover {
   opacity: 0.7;
+}
+
+#edit-notes-input {
+  width: 100%;
+  min-height: 110px;
+  max-height: 150px; /* Evitamos que crezca infinitamente */
+  resize: none; 
+  font-family: inherit;
+  line-height: 1.5;
+  margin-bottom: 4px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 2px solid #dac6f0;
+}
+
+#word-count-display {
+  text-align: right;
+  font-size: 0.75rem;
+  color: #718096;
+  margin-bottom: 15px; /* Espacio extra para separar de los botones */
 }
