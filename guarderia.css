@@ -436,6 +436,9 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  max-height: 250px; /* Evita que el modal se salga de la pantalla */
+    overflow-y: auto;
+    padding-right: 5px;
 }
 
 .summary-list li {
@@ -656,4 +659,113 @@ button,
 .btn-primary,
 .btn-secondary {
   font-family: 'Nunito', sans-serif;
+}
+/* ==================================
+   MEJORA DEL FOOTER DE SELECCIÓN
+   ================================== */
+
+.selection-footer {
+    margin-top: 20px; /* Separa el footer de la lista de pokémon */
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.6); /* Fondo semi-transparente */
+    border: 2px solid #dac6f0;
+    border-radius: 18px;
+    display: flex;
+    justify-content: space-between; /* Información a la izquierda, botón a la derecha */
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 15px rgba(183, 148, 244, 0.1);
+}
+
+.selection-info-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.selection-counter {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #242746;
+    margin: 0;
+}
+
+#selection-count {
+    color: #d53f8c; /* Color rosa/morado para resaltar el número */
+}
+
+/* Texto de aviso de Johto */
+.johto-hint {
+    font-size: 0.82rem;
+    color: #6366f1; /* Azul/Morado tipo "Sistema" */
+    margin: 0;
+    font-weight: 700;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    animation: fadeInHint 0.5s ease-out;
+}
+
+/* Icono sutil antes del texto (opcional si usas FontAwesome) */
+.johto-hint::before {
+    content: "✨"; 
+    font-style: normal;
+}
+
+/* Botón de Incubar Estilo "Premium" */
+.btn-primary-lg {
+    font-family: 'Nunito', sans-serif;
+    background: #f3ca3b;
+    color: #2a2511;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #b7900b; /* Sombra sólida tipo botón de consola */
+    transition: all 0.1s ease;
+}
+
+.btn-primary-lg:hover:not(:disabled) {
+    background: #ffe072;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #b7900b;
+}
+
+.btn-primary-lg:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #b7900b;
+}
+
+.btn-primary-lg:disabled {
+    background: #cbd5e0;
+    color: #718096;
+    box-shadow: 0 4px 0 #a0aec0;
+    cursor: not-allowed;
+    opacity: 0.6;
+    filter: grayscale(1);
+}
+
+/* Animación de entrada para el aviso */
+@keyframes fadeInHint {
+    from { opacity: 0; transform: translateX(-5px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* ==================================
+   AJUSTE DE RESPONSIVE
+   ================================== */
+
+@media (max-width: 640px) {
+    .selection-footer {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .btn-primary-lg {
+        width: 100%; /* Botón ancho total en móviles */
+    }
 }
