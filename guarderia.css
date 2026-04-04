@@ -1,0 +1,659 @@
+/* ================================
+   LAYOUT GENERAL
+   ================================ */
+
+.daycare-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 10px;
+  padding: 10px 4px 60px 4px; /* ← agrega espacio abajo */
+  min-height: 0;
+}
+
+.pool-info-section {
+  justify-content: flex-start;
+}
+
+/* ================================
+   INCUBADORAS
+   ================================ */
+
+.incubator-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.incubator-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #dac6f0;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 4px 12px rgba(44, 44, 44, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.incubator-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(44, 44, 44, 0.16);
+  border-color: #f3ca3b;
+}
+
+.incubator-card.ready {
+  border-color: #f3ca3b;
+  background: linear-gradient(180deg, #fffaf0 0%, #fff5d7 100%);
+  box-shadow: 0 0 0 2px rgba(243, 202, 59, 0.2);
+}
+
+.incubator-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.incubator-status {
+  font-size: 0.72rem;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: #dde1ff;
+  color: #252849;
+}
+
+.incubator-status.ready {
+  background: #f3ca3b;
+  color: #2a2511;
+}
+
+.egg-visual-container {
+  min-height: 120px;
+  border-radius: 16px;
+  border: 2px dashed #dac6f0;
+  background: linear-gradient(180deg, #fffdfd 0%, #fff6fb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.egg-visual-container::after {
+  content: "";
+  position: absolute;
+  inset: auto 20% 8px 20%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(36, 39, 70, 0.08);
+  filter: blur(4px);
+}
+
+.egg-sprite {
+  position: relative;
+  z-index: 1;
+  font-size: 3.4rem;
+  line-height: 1;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.12));
+}
+
+.incubator-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+}
+
+.meta-label {
+  font-weight: 700;
+  color: #323557;
+}
+
+.meta-value {
+  color: #555a83;
+  text-align: right;
+}
+
+.timer-display {
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.58rem;
+  line-height: 1.5;
+  color: #c957b0;
+  background: #fff7fb;
+  border: 1px solid #f4d4ea;
+  border-radius: 12px;
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.incubator-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.incubator-actions .btn-primary,
+.incubator-actions .btn-secondary {
+  flex: 1;
+  font-size: 0.82rem;
+  padding: 9px 12px;
+}
+
+/* ================================
+   POOL / POSIBILIDADES
+   ================================ */
+
+.pool-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.pool-tabs .info-tab-btn {
+  margin-right: 0;
+}
+
+.pool-tabs .info-tab-btn.active,
+.pool-tabs .info-tab-btn[aria-selected="true"] {
+  background: #f3ca3b;
+  color: #2a2511;
+}
+
+.pool-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 2px solid #dac6f0;
+  min-height: 260px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+
+/* ================================
+   MODAL DE ECLOSIÓN
+   ================================ */
+
+.hatch-card {
+  width: min(100% - 32px, 430px);
+  background: rgb(250, 250, 250);
+  border-radius: 22px;
+  padding: 24px 22px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hatch-card .modal-title {
+  margin-bottom: 0;
+}
+
+.hatch-status-text {
+  font-family: "Nunito", sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #373b5c;
+  margin-top: 0;
+}
+
+#hatch-animation-area {
+  min-height: 170px;
+  border-radius: 18px;
+  border: 2px solid #dac6f0;
+  background: radial-gradient(circle at top, #fffdf7 0%, #fff6fb 60%, #fce8f5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+#hatch-animation-area::before {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(243, 202, 59, 0.16);
+  animation: pulseGlow 1.6s ease-in-out infinite;
+}
+
+#hatch-animation-area .egg-sprite {
+  font-size: 4.8rem;
+}
+
+/* ================================
+   ANIMACIONES
+   ================================ */
+
+.egg-shaking {
+  display: inline-block;
+  animation: eggShake 0.6s infinite ease-in-out;
+  transform-origin: bottom center;
+}
+
+@keyframes eggShake {
+  0% { transform: rotate(0deg) translateY(0); }
+  20% { transform: rotate(7deg) translateY(-1px); }
+  40% { transform: rotate(-7deg) translateY(0); }
+  60% { transform: rotate(5deg) translateY(-2px); }
+  80% { transform: rotate(-5deg) translateY(0); }
+  100% { transform: rotate(0deg) translateY(0); }
+}
+
+.hatch-flash {
+  animation: hatchReveal 0.95s ease-out forwards;
+}
+
+@keyframes hatchReveal {
+  0% {
+    filter: brightness(8) contrast(0);
+    transform: scale(0.55);
+    opacity: 0;
+  }
+  45% {
+    filter: brightness(3);
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulseGlow {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(0.85);
+    opacity: 0.35;
+  }
+}
+
+/* ================================
+   ESTADOS VACÍOS
+   ================================ */
+
+.incubator-grid .detail-empty,
+.pool-list .detail-empty {
+  grid-column: 1 / -1;
+  min-height: 180px;
+  border: 2px dashed #dac6f0;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  color: #7f83a9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px;
+}
+
+/* ================================
+   RESPONSIVE
+   ================================ */
+
+@media (max-width: 960px) {
+  .daycare-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 6px 12px;
+  }
+
+  .incubator-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .incubator-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pool-list {
+    grid-template-columns: repeat(2, 1fr);
+    min-height: 220px;
+  }
+
+  .hatch-card {
+    padding: 20px 16px;
+  }
+
+  #hatch-animation-area {
+    min-height: 150px;
+  }
+
+  #hatch-animation-area .egg-sprite {
+    font-size: 4rem;
+  }
+
+  .timer-display {
+    font-size: 0.52rem;
+  }
+}
+/* --- ESTADO SELECCIONADO --- */
+.pool-item {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    background: #ffffff;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid #e9d8fd;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Hover para mejor interacción */
+.pool-item:hover {
+    background: #fdf4ff;
+    border-color: #d53f8c;
+    transform: translateY(-2px);
+}
+
+/* Pokémon seleccionado */
+.pool-item.selected {
+    background: linear-gradient(135deg, #ffd6ec, #ffe4f2);
+    border-color: #d53f8c;
+    color: #b83280;
+    box-shadow: 0 0 0 2px rgba(213, 63, 140, 0.15);
+    transform: scale(1.05);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(183, 148, 244, 0.25);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-backdrop.hidden {
+  display: none;
+}
+
+/* ================================
+   MODAL RESUMEN INCUBACIÓN
+   ================================ */
+
+.modal {
+  width: min(100% - 32px, 430px);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 22px;
+  padding: 24px 22px;
+  box-shadow: 0 18px 40px rgba(44, 44, 44, 0.25);
+  border: 2px solid #dac6f0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+.modal-title {
+  font-weight: 900;
+  font-size: 1.05rem;
+  color: #242746;
+  margin: 0;
+}
+
+.modal-body {
+  font-size: 0.85rem;
+  color: #373b5c;
+  line-height: 1.5;
+}
+
+.summary-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 8px 0 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summary-list li {
+  background: #fff6fb;
+  border: 1px solid #f4d4ea;
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  margin-top: 6px;
+}
+
+.checkbox-option input {
+  accent-color: #d53f8c;
+  transform: scale(1.1);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+@keyframes modalFadeIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.incubator-title {
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: #242746;
+}
+
+.incubator-card.ready .incubator-title {
+  color: #a47e00;
+}
+
+/* ================================
+   EFECTO SHINY
+   ================================ */
+
+.shiny-glow {
+  animation: shinyPulse 1.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px gold);
+}
+
+@keyframes shinyPulse {
+  0% {
+    filter: drop-shadow(0 0 8px gold);
+  }
+  50% {
+    filter: drop-shadow(0 0 18px #ffd700);
+  }
+  100% {
+    filter: drop-shadow(0 0 8px gold);
+  }
+}
+.pokeapi-sprite {
+  width: 140px;
+  height: 140px;
+  image-rendering: pixelated;
+}
+.incubation-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.inc-tab {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  background: #e2d6f6;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.inc-tab.active {
+  background: #f3ca3b;
+}
+
+/* ==============================
+   TARJETA INCUBADORA AVANZADA
+   ============================== */
+
+/* ==============================
+   TARJETA INCUBADORA COMPACTA
+   ============================== */
+
+.incubator-card-advanced {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(255,255,255,0.95);
+  border: 2px solid #dac6f0;
+  border-radius: 18px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 12px rgba(44,44,44,0.12);
+}
+
+/* HEADER COMPACTO */
+.inc-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #242746;
+}
+
+.inc-card-header .meta-info {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.inc-status-icon {
+  font-size: 1rem;
+}
+
+/* CONTENIDO */
+.inc-card-content {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+/* HUEVO */
+.inc-card-left {
+  width: 40%;
+  display: flex;
+  justify-content: center;
+}
+
+/* POKÉMON */
+.inc-card-right {
+  width: 60%;
+  display: grid;
+  grid-template-columns: repeat(3, 70px);
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+}
+
+.mini-sprite {
+  width: 60px;
+  image-rendering: pixelated;
+}
+
+/* Fecha */
+.hatch-date {
+  font-size: 0.8rem;
+  margin-top: 6px;
+  color: #666;
+  text-align: center;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+.mini-sprite-box {
+  width: 70px;
+  height: 70px;
+  border-radius: 12px;
+  border: 2px dashed #dac6f0;
+  background: linear-gradient(180deg, #fffdfd 0%, #fff6fb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.mini-sprite-box::after {
+  content: "";
+  position: absolute;
+  bottom: 6px;
+  left: 20%;
+  right: 20%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(36, 39, 70, 0.08);
+  filter: blur(3px);
+}
+
+.mystery-egg {
+  width: 90px;
+  image-rendering: pixelated;
+}
+
+button,
+.inc-tab,
+.btn-primary,
+.btn-secondary {
+  font-family: 'Nunito', sans-serif;
+}

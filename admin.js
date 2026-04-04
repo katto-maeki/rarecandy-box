@@ -1,4 +1,4 @@
-// admin.js - Gestión de Admin con PokeAPI Autocomplete
+// admin.js - Gestión de Admin con PokeAPI Autocomplete y Menú Lateral
 
 const GAME_TABLE = "user_game_data";
 const TRAINER_TABLE = "trainer_inventory";
@@ -21,73 +21,113 @@ let selectedPlayerFullData = null;
 let globalPokemonList = []; 
 
 // ==========================================
-// Inicialización
+// LÓGICA DEL MENÚ HAMBURGUESA
+// ==========================================
+function initHamburgerMenu() {
+    const btnMenu = document.getElementById("btn-menu");
+    const sideMenu = document.getElementById("side-menu");
+    const btnClose = document.getElementById("btn-close-menu");
+    const btnLogoutSide = document.getElementById("btn-logout-side");
+
+    if (btnMenu && sideMenu) {
+        // Abrir menú (desde la izquierda)
+        btnMenu.onclick = () => {
+            sideMenu.classList.remove("hidden");
+        };
+
+        // Cerrar con la X
+        if (btnClose) {
+            btnClose.onclick = () => {
+                sideMenu.classList.add("hidden");
+            };
+        }
+
+        // Cerrar al hacer clic fuera del panel
+        sideMenu.onclick = (e) => {
+            if (e.target === sideMenu) {
+                sideMenu.classList.add("hidden");
+            }
+        };
+    }
+
+    // Vincular el botón "Salir" del menú lateral al logout de admin
+    if (btnLogoutSide) {
+        btnLogoutSide.onclick = (e) => {
+            e.preventDefault();
+            const originalLogout = document.getElementById("btn-logout");
+            if (originalLogout) {
+                originalLogout.click();
+            } else {
+                window.supabaseClient.auth.signOut().then(() => {
+                    window.location.href = "index.html";
+                });
+            }
+        };
+    }
+}
+
+// ==========================================
+// INICIALIZACIÓN PRINCIPAL
 // ==========================================
 document.addEventListener("DOMContentLoaded", async () => {
+    // 1. Protección y Header
     const user = await initProtectedPage(); 
     if (!user) return;
-    document.getElementById("admin-label").textContent = "ADMIN CONECTADO";
+    
+    const adminLabel = document.getElementById("admin-label");
+    if(adminLabel) adminLabel.textContent = "ADMIN CONECTADO";
 
+    // 2. Inicializar Menú
+    initHamburgerMenu();
+
+    // 3. Cargar datos de Admin
     await fetchPlayerList();
     loadAllPokemonNames();
 
-    document.getElementById("admin-search").addEventListener("input", handleSearch);
+    // 4. Configurar Buscador y Logout original
+    document.getElementById("admin-search")?.addEventListener("input", handleSearch);
     if(window.setupLogoutButton) setupLogoutButton("btn-logout");
 
-    document.getElementById("btn-admin-edit").addEventListener("click", openAdminEditModal);
-    document.getElementById("btn-adm-cancel").addEventListener("click", () => closeModal("modal-admin-edit"));
-    document.getElementById("btn-adm-save").addEventListener("click", saveTargetData);
+    // 5. Listeners de Modales y Botones
+    document.getElementById("btn-admin-edit")?.addEventListener("click", openAdminEditModal);
+    document.getElementById("btn-adm-cancel")?.addEventListener("click", () => closeModal("modal-admin-edit"));
+    document.getElementById("btn-adm-save")?.addEventListener("click", saveTargetData);
 
-    document.getElementById("btn-new-pokedex").addEventListener("click", openPokeModal);
-    document.getElementById("btn-poke-cancel").addEventListener("click", () => closeModal("modal-new-poke"));
-    document.getElementById("btn-poke-save").addEventListener("click", saveNewDiscovery);
-    document.getElementById("btn-api-search").addEventListener("click", handleApiSearch);
+    document.getElementById("btn-new-pokedex")?.addEventListener("click", openPokeModal);
+    document.getElementById("btn-poke-cancel")?.addEventListener("click", () => closeModal("modal-new-poke"));
+    document.getElementById("btn-poke-save")?.addEventListener("click", saveNewDiscovery);
+    document.getElementById("btn-api-search")?.addEventListener("click", handleApiSearch);
     
+    // 6. Autocomplete de PokeAPI
     const apiInput = document.getElementById("api-search-input");
-    apiInput.addEventListener("input", function() {
-        const val = this.value.toLowerCase();
-        closeSuggestions();
-        if (!val) return;
-        const matches = globalPokemonList.filter(p => p.name.startsWith(val)).slice(0, 8);
-        if (matches.length > 0) {
-            const list = document.getElementById("api-suggestions");
-            list.classList.add("active");
-            matches.forEach(match => {
-                const li = document.createElement("li");
-                li.className = "suggestion-item";
-                li.textContent = match.name;
-                li.onclick = () => {
-                    apiInput.value = match.name;
-                    closeSuggestions();
-                    handleApiSearch();
-                };
-                list.appendChild(li);
-            });
-        }
-    });
+    if (apiInput) {
+        apiInput.addEventListener("input", function() {
+            const val = this.value.toLowerCase();
+            closeSuggestions();
+            if (!val) return;
+            const matches = globalPokemonList.filter(p => p.name.startsWith(val)).slice(0, 8);
+            if (matches.length > 0) {
+                const list = document.getElementById("api-suggestions");
+                list.classList.add("active");
+                matches.forEach(match => {
+                    const li = document.createElement("li");
+                    li.className = "suggestion-item";
+                    li.textContent = match.name;
+                    li.onclick = () => {
+                        apiInput.value = match.name;
+                        closeSuggestions();
+                        handleApiSearch();
+                    };
+                    list.appendChild(li);
+                });
+            }
+        });
+    }
 
     document.addEventListener("click", function (e) {
         if (e.target !== apiInput) closeSuggestions();
     });
 });
-
-// --- FUNCIONES SOPORTE ---
-async function loadAllPokemonNames() {
-    try {
-        const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1500');
-        const data = await res.json();
-        globalPokemonList = data.results;
-    } catch (e) { console.error(e); }
-}
-
-function closeSuggestions() {
-    const list = document.getElementById("api-suggestions");
-    list.innerHTML = "";
-    list.classList.remove("active");
-}
-
-function openModal(id) { document.getElementById(id).classList.remove("hidden"); }
-function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
 
 // --- LÓGICA JUGADORES ---
 async function fetchPlayerList() {

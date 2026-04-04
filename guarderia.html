@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Guardería Pokémon - Rare Candy!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="cajapkm.css" />
+  <link rel="stylesheet" href="guarderia.css" />
+</head>
+
+<body class="bg-main">
+  <div class="screen-frame">
+
+<header class="top-bar">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="btn-menu" class="nav-btn-icon" title="Abrir Menú" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">
+            <i class="fa fa-bars"></i>
+        </button>
+        <span class="top-bar-title">Incubadora de huevos pokémon</span>
+    </div>
+
+    <div class="top-bar-right">
+        <span class="top-bar-trainer" id="trainer-label">Entrenador: ???</span>
+    </div>
+</header>
+
+<nav id="side-menu" class="side-nav hidden">
+    <div class="side-nav-content">
+        <button id="btn-close-menu" class="close-btn">&times;</button>
+        <h3 class="menu-title">MENÚ</h3>
+        
+        <div class="menu-links">
+            <a href="cajapkm.html" class="menu-link"><i class="fa fa-archive"></i> Caja pokémon</a>
+            <a href="trainer.html" class="menu-link"><i class="fa fa-user"></i> Inventario</a>
+            <a href="actividades.html" class="menu-link"><i class="fa fa-list-alt"></i> Actividades</a>
+            <a href="guarderia.html" class="menu-link"><i class="fa fa-asterisk"></i> Incubadora</a>
+            <a href="pokedex.html" class="menu-link"><i class="fa fa-search"></i> Pokédex Comunitaria</a>
+            <a href="tablas.html" class="menu-link"><i class="fa fa-level-up"></i> Info. Evoluciones</a>
+            <hr style="border: 0; border-top: 1px dashed #c957b0; margin: 10px 0;">
+            <a href="#" id="btn-logout-side" class="menu-link" style="color: #e53e3e;"><i class="fa fa-sign-out"></i> Salir</a>
+        </div>
+    </div>
+</nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="daycare-layout">
+
+      <!-- PANEL IZQUIERDO: SELECCIÓN DE POKÉMON -->
+      <section class="column pool-info-section">
+        <h2 class="column-title">Selecciona 6 Pokémon</h2>
+
+        <!-- Tabs de tipo de huevo -->
+        <div class="pool-tabs">
+          <button class="info-tab-btn active" data-type="comun">Común</button>
+          <button class="info-tab-btn" data-type="raro">Raro</button>
+          <button class="info-tab-btn" data-type="baby">Baby</button>
+        </div>
+
+        <!-- Lista de Pokémon -->
+        <div id="pool-display" class="pool-list"></div>
+
+        <!-- Contador y botón -->
+        <div class="selection-footer">
+          <div class="selection-counter">
+            Seleccionados: <span id="selection-count">0 / 6</span>
+          </div>
+          <button id="btn-incubar" class="btn-primary" disabled>
+            Incubar
+          </button>
+        </div>
+      </section>
+
+      <!-- PANEL DERECHO: INCUBACIONES ACTIVAS -->
+      <section class="column">
+<h2 class="column-title">Gestión de Incubación</h2>
+
+<div class="incubation-tabs">
+  <button id="tab-incubadora" class="inc-tab active">Incubadora</button>
+  <button id="tab-historial" class="inc-tab">Historial</button>
+</div>
+
+<div id="incubadora-view">
+  <div id="incubator-container" class="incubator-grid"></div>
+</div>
+
+<div id="historial-view" class="hidden">
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Huevo</th>
+        <th>Pokémon</th>
+        <th>Shiny</th>
+      </tr>
+    </thead>
+    <tbody id="history-body"></tbody>
+  </table>
+</div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- MODAL: RESUMEN DE INCUBACIÓN -->
+  <div id="modal-summary" class="modal-backdrop hidden">
+    <div class="modal">
+      <h3 class="modal-title">Resumen de Incubación</h3>
+
+      <div class="modal-body">
+        <p><strong>Tipo de huevo:</strong> <span id="summary-type"></span></p>
+        <p><strong>Tiempo base:</strong> <span id="summary-time"></span></p>
+        <p><strong>Fecha de eclosión:</strong> <span id="summary-date"></span></p>
+
+        <p><strong>Pokémon seleccionados:</strong></p>
+        <ul id="summary-pokemon" class="summary-list"></ul>
+
+        <label class="checkbox-option">
+          <input type="checkbox" id="special-incubator" />
+          Usar incubadora especial (-7 días, costo: 100 Pokecoins)
+        </label>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeSummaryModal()">Cancelar</button>
+        <button class="btn-primary" onclick="confirmIncubationFromModal()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ECLOSIÓN -->
+  <div id="modal-hatch" class="modal-backdrop hidden">
+    <div class="hatch-card">
+      <h3 class="modal-title" id="hatch-title">¡Algo está pasando!</h3>
+
+<div id="hatch-animation-area" class="egg-visual-container">
+  <img 
+    src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/mystery-egg.png"
+    class="mystery-egg egg-shaking"
+  />
+</div>
+
+      <p id="hatch-status" class="hatch-status-text">¡El huevo se está rompiendo!</p>
+
+      <div id="modal-hatch-footer" style="display: none; margin-top: 20px;">
+        <button class="btn-primary" onclick="closeHatchModal()">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="core.js"></script>
+  <script src="guarderia.js"></script>
+</body>
+</html>

@@ -11,17 +11,36 @@
   </head>
   <body class="bg-main">
     <div class="screen-frame">
-      <header class="top-bar">
-        <span class="top-bar-title">Evoluciones por nivel y clase</span>
-        <div class="top-bar-right">
-          <span class="top-bar-trainer" id="trainer-label">Entrenador: ...</span>
-          <a class="top-nav-btn" href="cajapkm.html">Caja</a>
-          <a class="top-nav-btn" href="trainer.html">Entrenador</a>
-          <a class="top-nav-btn" href="pokedex.html">Sorelle</a>
-          <a class="top-nav-btn top-nav-btn-active" href="tablas.html">EVOL</a>
-          <button id="btn-logout" class="nav-btn nav-btn-icon" title="Cerrar sesión"><i class="fa fa-sign-out"></i></button>
+<header class="top-bar">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="btn-menu" class="nav-btn-icon" title="Abrir Menú" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">
+            <i class="fa fa-bars"></i>
+        </button>
+        <span class="top-bar-title">Inventario, finanzas y exp.</span>
+    </div>
+
+    <div class="top-bar-right">
+        <span class="top-bar-trainer" id="trainer-label">Entrenador: ???</span>
+    </div>
+</header>
+
+<nav id="side-menu" class="side-nav hidden">
+    <div class="side-nav-content">
+        <button id="btn-close-menu" class="close-btn">&times;</button>
+        <h3 class="menu-title">MENÚ</h3>
+        
+        <div class="menu-links">
+            <a href="cajapkm.html" class="menu-link"><i class="fa fa-archive"></i> Caja pokémon</a>
+            <a href="trainer.html" class="menu-link"><i class="fa fa-user"></i> Inventario</a>
+            <a href="actividades.html" class="menu-link"><i class="fa fa-list-alt"></i> Actividades</a>
+            <a href="guarderia.html" class="menu-link"><i class="fa fa-asterisk"></i> Incubadora</a>
+            <a href="pokedex.html" class="menu-link"><i class="fa fa-search"></i> Pokédex Comunitaria</a>
+            <a href="tablas.html" class="menu-link"><i class="fa fa-level-up"></i> Info. Evoluciones</a>
+            <hr style="border: 0; border-top: 1px dashed #c957b0; margin: 10px 0;">
+            <a href="#" id="btn-logout-side" class="menu-link" style="color: #e53e3e;"><i class="fa fa-sign-out"></i> Salir</a>
         </div>
-      </header>
+    </div>
+</nav>
 
       <main class="main-layout">
         

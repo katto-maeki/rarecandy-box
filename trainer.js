@@ -358,34 +358,37 @@ async function handleSave() {
   }
 }
 function renderView() {
-  const meta = loadMeta();
-  const trainerName = window.currentTrainerName || "Entrenador";
+    const meta = loadMeta(); // Carga el JSON de trainer_inventory
+    const trainerName = window.currentTrainerName || "Entrenador";
 
-  setText("trainer-name-display", trainerName.toUpperCase());
-  setText("trainer-label", `Entrenador: ${trainerName}`);
+    // 1. Mostrar nombre en la barra y en el perfil
+    setText("trainer-name-display", trainerName.toUpperCase());
+    setText("trainer-label", `Entrenador: ${trainerName}`);
 
-  const available = (meta.economy.savings + meta.economy.biIncome) - meta.economy.spent;
-  setText("money-available", available.toLocaleString());
-  setText("money-bi-income", meta.economy.biIncome.toLocaleString());
-  setText("money-spent", meta.economy.spent.toLocaleString());
-  setText("money-savings", meta.economy.savings.toLocaleString());
-  
-  setText("xp-value", meta.xp);
-  setText("achievements-value", meta.achievements || "—");
-  setText("pokedex-value", meta.pokedex || "0");
+    // 2. Lógica de Dinero (Sincronizada con Actividades)
+    // biIncome = Lo ganado en Actividades (Ingresos del periodo)
+    // savings = Dinero guardado de periodos anteriores
+    // spent = Dinero que el usuario ha gastado comprando ítems en el modal
+    const available = (meta.economy.savings + meta.economy.biIncome) - meta.economy.spent;
 
-  // --- CORRECCIÓN: Actualizar el Notepad en la vista principal ---
-  const notesDisplay = $("inventory-notes-area");
-  if (notesDisplay) {
-    notesDisplay.value = meta.notes || ""; // Carga la nota guardada
-    notesDisplay.readOnly = true;        // Asegura que sea solo lectura en la vista principal
-  }
+    setText("money-available", available.toLocaleString());
+    setText("money-bi-income", meta.economy.biIncome.toLocaleString());
+    setText("money-spent", meta.economy.spent.toLocaleString());
+    setText("money-savings", meta.economy.savings.toLocaleString());
+    
+    // 3. Progreso (XP ganado en Actividades)
+    setText("xp-value", meta.xp);
 
-  INVENTORY_ITEMS_VISUAL.forEach(i => setText(i.countId, meta.items[i.key]));
-  setText("ball-poke", meta.balls.poke);
-  setText("ball-super", meta.balls.super);
-  setText("ball-ultra", meta.balls.ultra);
-  setText("last-updated", formatDate(meta.lastUpdated));
+    // 4. Otros datos
+    setText("achievements-value", meta.achievements || "—");
+    setText("pokedex-value", meta.pokedex || "0");
+    setText("last-updated", formatDate(meta.lastUpdated));
+
+    // 5. Inventario Visual (Ítems y Balls)
+    INVENTORY_ITEMS_VISUAL.forEach(i => setText(i.countId, meta.items[i.key]));
+    setText("ball-poke", meta.balls.poke);
+    setText("ball-super", meta.balls.super);
+    setText("ball-ultra", meta.balls.ultra);
 }
 
 // ========================
@@ -438,30 +441,122 @@ function handleCancel() {
 
 function closeModal() { $("modal-edit")?.classList.add("hidden"); }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const list = $("inventory-list");
-  if (list) {
-    list.innerHTML = "";
-    INVENTORY_ITEMS_VISUAL.forEach(i => {
-      const art = document.createElement("article");
-      art.className = "inv-item";
-      art.innerHTML = `<div class="inv-left"><img class="inv-icon" src="${i.iconUrl}"> <span class="inv-name">${i.label}</span></div>
-                       <span class="inv-count">×<span id="${i.countId}">0</span></span>`;
-      list.appendChild(art);
-    });
-  }
-  const user = await initProtectedPage();
-  if (!user) return;
-  setupLogoutButton();
-  await renderTrainerLabelFromGame();
-  await initTrainerMeta();
-  renderView();
-  await updateCapturedCountFromSupabase();
-  await updatePokedexCountFromDiscoveries();
+// ==========================================
+// LÓGICA DEL MENÚ HAMBURGUESA
+// ==========================================
+function initHamburgerMenu() {
+    const btnMenu = $("btn-menu");
+    const sideMenu = $("side-menu");
+    const btnClose = $("btn-close-menu");
+    const btnLogoutSide = $("btn-logout-side");
 
-  $("btn-edit-profile")?.addEventListener("click", openProfileModal);
-  $("btn-edit-inventory")?.addEventListener("click", openInventoryModal);
-  $("btn-cancel-edit")?.addEventListener("click", handleCancel);
-  $("btn-save-edit")?.addEventListener("click", handleSave);
-  $("btn-close-period")?.addEventListener("click", handleClosePeriod);
+    if (btnMenu && sideMenu) {
+        // Abrir menú
+        btnMenu.onclick = () => {
+            sideMenu.classList.remove("hidden");
+        };
+
+        // Cerrar menú con la X
+        if (btnClose) {
+            btnClose.onclick = () => {
+                sideMenu.classList.add("hidden");
+            };
+        }
+
+        // Cerrar al hacer clic en el fondo oscuro (backdrop)
+        sideMenu.onclick = (e) => {
+            if (e.target === sideMenu) {
+                sideMenu.classList.add("hidden");
+            }
+        };
+    }
+
+    // Vincular el botón de salir del menú lateral al logout original
+    if (btnLogoutSide) {
+        btnLogoutSide.onclick = (e) => {
+            e.preventDefault();
+            const originalLogoutBtn = $("btn-logout");
+            if (originalLogoutBtn) {
+                originalLogoutBtn.click(); // Simula el clic en el botón de salida original
+            }
+        };
+    }
+}
+
+// ==========================================
+// INICIALIZACIÓN (DOMContentLoaded)
+// ==========================================
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. Render de lista estática de ítems
+    const list = $("inventory-list");
+    if (list) {
+        list.innerHTML = "";
+        INVENTORY_ITEMS_VISUAL.forEach(i => {
+            const art = document.createElement("article");
+            art.className = "inv-item";
+            art.innerHTML = `
+                <div class="inv-left">
+                    <img class="inv-icon" src="${i.iconUrl}"> 
+                    <span class="inv-name">${i.label}</span>
+                </div>
+                <span class="inv-count">×<span id="${i.countId}">0</span></span>`;
+            list.appendChild(art);
+        });
+    }
+
+    // 2. Protección de página y carga de datos
+    const user = await initProtectedPage();
+    if (!user) return;
+
+    setupLogoutButton();
+    await renderTrainerLabelFromGame();
+    await initTrainerMeta();
+    renderView();
+    await updateCapturedCountFromSupabase();
+    await updatePokedexCountFromDiscoveries();
+
+    // 3. Inicializar Menú Hamburguesa
+    initHamburgerMenu();
+
+    // 4. Listeners de botones
+    $("btn-edit-profile")?.addEventListener("click", openProfileModal);
+    $("btn-edit-inventory")?.addEventListener("click", openInventoryModal);
+    $("btn-cancel-edit")?.addEventListener("click", handleCancel);
+    $("btn-save-edit")?.addEventListener("click", handleSave);
+    $("btn-close-period")?.addEventListener("click", handleClosePeriod);
 });
+
+window.deleteLogEntry = async function() {
+    const id = document.getElementById("edit-log-id").value;
+
+    if (!confirm("¿Eliminar actividad? Se restará el dinero y EXP de tu perfil.")) return;
+
+    try {
+        // 1. Buscamos los datos para saber qué restar
+        const { data: activity } = await window.supabaseClient
+            .from(LOG_TABLE).select("money_reward, xp_reward").eq("id", id).single();
+
+        // 2. Restamos del inventario
+        const { data: invRow } = await window.supabaseClient
+            .from(TRAINER_TABLE).select("inventory").eq("user_id", window.currentUserId).single();
+
+        let meta = invRow.inventory;
+        meta.economy.biIncome -= activity.money_reward;
+        meta.xp -= activity.xp_reward;
+
+        // 3. Guardamos inventario y BORRAMOS el log
+        await window.supabaseClient.from(TRAINER_TABLE).upsert({ user_id: window.currentUserId, inventory: meta });
+        await window.supabaseClient.from(LOG_TABLE).delete().eq("id", id);
+
+        // --- LA CLAVE ESTÁ AQUÍ ---
+        alert("¡Borrado con éxito!");
+        closeEditModal();
+        
+        // Esto obliga a la página a leer todo de nuevo de Supabase
+        location.reload(); 
+
+    } catch (err) {
+        console.error("Error al borrar:", err);
+        alert("No se pudo borrar el registro.");
+    }
+};

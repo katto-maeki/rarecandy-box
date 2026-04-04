@@ -1,0 +1,353 @@
+/* Estilos específicos de la página de Actividades */
+
+.activities-grid {
+    grid-template-columns: 1fr 1.5fr !important;
+}
+
+.full-width-btn {
+    width: 100%;
+    margin-top: 15px;
+}
+
+.log-scroll-area {
+    overflow-y: auto;
+    flex: 1;
+    max-height: 420px;
+    padding-right: 5px;
+}
+
+/* Estilo para cada fila del historial */
+.log-item {
+    margin-bottom: 10px;
+    transition: transform 0.2s ease;
+}
+
+.log-item:hover {
+    transform: scale(1.01);
+}
+
+.log-info-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.log-date {
+    font-size: 0.65rem;
+    color: #718096;
+}
+
+.log-rewards {
+    text-align: right;
+}
+
+.money-text {
+    color: #0fb86b;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.xp-text {
+    color: #7a47ff;
+    font-weight: bold;
+    font-size: 0.75rem;
+}
+
+.link-text {
+    font-size: 0.6rem;
+    color: #3182ce;
+    text-decoration: underline;
+}
+
+.empty-msg {
+    text-align: center;
+    color: #a0aec0;
+    font-size: 0.8rem;
+    margin-top: 30px;
+}
+.activities-grid { grid-template-columns: 1fr 1.4fr !important; }
+.full-width-btn { width: 100%; margin-top: 10px; }
+.log-scroll-area { overflow-y: auto; flex: 1; max-height: 420px; padding-right: 5px; }
+
+.log-item { margin-bottom: 8px; border-left: 4px solid #f3ca3b; }
+.log-info-group { display: flex; flex-direction: column; }
+.log-date { font-size: 0.65rem; color: #718096; }
+.log-rewards { text-align: right; }
+
+.money-text { color: #0fb86b; font-weight: bold; font-size: 0.85rem; font-family: 'Nunito', cursive; }
+.xp-text { color: #7a47ff; font-weight: bold; font-size: 0.7rem; }
+.link-text { font-size: 0.6rem; color: #3182ce; text-decoration: underline; }
+
+.empty-msg { text-align: center; color: #a0aec0; font-size: 0.8rem; margin-top: 30px; }
+.hidden { display: none !important; }
+
+/* Feedback visual para participación */
+#participation-row select:disabled { background-color: #edf2f7; cursor: not-allowed; }
+/* Botón pequeño para editar */
+.btn-edit-small {
+    background: #dac6f0;
+    border: none;
+    border-radius: 4px;
+    color: #252849;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-edit-small:hover {
+    background: #f3ca3b;
+}
+
+/* 2. Estilo para el botón de borrar (Rojo) */
+.btn-danger {
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: none;
+    background: #e53e3e;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-right: auto; /* Lo empuja a la izquierda en el footer */
+}
+
+.btn-danger:hover {
+    background: #c53030;
+}
+
+/* Ajustes de tipografía en el historial */
+.log-date {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    color: #c957b0;
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+}
+
+.inv-name {
+    font-size: 0.8rem;
+    line-height: 1.2;
+}
+
+/* Contenedor principal del menú */
+.side-nav {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.4); /* Fondo oscurecido */
+    display: flex;
+    justify-content: flex-start; /* CAMBIO: Ahora alinea el contenido a la IZQUIERDA */
+    transition: opacity 0.3s ease;
+}
+
+/* El panel blanco del menú */
+.side-nav-content {
+    width: 280px;
+    height: 100%;
+    background: linear-gradient(180deg, #fdf5f8 0%, #ffe4f2 100%);
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2); /* CAMBIO: Sombra hacia la derecha */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    animation: slideInLeft 0.3s ease-out; /* Nueva animación */
+}
+
+/* Animación para que salga desde la izquierda */
+@keyframes slideInLeft {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+.menu-title {
+    font-family: 'Nunito', cursive;
+    font-size: 0.75rem;
+    color: #c957b0;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.menu-links {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.menu-link {
+    text-decoration: none;
+    color: #373b5c;
+    font-weight: 800;
+    font-size: 0.95rem;
+    padding: 10px 15px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+}
+
+.menu-link:hover {
+    background: #f3ca3b;
+    color: #2a2511;
+    transform: translateX(-5px);
+}
+
+.close-btn {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #c957b0;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.text-red { color: #e53e3e !important; }
+
+/* Estilo específico para la columna de fecha */
+.td-date {
+    color: #a0aec0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.td-activity-name {
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 2px;
+}
+
+.td-link {
+    font-size: 0.7rem;
+    color: #3182ce;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.td-link:hover {
+    text-decoration: underline;
+}
+
+/* Agrupar dinero y XP en la misma celda para ahorrar espacio */
+.td-money { 
+    color: #0fb86b; 
+    font-weight: 800; 
+    font-size: 0.9rem;
+}
+.td-xp { 
+    color: #7a47ff; 
+    font-weight: 700; 
+    font-size: 0.75rem;
+}
+
+/* --- NUEVOS ESTILOS PARA LA TABLA DE LOG --- */
+
+.log-table-container {
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #ffe4f2;
+    overflow: hidden; /* Para que los bordes redondeados corten la tabla */
+    margin-top: 10px;
+}
+
+.activities-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Nunito', sans-serif;
+}
+
+/* Encabezados */
+.activities-table th {
+    background-color: #fff5f9;
+    color: #c957b0;
+    text-align: left;
+    padding: 12px 10px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    border-bottom: 2px solid #ffe4f2;
+}
+
+/* Celdas */
+.activities-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #fff0f7;
+    vertical-align: middle;
+    font-size: 0.85rem;
+}
+
+.activities-table tr:hover {
+    background-color: #fff9fc;
+}
+
+/* Columnas específicas */
+.td-date {
+    color: #a0aec0;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.td-activity-name {
+    font-weight: 800;
+    color: #373b5c;
+    display: block;
+}
+
+.td-link {
+    font-size: 0.7rem;
+    color: #3182ce;
+    text-decoration: none;
+}
+
+/* Badges (Categoría y Participación) */
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.badge-type { background: #f0ebff; color: #7a47ff; }
+.badge-part { background: #e0f2ff; color: #3182ce; }
+
+/* Recompensas */
+.td-money { 
+    color: #0fb86b; 
+    font-weight: 800; 
+    font-size: 0.9rem;
+    margin-bottom: -2px;
+}
+.td-xp { 
+    color: #7a47ff; 
+    font-weight: 700; 
+    font-size: 0.75rem;
+}
+
+/* Botones de Acción */
+.actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-action-table {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px;
+    transition: transform 0.2s;
+}
+
+.btn-edit-table { color: #3182ce; }
+.btn-delete-table { color: #e53e3e; }
+
+.btn-action-table:hover {
+    transform: scale(1.2);
+}
