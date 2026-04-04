@@ -769,3 +769,21 @@ button,
         width: 100%; /* Botón ancho total en móviles */
     }
 }
+.extra-count-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f0ff; /* Un lila suave */
+    border: 2px dashed #c957b0 !important;
+    color: #c957b0;
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+/* Forzar que la cuadrícula siempre sea de 3 columnas para que no se mueva */
+.inc-card-right {
+    display: grid !important;
+    grid-template-columns: repeat(3, 70px) !important;
+    grid-template-rows: repeat(2, 70px) !important;
+    gap: 10px;
+}

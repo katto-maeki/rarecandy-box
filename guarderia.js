@@ -76,13 +76,14 @@ function setupEggTabs() {
     btn.onclick = () => {
       document.querySelectorAll(".info-tab-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
+      selectedType = btn.dataset.type;
+
       if (selectedType === "baby") {
         selectedPokemon = [...EGG_DATA.baby.pool];
       } else {
         selectedPokemon = [];
       }
-      selectedType = btn.dataset.type;
-      selectedPokemon = [];
+
       renderPool(selectedType);
       updateCounter();
       updateIncubateButton();
@@ -90,15 +91,10 @@ function setupEggTabs() {
   });
 }
 
-// ===============================
-// LÓGICA DE SELECCIÓN (FILTRO BABY)
-// ===============================
-
 function renderPool(type) {
   const container = document.getElementById("pool-display");
   const pool = EGG_DATA[type].pool;
 
-  // REGLA: Si es Baby, mostramos TODO el pool. Si no, solo Hoenn.
   const poolToShow = (type === "baby") 
     ? pool 
     : pool.filter(p => REGION_MAP[p] === "hoenn");
@@ -111,7 +107,6 @@ function renderPool(type) {
 }
 
 function toggleSelection(name) {
-  // REGLA: Si es Baby, el máximo es el total de la lista. Si no, es 4.
   const max = (selectedType === "baby") ? EGG_DATA.baby.pool.length : 4;
 
   if (selectedPokemon.includes(name)) {
@@ -119,41 +114,19 @@ function toggleSelection(name) {
   } else if (selectedPokemon.length < max) {
     selectedPokemon.push(name);
   }
+  
   renderPool(selectedType);
   updateCounter();
   updateIncubateButton();
 }
 
 function updateCounter() {
-  // Ajustamos el texto del contador según el tipo
-  const max = (selectedType === "baby") ? EGG_DATA.baby.pool.length : 4;
-  document.getElementById("selection-count").textContent = `Seleccionados: ${selectedPokemon.length} / ${max}`;
-  
-  const notice = document.getElementById("johto-notice");
-  if (notice) {
-    notice.style.visibility = (selectedType === "baby") ? "hidden" : "visible";
-  }
-}
-
-function updateIncubateButton() {
-  // Para Baby, dejamos incubar si hay al menos 1 seleccionado (o todos)
-  // Para los demás, obligamos a que sean exactamente 4
-  const isReady = (selectedType === "baby") 
-    ? selectedPokemon.length > 0 
-    : selectedPokemon.length === 4;
-
-  document.getElementById("btn-incubar").disabled = !isReady;
-}
-
-function updateCounter() {
-  // 1. Definimos el máximo dinámico
   const isBaby = (selectedType === "baby");
   const max = isBaby ? EGG_DATA.baby.pool.length : 4;
   
-  // 2. Actualizamos el texto del contador
-  document.getElementById("selection-count").textContent = `${selectedPokemon.length} / ${max}`;
+  const countEl = document.getElementById("selection-count");
+  if (countEl) countEl.textContent = `${selectedPokemon.length} / ${max}`;
   
-  // 3. Actualizamos el título de la sección para que tenga sentido
   const title = document.querySelector(".pool-info-section .column-title");
   if (title) {
     title.textContent = isBaby 
@@ -161,112 +134,51 @@ function updateCounter() {
       : "Selecciona 4 Pokémon de Hoenn";
   }
 
-  // 4. Ocultamos el aviso de Johto en Baby
   const notice = document.getElementById("johto-notice");
   if (notice) {
     notice.style.display = isBaby ? "none" : "block";
   }
 }
 
-function setupEggTabs() {
-  document.querySelectorAll(".info-tab-btn").forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll(".info-tab-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedType = btn.dataset.type;
-
-      // REGLA: Si entras a Baby, seleccionamos TODOS automáticamente
-      if (selectedType === "baby") {
-        selectedPokemon = [...EGG_DATA.baby.pool];
-      } else {
-        selectedPokemon = [];
-      }
-
-      renderPool(selectedType);
-      updateCounter();
-      updateIncubateButton();
-    };
-  });
-}
-
-function toggleSelection(name) {
-  // Evitamos que se deseleccionen en Baby si quieres que siempre se consideren todos
-  // O permitimos que el usuario quite alguno si quiere menos probabilidad para ese.
-  const max = (selectedType === "baby") ? EGG_DATA.baby.pool.length : 4;
-
-  if (selectedPokemon.includes(name)) {
-    selectedPokemon = selectedPokemon.filter(p => p !== name);
-  } else if (selectedPokemon.length < max) {
-    selectedPokemon.push(name);
-  }
-  
-  renderPool(selectedType);
-  updateCounter();
-  updateIncubateButton();
-}
-
 function updateIncubateButton() {
   const isBaby = (selectedType === "baby");
-  // En Baby: permitimos incubar siempre que haya al menos 1.
-  // En Común/Raro: exigimos exactamente 4.
-  const canIncubate = isBaby 
-    ? selectedPokemon.length > 0 
-    : selectedPokemon.length === 4;
-
-  document.getElementById("btn-incubar").disabled = !canIncubate;
-}
-
-function updateIncubateButton() {
-  const isBaby = (selectedType === "baby");
-  
-  // REGLA:
-  // En Baby: se activa si hay al menos 1 seleccionado (aunque por defecto pusimos todos).
-  // En Otros: se activa SOLO si hay exactamente 4.
   const canIncubate = isBaby 
     ? selectedPokemon.length > 0 
     : selectedPokemon.length === 4;
 
   const btn = document.getElementById("btn-incubar");
-  if (btn) {
-    btn.disabled = !canIncubate;
-  }
+  if (btn) btn.disabled = !canIncubate;
 }
 
 // ===============================
-// MODAL DE RESUMEN
+// MODAL Y LÓGICA DE JUEGO
 // ===============================
 
 document.getElementById("btn-incubar").onclick = openSummaryModal;
 
 function openSummaryModal() {
-  // 1. Limpiamos selecciones previas de Johto
   tempJohtoSelection = [];
   let fullPreview = [];
 
   if (selectedType === "baby") {
-    // Para Baby, usamos lo que el usuario seleccionó (los 16 o los que quiera)
     fullPreview = [...selectedPokemon];
   } else {
-    // Para Común/Raro, generamos los 2 de Johto obligatorios
     tempJohtoSelection = getRandomJohto(selectedType, 2);
     fullPreview = [...selectedPokemon, ...tempJohtoSelection];
   }
 
-  // 2. Rellenar datos básicos del modal
   document.getElementById("summary-type").textContent = EGG_DATA[selectedType].label;
   document.getElementById("summary-time").textContent = `${INCUBATION_TIME[selectedType]} días`;
   
   const hatchDate = calculateHatchDate(selectedType, false);
   document.getElementById("summary-date").textContent = hatchDate.toLocaleDateString("es-ES");
 
-  // 3. Renderizar la lista de Pokémon en el resumen
   const list = document.getElementById("summary-pokemon");
   list.innerHTML = fullPreview.map(p => {
     const isAutoJohto = tempJohtoSelection.includes(p);
     return `<li>${p} ${isAutoJohto ? '<small style="color: #6366f1;">(Johto)</small>' : ''}</li>`;
   }).join("");
 
-  // 4. Mostrar el modal
   document.getElementById("modal-summary").classList.remove("hidden");
 }
 
@@ -275,10 +187,6 @@ function getRandomJohto(type, count = 2) {
   const johtoPool = pool.filter(p => REGION_MAP[p] === "johto");
   return [...johtoPool].sort(() => 0.5 - Math.random()).slice(0, count);
 }
-
-// ===============================
-// GESTIÓN DE INCUBACIÓN DB
-// ===============================
 
 async function confirmIncubationFromModal() {
   if (activeIncubations.length >= 2) return alert("Solo puedes tener 2 incubadoras activas.");
@@ -290,37 +198,28 @@ async function confirmIncubationFromModal() {
   if (inventory.items.egg <= 0) return alert("No tienes huevos disponibles.");
   if (special && inventory.economy.savings < 100) return alert("No tienes suficientes Pokecoins.");
 
-  // Restar recursos
   inventory.items.egg--;
   if (special) inventory.economy.savings -= 100;
   await bd.from("trainer_inventory").update({ inventory }).eq("user_id", user.id);
 
   const hatchDate = calculateHatchDate(selectedType, special);
-  
-  // IMPORTANTE: Definir el pool final que se guarda en la base de datos
-  const finalPool = (selectedType === "baby") 
-    ? [...selectedPokemon] 
-    : [...selectedPokemon, ...tempJohtoSelection];
+  const finalPool = (selectedType === "baby") ? [...selectedPokemon] : [...selectedPokemon, ...tempJohtoSelection];
 
   const { data: newInc, error } = await bd.from("trainer_incubations").insert({
     user_id: user.id,
     egg_type: selectedType,
-    selected_pokemon: finalPool, // Aquí se guardan los 16 si es Baby
+    selected_pokemon: finalPool,
     start_date: new Date(),
     hatch_date: hatchDate,
     special_incubator: special,
     hatched: false
   }).select().single();
 
-  if (error) {
-      console.error("Error al incubar:", error);
-      return;
-  }
+  if (error) return console.error("Error al incubar:", error);
 
   activeIncubations.push(newInc);
   renderIncubations();
   
-  // Resetear interfaz
   selectedPokemon = [];
   tempJohtoSelection = [];
   updateCounter();
@@ -329,7 +228,7 @@ async function confirmIncubationFromModal() {
 }
 
 // ===============================
-// RENDERIZADO Y ECLOSIÓN
+// RENDERIZADO INCUBADORAS
 // ===============================
 
 async function loadIncubations() {
@@ -345,14 +244,30 @@ async function renderIncubations() {
     return;
   }
 
-  container.innerHTML = (await Promise.all(activeIncubations.map(async inc => {
+  const cardsHtml = await Promise.all(activeIncubations.map(async inc => {
     const isReady = new Date(inc.hatch_date) <= new Date();
+    const MAX_VISIBLES = 6;
+    const totalPkm = inc.selected_pokemon.length;
+    
+    const pkmParaMostrar = totalPkm > MAX_VISIBLES 
+        ? inc.selected_pokemon.slice(0, MAX_VISIBLES - 1) 
+        : inc.selected_pokemon;
+
     const pokemonSprites = await Promise.all(
-      inc.selected_pokemon.map(async p => {
+      pkmParaMostrar.map(async p => {
         const url = await getPokemonSprite(p);
         return `<div class="mini-sprite-box"><img src="${url}" class="mini-sprite" title="${p}"></div>`;
       })
     );
+
+    if (totalPkm > MAX_VISIBLES) {
+        const resto = totalPkm - (MAX_VISIBLES - 1);
+        pokemonSprites.push(`
+            <div class="mini-sprite-box extra-count-box" title="Y otros ${resto} más...">
+                <span>+${resto}</span>
+            </div>
+        `);
+    }
 
     return `
       <div class="incubator-card-advanced ${isReady ? "ready" : ""}" ${isReady ? `onclick="hatchIncubation('${inc.id}')"` : ""}>
@@ -364,22 +279,30 @@ async function renderIncubations() {
           <span class="inc-status-icon">${isReady ? "✅" : "⏳"}</span>
         </div>
         <div class="inc-card-content">
-          <div class="inc-card-left"><div class="egg-visual-container"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/mystery-egg.png" class="mystery-egg" /></div></div>
+          <div class="inc-card-left">
+            <div class="egg-visual-container">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/mystery-egg.png" class="mystery-egg" />
+            </div>
+          </div>
           <div class="inc-card-right">${pokemonSprites.join("")}</div>
         </div>
       </div>`;
-  }))).join("");
+  }));
+
+  container.innerHTML = cardsHtml.join("");
 }
+
+// ===============================
+// ECLOSIÓN Y HELPERS
+// ===============================
 
 async function hatchIncubation(id) {
   const inc = activeIncubations.find(i => i.id === id);
   let winner;
 
   if (inc.egg_type === "baby") {
-    // Azar total entre los 6 elegidos
     winner = inc.selected_pokemon[Math.floor(Math.random() * inc.selected_pokemon.length)];
   } else {
-    // 80% Hoenn / 20% Johto
     const hoenn = inc.selected_pokemon.filter(p => REGION_MAP[p] === "hoenn");
     const johto = inc.selected_pokemon.filter(p => REGION_MAP[p] === "johto");
     winner = (Math.random() < 0.8 && hoenn.length > 0) ? hoenn[Math.floor(Math.random()*hoenn.length)] : johto[Math.floor(Math.random()*johto.length)];
@@ -391,7 +314,6 @@ async function hatchIncubation(id) {
   startHatchAnimation(winner, shiny);
 }
 
-// Helpers PokeAPI
 async function getPokemonSprite(name, shiny = false) {
   try {
     const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name.toLowerCase().replace(" ", "-")}`);
@@ -427,10 +349,11 @@ function initHamburgerMenu() {
   const b = document.getElementById("btn-menu");
   const m = document.getElementById("side-menu");
   if(b) b.onclick = () => m.classList.remove("hidden");
-  document.getElementById("btn-close-menu").onclick = () => m.classList.add("hidden");
+  const cb = document.getElementById("btn-close-menu");
+  if(cb) cb.onclick = () => m.classList.add("hidden");
 }
 
-// Globales
+// Globales para HTML
 window.toggleSelection = toggleSelection;
 window.closeSummaryModal = () => document.getElementById("modal-summary").classList.add("hidden");
 window.confirmIncubationFromModal = confirmIncubationFromModal;
