@@ -515,7 +515,9 @@ function renderDetail() {
   }
 
   // Botón Liberar
-  if (btnRelease) btnRelease.disabled = false;
+  if (btnRelease) {
+    btnRelease.disabled = false;
+}
 
   // Botón Entrenar (Solo visible si el Pokémon está en la Party)
   if (btnTrain) {
@@ -1178,10 +1180,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("btn-add-confirm")?.addEventListener("click", handleAddPokemon);
 
     document.getElementById("btn-update-pokemon")?.addEventListener("click", () => {
-        // Lógica de apertura de modal edición... (abreviado por espacio)
         openModal("modal-edit");
     });
 
+    document.getElementById("btn-move-to-party")?.addEventListener("click", handleMoveToParty);
+
+// Evento para Liberar Pokémon
+document.getElementById("btn-release-pokemon")?.addEventListener("click", handleReleasePokemon);   
     document.getElementById("btn-edit-cancel")?.addEventListener("click", () => closeModal("modal-edit"));
     document.getElementById("btn-edit-confirm")?.addEventListener("click", handleUpdatePokemon);
 
