@@ -218,62 +218,65 @@ async function getEvolutionOptions(pokemonId, pokemonName) {
     const pokemonData = await resPokemon.json();
     
     const currentRegionSuffix = getRegionSuffix(pokemonData.name); 
-
-    const speciesUrl = pokemonData.species.url;
-    const resSpecies = await fetch(speciesUrl);
+    const resSpecies = await fetch(pokemonData.species.url);
     if (!resSpecies.ok) return [];
     const speciesData = await resSpecies.json();
 
     const evoUrl = speciesData.evolution_chain?.url;
     if (!evoUrl) return [];
     const resChain = await fetch(evoUrl);
-    if (!resChain.ok) return [];
     const chainData = await resChain.json();
+
+    // 1. DETERMINAR LA ETAPA ACTUAL
+    // Comparamos el nombre de la especie actual con la raíz de la cadena evolutiva
+    const isBaseForm = (chainData.chain.species.name === speciesData.name);
+    const evolutionStage = isBaseForm ? 1 : 2; 
 
     const root = chainData.chain;
     const node = findEvolutionNode(root, speciesData.name);
     
-    if (!node || !Array.isArray(node.evolves_to) || node.evolves_to.length === 0) return [];
+    if (!node || !node.evolves_to.length) return [];
 
     const options = [];
     for (const evNode of node.evolves_to) {
       const evoSpeciesName = evNode.species.name;
       const resEvoSpecies = await fetch(`${POKEAPI_BASE}/pokemon-species/${evoSpeciesName}`);
-      if (!resEvoSpecies.ok) continue;
       const evoSpeciesData = await resEvoSpecies.json();
 
-      // Buscamos todas las variedades (Normal y Regionales)
       for (const varEntry of evoSpeciesData.varieties) {
         const vName = varEntry.pokemon.name;
         const regionSuffix = getRegionSuffix(vName);
         
-        // LÓGICA DE FILTRADO:
-        // 1. Si el actual es regional, solo mostramos su línea regional.
-        // 2. Si el actual es normal, mostramos la normal Y las regionales disponibles.
+        // --- LÓGICA DE FILTRADO (Rockruff & Regionales) ---
         if (currentRegionSuffix && !vName.includes(currentRegionSuffix)) continue;
-        if (!currentRegionSuffix && !varEntry.is_default && !regionSuffix) continue;
+        if (!currentRegionSuffix && regionSuffix) continue; 
 
         const evoPokemonId = parseSpeciesIdFromUrl(varEntry.pokemon.url);
-        const evoPokemonName = capitalize(vName);
-
+        
         let requiresStone = false;
         let requiresFriendship = false;
-        // Si tiene sufijo de región y el Pokémon base NO lo tenía, requiere Pasaporte
         let requiresPassport = (regionSuffix && !currentRegionSuffix);
+        let timeCondition = ""; 
 
         if (Array.isArray(evNode.evolution_details)) {
           for (const detail of evNode.evolution_details) {
+            // Unificamos criterios: Piedras, Amistad y Tiempo
             if (detail.trigger?.name === "use-item" && detail.item?.name?.endsWith("stone")) requiresStone = true;
             if (detail.min_happiness > 0 || detail.min_affection > 0) requiresFriendship = true;
+            if (detail.time_of_day) timeCondition = detail.time_of_day;
           }
         }
 
+        let displayName = capitalize(vName.replace(/-/g, " "));
+
         options.push({
           id: evoPokemonId,
-          name: evoPokemonName,
+          name: displayName,
           requiresStone,
           requiresFriendship,
-          requiresPassport // Nueva propiedad
+          requiresPassport,
+          timeCondition: timeCondition,
+          evolutionStage: evolutionStage // <-- Crucial para que el Modal sepa qué nivel pedir
         });
       }
     }
@@ -290,6 +293,41 @@ function filterSuggestions(list, query, max = 7) {
   const isNum = /^\d+$/.test(q);
   return list.filter((p) => !isNum && p.name.startsWith(q)).slice(0, max);
 }
+
+function handleMaxXP() {
+    if (!currentTrainingPoke || !currentInventory) return;
+
+    const select = document.getElementById("train-evolution-select");
+    const selectedOption = select.options[select.selectedIndex];
+    const xpInput = document.getElementById("train-xp-input");
+    
+    let amountToFill = 0;
+
+    // Si hay una evolución seleccionada, calculamos hasta el objetivo
+    if (selectedOption && selectedOption.value) {
+        const targetLvlRequired = parseInt(selectedOption.dataset.targetLevel);
+        const totalNeededXP = getTotalXpForLevel(targetLvlRequired);
+        const storedXP = currentTrainingPoke.storedXP || 0;
+        
+        const needed = Math.max(0, totalNeededXP - storedXP);
+        // Usamos lo que necesite, pero sin pasarnos de lo que tenemos en el inventario
+        amountToFill = Math.min(needed, currentInventory.xp);
+    } else {
+        // Si no hay evolución, calculamos para subir UN nivel
+        const nextLevelXP = getTotalXpForLevel(currentTrainingPoke.nivel + 1);
+        const currentXP = currentTrainingPoke.storedXP || 0;
+        
+        const needed = Math.max(0, nextLevelXP - currentXP);
+        amountToFill = Math.min(needed, currentInventory.xp);
+    }
+
+    // Si por alguna razón el cálculo da negativo o el inventario es 0
+    xpInput.value = amountToFill > 0 ? amountToFill : 0;
+    
+    // ¡IMPORTANTE! Llamar a esta función para que los botones de "Guardar" o "Evolucionar" se activen
+    updateTrainingUI(); 
+}
+
 
 // =============================
 // Render de UI
@@ -648,16 +686,17 @@ evolutions.forEach(evo => {
     const option = document.createElement("option");
     option.value = evo.id; 
     option.textContent = evo.name;
+    
+    // Pasamos los datasets para que updateTrainingUI los lea
     option.dataset.requiresStone = evo.requiresStone;
     option.dataset.requiresFriendship = evo.requiresFriendship;
     option.dataset.requiresPassport = evo.requiresPassport;
     
     const clase = currentTrainingPoke.clase;
     
-    // DETERMINACIÓN DE NIVEL FIJA
-    // Siempre pedimos el nivel de la 1ra evolución (lvl1) para el Pokémon actual.
-    // Esto evita que Pikachu pida nivel 38 (lvl2) solo por haber llegado al 19.
-    const targetLvl = getTargetLevelByClass(clase, 1);
+    // DINÁMICO: Ahora usamos la etapa que detectó la API
+    // Si es Ivysaur, evo.evolutionStage será 2, y pedirá Nivel 32.
+    const targetLvl = getTargetLevelByClass(clase, evo.evolutionStage);
     
     option.dataset.targetLevel = targetLvl;
     option.textContent += ` (Requiere Nivel ${targetLvl})`;
@@ -816,15 +855,20 @@ async function handleSaveXPAction() {
 async function handleEvolveAction() {
     const select = document.getElementById("train-evolution-select");
     const selectedOption = select.options[select.selectedIndex];
+    
+    // Guard clause: Evitar errores si no hay selección
+    if (!selectedOption || !selectedOption.value) return;
+
     const xpInput = document.getElementById("train-xp-input");
     const amount = parseInt(xpInput.value) || 0;
 
-    const targetId = selectedOption.value;
+    const targetId = selectedOption.value; // El ID de la variedad (ej. Lycanroc-Midnight)
     const targetLvl = parseInt(selectedOption.dataset.targetLevel);
     const requiresStone = selectedOption.dataset.requiresStone === "true";
     const requiresFriendship = selectedOption.dataset.requiresFriendship === "true";
     const requiresPassport = selectedOption.dataset.requiresPassport === "true";
 
+    // 1. Descontar recursos
     currentInventory.xp -= amount; 
     if (!currentTrainingPoke.storedXP) currentTrainingPoke.storedXP = 0;
     currentTrainingPoke.storedXP += amount;
@@ -834,30 +878,51 @@ async function handleEvolveAction() {
     if (requiresPassport) currentInventory.items.passport--;
 
     try {
+        // 2. Obtener datos de la nueva especie/forma
         const basic = await fetchPokemonByNameOrId(targetId);
+        
+        // 3. Transformación del Pokémon
         currentTrainingPoke.id = basic.id;
         currentTrainingPoke.numero = basic.numero;
         currentTrainingPoke.nombre = basic.nombre;
         currentTrainingPoke.tipos = basic.tipos;
         currentTrainingPoke.sprite = currentTrainingPoke.isShiny ? basic.spriteShiny : basic.spriteNormal;
-        currentTrainingPoke.nivel = Math.max(currentTrainingPoke.nivel, targetLvl);
 
+        // 4. CORRECCIÓN DE NIVEL Y XP (Punto Crítico)
+        // Forzamos el nivel al objetivo si el actual es menor.
+        if (currentTrainingPoke.nivel < targetLvl) {
+            currentTrainingPoke.nivel = targetLvl;
+            // Sincronizamos la XP acumulada para que coincida con el inicio del nivel de evolución
+            // Esto evita que "deba" XP en la siguiente etapa.
+            const minXPForTarget = getTotalXpForLevel(targetLvl);
+            if (currentTrainingPoke.storedXP < minXPForTarget) {
+                currentTrainingPoke.storedXP = minXPForTarget;
+            }
+        }
+
+        // 5. Actualizar Clase (si existe la función)
         if (typeof getPokemonClass === 'function') {
              currentTrainingPoke.clase = getPokemonClass(basic.nombre);
         }
 
+        // 6. Guardar en el origen correcto (Party o Caja)
         if (state.detailSource === 'party' && state.selectedPartyIndex !== null) {
             state.party[state.selectedPartyIndex] = currentTrainingPoke;
+        } else if (state.detailSource === 'box' && state.selectedBoxSlotIndex !== null) {
+            state.boxes[state.currentBoxIndex][state.selectedBoxSlotIndex] = currentTrainingPoke;
         }
 
+        // 7. Persistencia y actualización visual
         await saveGameData();
         alert(`¡Evolución exitosa a ${basic.nombre}!`);
+        
         closeModal("modal-train");
         renderParty();
+        renderBox();
         renderDetail();
     } catch (e) {
-        console.error(e);
-        alert("Error de conexión con PokeAPI.");
+        console.error("Error en el proceso de evolución:", e);
+        alert("Hubo un problema al conectar con PokeAPI. Los cambios no se guardaron.");
     }
 }
 
@@ -1178,7 +1243,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     document.getElementById("btn-add-cancel")?.addEventListener("click", () => closeModal("modal-add"));
     document.getElementById("btn-add-confirm")?.addEventListener("click", handleAddPokemon);
-
+document.getElementById("btn-max-xp")?.addEventListener("click", handleMaxXP);
     document.getElementById("btn-update-pokemon")?.addEventListener("click", () => {
         openModal("modal-edit");
     });

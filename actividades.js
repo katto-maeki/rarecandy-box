@@ -10,7 +10,7 @@ const REWARDS_CONFIG = {
     pokedex_legen: { individual: [100, 80] },
     pokewords: { individual: [100, 100], pareja: [150, 120], grupal: [200, 140] },
     freemode:  { individual: [100, 80], pareja: [150, 100], grupal: [200, 120] },
-    passport:  { individual: [100, 80], pareja: [150, 100], grupal: [200, 120] },
+    passport:  { individual: [80, 80], pareja: [130, 100], grupal: [180, 120] },
     evolution: { individual: [100, 0] },
     trade:     { pareja: [100, 0] },
     checkpoint: { individual: [100, 0] }
