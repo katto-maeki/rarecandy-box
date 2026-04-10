@@ -243,29 +243,35 @@ function getRandomJohto(type, count = 2) {
 async function confirmIncubationFromModal() {
   if (activeIncubations.length >= 2) return alert("Solo puedes tener 2 incubadoras activas.");
   
-  // 1. Cambiamos a 'let' para poder modificarlo y forzamos FALSE si es común
+  // 1. Forzar special a false si el huevo es común
   let special = document.getElementById("special-incubator").checked;
   if (selectedType === "comun") {
     special = false; 
   }
 
+  // 2. Obtener inventario actual de la base de datos
   const { data } = await bd.from("trainer_inventory").select("inventory").eq("user_id", user.id).single();
   const inventory = data.inventory;
 
   if (inventory.items.egg <= 0) return alert("No tienes huevos disponibles.");
   
-  // 2. Esta validación solo se activará si special sigue siendo true (Raro o Baby)
-  if (special && inventory.economy.savings < 100) return alert("No tienes suficientes Pokecoins.");
+  // 3. Calcular saldo disponible (usando la misma fórmula de tu inventario)
+  const disponible = (inventory.economy.savings + inventory.economy.biIncome) - inventory.economy.spent;
 
+  // 4. Validar cobro si es incubadora especial (100 Pokecoins)
+  if (special) {
+    if (disponible < 100) return alert("No tienes suficientes Pokecoins.");
+    
+    // RESTAR del ahorro visual (opcional según tu lógica) y SUMAR al gasto del mes
+    inventory.economy.spent += 100; 
+  }
+
+  // 5. Descontar el huevo e introducir cambios en la BD
   inventory.items.egg--;
-  
-  // 3. El cobro de 100 solo ocurre si special es true
-  if (special) inventory.economy.savings -= 100;
   
   await bd.from("trainer_inventory").update({ inventory }).eq("user_id", user.id);
 
-  // 4. La fecha se calculará correctamente: 
-  // Si era común, special es false -> usa tiempo estándar.
+  // 6. Resto de la lógica de creación de la incubación
   const hatchDate = calculateHatchDate(selectedType, special);
   const finalPool = (selectedType === "baby") ? [...selectedPokemon] : [...selectedPokemon, ...tempJohtoSelection];
 
@@ -275,7 +281,7 @@ async function confirmIncubationFromModal() {
     selected_pokemon: finalPool,
     start_date: new Date(),
     hatch_date: hatchDate,
-    special_incubator: special, // Se guardará como false para los comunes
+    special_incubator: special,
     hatched: false
   }).select().single();
 
@@ -284,6 +290,7 @@ async function confirmIncubationFromModal() {
   activeIncubations.push(newInc);
   renderIncubations();
   
+  // Resetear interfaz
   selectedPokemon = [];
   tempJohtoSelection = [];
   updateCounter();

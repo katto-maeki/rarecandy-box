@@ -79,6 +79,7 @@ async function initTrainerMeta() {
       currentMeta = {
         ...defaultMeta,
         ...parsed,
+        achievements: parsed.achievements || "—",
         economy: { ...defaultMeta.economy, ...(parsed.economy || {}) },
         items: { ...defaultMeta.items, ...(parsed.items || {}) },
         balls: { ...defaultMeta.balls, ...(parsed.balls || {}) },
@@ -358,37 +359,42 @@ async function handleSave() {
   }
 }
 function renderView() {
-    const meta = loadMeta(); // Carga el JSON de trainer_inventory
+    // 1. Cargar metadatos (asegurándonos de que no sea null)
+    const meta = loadMeta() || defaultMeta; 
     const trainerName = window.currentTrainerName || "Entrenador";
 
-    // 1. Mostrar nombre en la barra y en el perfil
+    // 2. Mostrar nombre en la barra y en el perfil
     setText("trainer-name-display", trainerName.toUpperCase());
     setText("trainer-label", `Entrenador: ${trainerName}`);
 
-    // 2. Lógica de Dinero (Sincronizada con Actividades)
-    // biIncome = Lo ganado en Actividades (Ingresos del periodo)
-    // savings = Dinero guardado de periodos anteriores
-    // spent = Dinero que el usuario ha gastado comprando ítems en el modal
-    const available = (meta.economy.savings + meta.economy.biIncome) - meta.economy.spent;
+    // 3. Lógica de Dinero
+    const eco = meta.economy || { savings: 0, biIncome: 0, spent: 0 };
+    const available = (eco.savings + eco.biIncome) - eco.spent;
 
     setText("money-available", available.toLocaleString());
-    setText("money-bi-income", meta.economy.biIncome.toLocaleString());
-    setText("money-spent", meta.economy.spent.toLocaleString());
-    setText("money-savings", meta.economy.savings.toLocaleString());
+    setText("money-bi-income", eco.biIncome.toLocaleString());
+    setText("money-spent", eco.spent.toLocaleString());
+    setText("money-savings", eco.savings.toLocaleString());
     
-    // 3. Progreso (XP ganado en Actividades)
-    setText("xp-value", meta.xp);
-
-    // 4. Otros datos
-    setText("achievements-value", meta.achievements || "—");
+    // 4. Progreso y Otros datos
+    // Forzamos el valor de logros; si el Admin puso "0", mostrará "0".
+    setText("xp-value", meta.xp ?? 0);
+    setText("achievements-value", (meta.achievements !== undefined && meta.achievements !== "") ? meta.achievements : "—");
     setText("pokedex-value", meta.pokedex || "0");
     setText("last-updated", formatDate(meta.lastUpdated));
 
     // 5. Inventario Visual (Ítems y Balls)
-    INVENTORY_ITEMS_VISUAL.forEach(i => setText(i.countId, meta.items[i.key]));
-    setText("ball-poke", meta.balls.poke);
-    setText("ball-super", meta.balls.super);
-    setText("ball-ultra", meta.balls.ultra);
+    if (meta.items) {
+        INVENTORY_ITEMS_VISUAL.forEach(i => {
+            setText(i.countId, meta.items[i.key] ?? 0);
+        });
+    }
+
+    if (meta.balls) {
+        setText("ball-poke", meta.balls.poke ?? 0);
+        setText("ball-super", meta.balls.super ?? 0);
+        setText("ball-ultra", meta.balls.ultra ?? 0);
+    }
 }
 
 // ========================

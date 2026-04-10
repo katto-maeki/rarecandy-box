@@ -42,11 +42,11 @@ function closeSuggestions() {
 // Carga inicial de nombres para el autocompletado (PokeAPI)
 async function loadAllPokemonNames() {
     try {
-        // Cargamos los primeros 1000 para cubrir la mayoría
-        const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1000");
+        // Subimos a 2000 para capturar variantes y formas regionales
+        const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=2000");
         const data = await res.json();
         globalPokemonList = data.results;
-        console.log("PokeAPI lista cargada.");
+        console.log("PokeAPI lista cargada con variantes.");
     } catch (e) {
         console.error("Error cargando lista de nombres:", e);
     }
@@ -126,27 +126,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Autocomplete Logic
     const apiInput = document.getElementById("api-search-input");
     if (apiInput) {
-        apiInput.addEventListener("input", function() {
-            const val = this.value.toLowerCase();
-            closeSuggestions();
-            if (!val) return;
-            const matches = globalPokemonList.filter(p => p.name.startsWith(val)).slice(0, 8);
-            if (matches.length > 0) {
-                const list = document.getElementById("api-suggestions");
-                list.classList.add("active");
-                matches.forEach(match => {
-                    const li = document.createElement("li");
-                    li.className = "suggestion-item";
-                    li.textContent = match.name;
-                    li.onclick = () => {
-                        apiInput.value = match.name;
-                        closeSuggestions();
-                        handleApiSearch();
-                    };
-                    list.appendChild(li);
-                });
-            }
+apiInput.addEventListener("input", function() {
+    const val = this.value.toLowerCase().trim();
+    closeSuggestions();
+    if (val.length < 2) return; // Esperar a que escriba al menos 2 letras
+
+    // CAMBIO CLAVE: usamos .includes en lugar de .startsWith
+    const matches = globalPokemonList
+        .filter(p => p.name.includes(val)) 
+        .slice(0, 10); // Mostramos hasta 10 sugerencias
+
+    if (matches.length > 0) {
+        const list = document.getElementById("api-suggestions");
+        list.classList.add("active");
+        matches.forEach(match => {
+            const li = document.createElement("li");
+            li.className = "suggestion-item";
+            // Reemplazamos guiones por espacios para que se vea más limpio
+            li.textContent = match.name.replace(/-/g, " "); 
+            li.onclick = () => {
+                apiInput.value = match.name;
+                closeSuggestions();
+                handleApiSearch();
+            };
+            list.appendChild(li);
         });
+    }
+});
     }
 
     document.addEventListener("click", (e) => {
@@ -337,22 +343,35 @@ async function syncPokedexCount(targetId) {
 
 // --- LÓGICA POKÉDEX ---
 async function handleApiSearch() {
-    const query = document.getElementById("api-search-input").value.trim().toLowerCase();
+    const query = document.getElementById("api-search-input").value.trim().toLowerCase().replace(/\s+/g, "-");
     if(!query) return;
+    
     try {
         const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${query}`);
         const data = await res.json();
-        const resSpec = await fetch(data.species.url);
-        const dataSpec = await resSpec.json();
+        
+        // El nombre lo formateamos para que se vea bien (Raichu-alola -> Raichu Alola)
+        const cleanName = data.name.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+        document.getElementById("poke-input-name").value = cleanName;
 
-        document.getElementById("poke-input-name").value = data.name.charAt(0).toUpperCase() + data.name.slice(1);
         const img = data.sprites.other["official-artwork"].front_default || data.sprites.front_default;
         document.getElementById("poke-input-img").value = img;
         document.getElementById("api-preview-img").src = img;
         document.getElementById("api-preview-img").classList.add("visible");
         document.getElementById("poke-input-type").value = data.types.map(t => t.type.name).join(" / ");
-        document.getElementById("poke-input-season").value = REGION_MAP[dataSpec.generation.name] || "Desconocida";
-    } catch (e) { alert("Pokémon no encontrado en PokeAPI"); }
+
+        // Intentamos obtener la generación de la especie
+        try {
+            const resSpec = await fetch(data.species.url);
+            const dataSpec = await resSpec.json();
+            document.getElementById("poke-input-season").value = REGION_MAP[dataSpec.generation.name] || "Desconocida";
+        } catch (e) {
+            document.getElementById("poke-input-season").value = "Variante Especial";
+        }
+
+    } catch (e) { 
+        alert("Pokémon o variante no encontrada"); 
+    }
 }
 
 function openPokeModal() {
