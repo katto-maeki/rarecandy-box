@@ -12,35 +12,65 @@ let activeIncubations = [];
 
 const EGG_DATA = {
   comun: { label: "Huevo Común", pool: ["Poochyena","Zigzagoon","Wurmple","Lotad","Seedot","Taillow","Wingull","Surskit","Shroomish","Nincada","Whismur","Makuhita","Nosepass","Skitty","Aron","Meditite","Electrike","Gulpin","Carvanha","Wailmer","Numel","Spoink","Cacnea","Barboach","Corphish","Baltoy","Shuppet","Duskull","Snorunt","Spheal","Luvdisc","Sentret","Hoothoot","Ledyba","Spinarak","Chinchou","Natu","Mareep","Marill","Hoppip","Sunkern","Wooper","Pineco","Snubbull","Teddiursa","Slugma","Swinub","Remoraid","Phanpy"] },
-  raro: { label: "Huevo Raro", pool: ["Treecko","Torchic","Mudkip","Ralts","Slakoth","Sableye","Mawile","Plusle","Minun","Volbeat","Illumise","Roselia","Torkoal","Spinda","Trapinch","Swablu","Zangoose","Seviper","Lunatone","Solrock","Lileep","Anorith","Feebas","Castform","Kecleon","Tropius","Chimecho","Absol","Clamperl","Relicanth","Bagon","Beldum","Chikorita","Cyndaquil","Totodile","Sudowoodo","Aipom","Yanma","Murkrow","Misdreavus","Unown","Girafarig","Dunsparce","Gligar","Qwilfish","Shuckle","Heracross","Sneasel","Corsola","Delibird","Skarmory","Houndour","Stantler","Smeargle","Miltank","Larvitar"] },
-  baby: { label: "Huevo Baby", pool: ["Azurill","Wynaut","Pichu","Cleffa","Igglybuff","Togepi","Tyrogue","Smoochum","Elekid","Magby","Budew","Chingling","Bonsly","Mime Jr.","Happiny","Munchlax"] }
+  raro: { label: "Huevo Raro", pool: ["Treecko","Torchic","Mudkip","Ralts","Slakoth","Sableye","Mawile","Plusle","Minun","Volbeat","Illumise","Roselia","Torkoal","Spinda","Trapinch","Swablu","Zangoose","Seviper","Lunatone","Solrock","Feebas","Castform","Kecleon","Tropius","Chimecho","Absol","Clamperl","Relicanth","Bagon","Beldum","Chikorita","Cyndaquil","Totodile","Sudowoodo","Aipom","Yanma","Murkrow","Misdreavus","Unown","Girafarig","Dunsparce","Gligar","Qwilfish","Shuckle","Heracross","Sneasel","Corsola","Delibird","Skarmory","Houndour","Stantler","Smeargle","Miltank","Larvitar"] },
+  baby: { label: "Huevo Baby", pool: ["Azurill","Wynaut","Pichu","Cleffa","Igglybuff","Togepi","Tyrogue","Smoochum","Elekid","Magby","Budew","Chingling","Bonsly","Mime Jr.","Happiny","Munchlax", "Riolu", "Mantyke", "Toxel",] }
 };
 
 const REGION_MAP = {
   /* HOENN */
-  Treecko: "hoenn", Torchic: "hoenn", Mudkip: "hoenn", Ralts: "hoenn", Slakoth: "hoenn", Sableye: "hoenn", Mawile: "hoenn", Plusle: "hoenn", Minun: "hoenn", Volbeat: "hoenn", Illumise: "hoenn", Roselia: "hoenn", Torkoal: "hoenn", Spinda: "hoenn", Trapinch: "hoenn", Swablu: "hoenn", Zangoose: "hoenn", Seviper: "hoenn", Lunatone: "hoenn", Solrock: "hoenn", Lileep: "hoenn", Anorith: "hoenn", Feebas: "hoenn", Castform: "hoenn", Kecleon: "hoenn", Tropius: "hoenn", Chimecho: "hoenn", Absol: "hoenn", Clamperl: "hoenn", Relicanth: "hoenn", Bagon: "hoenn", Beldum: "hoenn", Poochyena: "hoenn", Zigzagoon: "hoenn", Wurmple: "hoenn", Lotad: "hoenn", Seedot: "hoenn", Taillow: "hoenn", Wingull: "hoenn", Surskit: "hoenn", Shroomish: "hoenn", Nincada: "hoenn", Whismur: "hoenn", Makuhita: "hoenn", Nosepass: "hoenn", Skitty: "hoenn", Aron: "hoenn", Meditite: "hoenn", Electrike: "hoenn", Gulpin: "hoenn", Carvanha: "hoenn", Wailmer: "hoenn", Numel: "hoenn", Spoink: "hoenn", Cacnea: "hoenn", Barboach: "hoenn", Corphish: "hoenn", Baltoy: "hoenn", Shuppet: "hoenn", Duskull: "hoenn", Snorunt: "hoenn", Spheal: "hoenn", Luvdisc: "hoenn", Azurill: "hoenn", Wynaut: "hoenn",
+  Treecko: "hoenn", Torchic: "hoenn", Mudkip: "hoenn", Ralts: "hoenn", Slakoth: "hoenn", Sableye: "hoenn", Mawile: "hoenn", Plusle: "hoenn", Minun: "hoenn", Volbeat: "hoenn", Illumise: "hoenn", Roselia: "hoenn", Torkoal: "hoenn", Spinda: "hoenn", Trapinch: "hoenn", Swablu: "hoenn", Zangoose: "hoenn", Seviper: "hoenn", Lunatone: "hoenn", Solrock: "hoenn", Feebas: "hoenn", Castform: "hoenn", Kecleon: "hoenn", Tropius: "hoenn", Chimecho: "hoenn", Absol: "hoenn", Clamperl: "hoenn", Relicanth: "hoenn", Bagon: "hoenn", Beldum: "hoenn", Poochyena: "hoenn", Zigzagoon: "hoenn", Wurmple: "hoenn", Lotad: "hoenn", Seedot: "hoenn", Taillow: "hoenn", Wingull: "hoenn", Surskit: "hoenn", Shroomish: "hoenn", Nincada: "hoenn", Whismur: "hoenn", Makuhita: "hoenn", Nosepass: "hoenn", Skitty: "hoenn", Aron: "hoenn", Meditite: "hoenn", Electrike: "hoenn", Gulpin: "hoenn", Carvanha: "hoenn", Wailmer: "hoenn", Numel: "hoenn", Spoink: "hoenn", Cacnea: "hoenn", Barboach: "hoenn", Corphish: "hoenn", Baltoy: "hoenn", Shuppet: "hoenn", Duskull: "hoenn", Snorunt: "hoenn", Spheal: "hoenn", Luvdisc: "hoenn", Azurill: "hoenn", Wynaut: "hoenn",
   /* JOHTO */
   Chikorita: "johto", Cyndaquil: "johto", Totodile: "johto", Sudowoodo: "johto", Aipom: "johto", Yanma: "johto", Murkrow: "johto", Misdreavus: "johto", Unown: "johto", Girafarig: "johto", Dunsparce: "johto", Gligar: "johto", Qwilfish: "johto", Shuckle: "johto", Heracross: "johto", Sneasel: "johto", Corsola: "johto", Delibird: "johto", Skarmory: "johto", Houndour: "johto", Stantler: "johto", Smeargle: "johto", Miltank: "johto", Larvitar: "johto", Sentret: "johto", Hoothoot: "johto", Ledyba: "johto", Spinarak: "johto", Chinchou: "johto", Natu: "johto", Mareep: "johto", Marill: "johto", Hoppip: "johto", Sunkern: "johto", Wooper: "johto", Pineco: "johto", Snubbull: "johto", Teddiursa: "johto", Slugma: "johto", Swinub: "johto", Remoraid: "johto", Phanpy: "johto", Smoochum: "johto", Elekid: "johto", Magby: "johto", Tyrogue: "johto", Pichu: "johto", Cleffa: "johto", Igglybuff: "johto", Togepi: "johto"
 };
 
-const INCUBATION_TIME = { comun: 7, raro: 14, baby: 28 };
+const INCUBATION_TIME = { comun: 7, raro: 21, baby: 28 };
 
 // ===============================
 // INICIALIZACIÓN
 // ===============================
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // 1. Validación de sesión y usuario
   const loggedUser = await initProtectedPage();
   if (!loggedUser) return;
   user = loggedUser;
 
+  // 2. Setup visual y menús
   await renderTrainerLabelFromGame();
   initHamburgerMenu();
 
+  // 3. Carga de datos y configuración de pestañas
   await loadIncubations();
   setupEggTabs();
   setupViewTabs();
-  
+
+  // 4. Lógica del Rayo y Fecha Dinámica en el Modal ---
+  const specialCheckbox = document.getElementById("special-incubator");
+  if (specialCheckbox) {
+    specialCheckbox.addEventListener("change", function() {
+      const iconContainer = document.getElementById("special-icon-summary");
+      const dateDisplay = document.getElementById("summary-date");
+
+      if (this.checked) {
+        // Mostramos el rayo
+        if (iconContainer) iconContainer.innerHTML = " ⚡";
+        
+        // OPCIONAL: Actualizar la fecha en el modal restando los 7 días al instante
+        const newDate = calculateHatchDate(selectedType, true);
+        if (dateDisplay) dateDisplay.textContent = newDate.toLocaleDateString("es-ES");
+      } else {
+        // Quitamos el rayo
+        if (iconContainer) iconContainer.innerHTML = "";
+        
+        // Volvemos a la fecha original
+        const originalDate = calculateHatchDate(selectedType, false);
+        if (dateDisplay) dateDisplay.textContent = originalDate.toLocaleDateString("es-ES");
+      }
+    });
+  }
+  // -----------------------------------------------------------
+
+  // 5. Renderizado inicial de la pool de Pokémon
   renderPool(selectedType);
   updateCounter();
   updateIncubateButton();
@@ -160,6 +190,7 @@ function openSummaryModal() {
   tempJohtoSelection = [];
   let fullPreview = [];
 
+  // 1. Preparar la previsualización de Pokémon
   if (selectedType === "baby") {
     fullPreview = [...selectedPokemon];
   } else {
@@ -167,18 +198,39 @@ function openSummaryModal() {
     fullPreview = [...selectedPokemon, ...tempJohtoSelection];
   }
 
+  // 2. Lógica de Restricción e Iconos
+  const specialContainer = document.getElementById("container-special-incubator");
+  const specialCheckbox = document.getElementById("special-incubator");
+  const specialIconContainer = document.getElementById("special-icon-summary");
+
+  // RESET: Siempre empezamos con el checkbox desmarcado y sin rayo al abrir el modal
+  if (specialCheckbox) specialCheckbox.checked = false;
+  if (specialIconContainer) specialIconContainer.innerHTML = "";
+
+  if (selectedType === "comun") {
+    // Si el huevo es común, escondemos la opción
+    if (specialContainer) specialContainer.style.display = "none";
+  } else {
+    // Si es Raro o Baby, mostramos la opción
+    if (specialContainer) specialContainer.style.display = "block";
+  }
+
+  // 3. Rellenar datos de texto en el modal
   document.getElementById("summary-type").textContent = EGG_DATA[selectedType].label;
   document.getElementById("summary-time").textContent = `${INCUBATION_TIME[selectedType]} días`;
   
+  // Siempre mostramos la fecha base inicialmente
   const hatchDate = calculateHatchDate(selectedType, false);
   document.getElementById("summary-date").textContent = hatchDate.toLocaleDateString("es-ES");
 
+  // 4. Renderizar la lista de Pokémon que podrían salir
   const list = document.getElementById("summary-pokemon");
   list.innerHTML = fullPreview.map(p => {
     const isAutoJohto = tempJohtoSelection.includes(p);
     return `<li>${p} ${isAutoJohto ? '<small style="color: #6366f1;">(Johto)</small>' : ''}</li>`;
   }).join("");
 
+  // 5. Mostrar el modal
   document.getElementById("modal-summary").classList.remove("hidden");
 }
 
@@ -191,17 +243,29 @@ function getRandomJohto(type, count = 2) {
 async function confirmIncubationFromModal() {
   if (activeIncubations.length >= 2) return alert("Solo puedes tener 2 incubadoras activas.");
   
-  const special = document.getElementById("special-incubator").checked;
+  // 1. Cambiamos a 'let' para poder modificarlo y forzamos FALSE si es común
+  let special = document.getElementById("special-incubator").checked;
+  if (selectedType === "comun") {
+    special = false; 
+  }
+
   const { data } = await bd.from("trainer_inventory").select("inventory").eq("user_id", user.id).single();
   const inventory = data.inventory;
 
   if (inventory.items.egg <= 0) return alert("No tienes huevos disponibles.");
+  
+  // 2. Esta validación solo se activará si special sigue siendo true (Raro o Baby)
   if (special && inventory.economy.savings < 100) return alert("No tienes suficientes Pokecoins.");
 
   inventory.items.egg--;
+  
+  // 3. El cobro de 100 solo ocurre si special es true
   if (special) inventory.economy.savings -= 100;
+  
   await bd.from("trainer_inventory").update({ inventory }).eq("user_id", user.id);
 
+  // 4. La fecha se calculará correctamente: 
+  // Si era común, special es false -> usa tiempo estándar.
   const hatchDate = calculateHatchDate(selectedType, special);
   const finalPool = (selectedType === "baby") ? [...selectedPokemon] : [...selectedPokemon, ...tempJohtoSelection];
 
@@ -211,7 +275,7 @@ async function confirmIncubationFromModal() {
     selected_pokemon: finalPool,
     start_date: new Date(),
     hatch_date: hatchDate,
-    special_incubator: special,
+    special_incubator: special, // Se guardará como false para los comunes
     hatched: false
   }).select().single();
 
@@ -276,7 +340,10 @@ async function renderIncubations() {
             <span class="inc-type">${formatEggType(inc.egg_type)}</span>
             <span class="inc-date">${new Date(inc.hatch_date).toLocaleDateString("es-ES")}</span>
           </div>
-          <span class="inc-status-icon">${isReady ? "✅" : "⏳"}</span>
+          <span class="inc-status-icon">
+            ${isReady ? "✅" : "⏳"}
+            ${inc.special_incubator ? '<span class="special-icon" style="color: #facc15; font-weight: bold; margin-left: 2px;">⚡</span>' : ''}
+          </span>
         </div>
         <div class="inc-card-content">
           <div class="inc-card-left">

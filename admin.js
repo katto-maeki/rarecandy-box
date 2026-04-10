@@ -21,6 +21,38 @@ let selectedPlayerFullData = null;
 let globalPokemonList = []; 
 
 // ==========================================
+// UTILIDADES DE MODALES Y UI
+// ==========================================
+function openModal(id) {
+    document.getElementById(id)?.classList.remove("hidden");
+}
+
+function closeModal(id) {
+    document.getElementById(id)?.classList.add("hidden");
+}
+
+function closeSuggestions() {
+    const list = document.getElementById("api-suggestions");
+    if (list) {
+        list.innerHTML = "";
+        list.classList.remove("active");
+    }
+}
+
+// Carga inicial de nombres para el autocompletado (PokeAPI)
+async function loadAllPokemonNames() {
+    try {
+        // Cargamos los primeros 1000 para cubrir la mayoría
+        const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1000");
+        const data = await res.json();
+        globalPokemonList = data.results;
+        console.log("PokeAPI lista cargada.");
+    } catch (e) {
+        console.error("Error cargando lista de nombres:", e);
+    }
+}
+
+// ==========================================
 // LÓGICA DEL MENÚ HAMBURGUESA
 // ==========================================
 function initHamburgerMenu() {
@@ -30,37 +62,19 @@ function initHamburgerMenu() {
     const btnLogoutSide = document.getElementById("btn-logout-side");
 
     if (btnMenu && sideMenu) {
-        // Abrir menú (desde la izquierda)
-        btnMenu.onclick = () => {
-            sideMenu.classList.remove("hidden");
-        };
-
-        // Cerrar con la X
-        if (btnClose) {
-            btnClose.onclick = () => {
-                sideMenu.classList.add("hidden");
-            };
-        }
-
-        // Cerrar al hacer clic fuera del panel
+        btnMenu.onclick = () => sideMenu.classList.remove("hidden");
+        if (btnClose) btnClose.onclick = () => sideMenu.classList.add("hidden");
         sideMenu.onclick = (e) => {
-            if (e.target === sideMenu) {
-                sideMenu.classList.add("hidden");
-            }
+            if (e.target === sideMenu) sideMenu.classList.add("hidden");
         };
     }
 
-    // Vincular el botón "Salir" del menú lateral al logout de admin
     if (btnLogoutSide) {
-        btnLogoutSide.onclick = (e) => {
+        btnLogoutSide.onclick = async (e) => {
             e.preventDefault();
-            const originalLogout = document.getElementById("btn-logout");
-            if (originalLogout) {
-                originalLogout.click();
-            } else {
-                window.supabaseClient.auth.signOut().then(() => {
-                    window.location.href = "index.html";
-                });
+            if (window.supabaseClient) {
+                await window.supabaseClient.auth.signOut();
+                window.location.href = "index.html";
             }
         };
     }
@@ -70,25 +84,36 @@ function initHamburgerMenu() {
 // INICIALIZACIÓN PRINCIPAL
 // ==========================================
 document.addEventListener("DOMContentLoaded", async () => {
+    console.log("Iniciando Panel de Admin...");
+
     // 1. Protección y Header
-    const user = await initProtectedPage(); 
-    if (!user) return;
-    
-    const adminLabel = document.getElementById("admin-label");
-    if(adminLabel) adminLabel.textContent = "ADMIN CONECTADO";
+    let user = null;
+    try {
+        if (typeof initProtectedPage === "function") {
+            user = await initProtectedPage(); 
+        }
+    } catch (e) {
+        console.error("Error en la protección de página:", e);
+    }
+
+    const trainerLabel = document.getElementById("trainer-label");
+    if (user && trainerLabel) {
+        trainerLabel.textContent = "Admin Conectado";
+    } else if (trainerLabel) {
+        trainerLabel.textContent = "Sin Conexión";
+    }
 
     // 2. Inicializar Menú
     initHamburgerMenu();
 
-    // 3. Cargar datos de Admin
-    await fetchPlayerList();
-    loadAllPokemonNames();
+    // 3. Cargar datos base
+    if (window.supabaseClient) {
+        await fetchPlayerList();
+        loadAllPokemonNames();
+    }
 
-    // 4. Configurar Buscador y Logout original
+    // 4. Listeners de Botones y Buscador
     document.getElementById("admin-search")?.addEventListener("input", handleSearch);
-    if(window.setupLogoutButton) setupLogoutButton("btn-logout");
-
-    // 5. Listeners de Modales y Botones
     document.getElementById("btn-admin-edit")?.addEventListener("click", openAdminEditModal);
     document.getElementById("btn-adm-cancel")?.addEventListener("click", () => closeModal("modal-admin-edit"));
     document.getElementById("btn-adm-save")?.addEventListener("click", saveTargetData);
@@ -98,7 +123,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("btn-poke-save")?.addEventListener("click", saveNewDiscovery);
     document.getElementById("btn-api-search")?.addEventListener("click", handleApiSearch);
     
-    // 6. Autocomplete de PokeAPI
+    // Autocomplete Logic
     const apiInput = document.getElementById("api-search-input");
     if (apiInput) {
         apiInput.addEventListener("input", function() {
@@ -124,7 +149,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    document.addEventListener("click", function (e) {
+    document.addEventListener("click", (e) => {
         if (e.target !== apiInput) closeSuggestions();
     });
 });
@@ -132,8 +157,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 // --- LÓGICA JUGADORES ---
 async function fetchPlayerList() {
     const listContainer = document.getElementById("player-list");
+    if (!listContainer) return;
+    
     listContainer.innerHTML = '<div style="padding:10px;">Cargando...</div>';
     const { data, error } = await window.supabaseClient.from(GAME_TABLE).select("id, trainer_name, email");
+    
     if (error) return console.error(error);
     allPlayers = data.sort((a, b) => (a.trainer_name || "Z").localeCompare(b.trainer_name || "Z"));
     renderPlayerList(allPlayers);
@@ -141,6 +169,7 @@ async function fetchPlayerList() {
 
 function renderPlayerList(players) {
     const listContainer = document.getElementById("player-list");
+    if (!listContainer) return;
     listContainer.innerHTML = "";
     players.forEach(p => {
         const div = document.createElement("div");
@@ -187,76 +216,56 @@ function renderDetailPanel(data) {
     document.getElementById("det-achievements").textContent = inv.achievements||"-";
     document.getElementById("det-pokedex").textContent = inv.pokedex||"0";
 
-    const iList = document.getElementById("det-inventory-list"); iList.innerHTML = "";
+    const iList = document.getElementById("det-inventory-list"); 
+    iList.innerHTML = "";
     const items = inv.items||{}; const balls = inv.balls||{};
     Object.keys(LABELS).forEach(k => {
         let v = ["poke","super","ultra"].includes(k) ? (balls[k]||0) : (items[k]||0);
-        if(v>0) iList.innerHTML += `<div style="display:flex; justify-content:space-between"><span>${LABELS[k]}</span><strong>${v}</strong></div>`;
+        if(v > 0) iList.innerHTML += `<div style="display:flex; justify-content:space-between"><span>${LABELS[k]}</span><strong>${v}</strong></div>`;
     });
 
     // --- Pokémon: Equipo y Caja ---
-const partyListEl = document.getElementById("det-party-list");
-const boxListEl = document.getElementById("det-box-list");
-const partyCountEl = document.getElementById("det-party-count");
-const boxCountEl = document.getElementById("det-box-count");
+    const partyListEl = document.getElementById("det-party-list");
+    const boxListEl = document.getElementById("det-box-list");
+    const partyCountEl = document.getElementById("det-party-count");
+    const boxCountEl = document.getElementById("det-box-count");
 
-if (partyListEl) partyListEl.innerHTML = "";
-if (boxListEl) boxListEl.innerHTML = "";
+    if (partyListEl) partyListEl.innerHTML = "";
+    if (boxListEl) boxListEl.innerHTML = "";
 
-const getPokeName = (p) => {
-  if (!p) return null;
-  if (typeof p === "string") return p;
+    const getPokeName = (p) => {
+        if (!p) return null;
+        return (typeof p === "string") ? p : (p.apodo || p.nickname || p.name || p.species || "Pokémon");
+    };
 
-  // Tu estructura real
-  if (p.apodo) return p.apodo;
+    const party = (Array.isArray(game.party_data) ? game.party_data : []).filter(Boolean);
+    if (partyCountEl) partyCountEl.textContent = String(party.length);
+    party.forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = getPokeName(p);
+        partyListEl?.appendChild(li);
+    });
 
-  // Fallbacks por si cambia el formato
-  return (
-    p.nickname ||
-    p.name ||
-    p.species ||
-    p.pokemon?.name ||
-    p.species?.name ||
-    null
-  );
-};
-
-
-// Equipo
-const partyRaw = Array.isArray(game.party_data) ? game.party_data : [];
-const party = partyRaw.filter(Boolean);
-if (partyCountEl) partyCountEl.textContent = String(party.length);
-
-if (partyListEl) {
-  party.forEach((p) => {
-    const li = document.createElement("li");
-    li.textContent = getPokeName(p) || "Pokémon";
-    partyListEl.appendChild(li);
-  });
-}
-
-// Caja
-let boxAll = [];
-if (game.box_data && Array.isArray(game.box_data.boxes)) {
-  game.box_data.boxes.forEach((box) => {
-    if (Array.isArray(box)) boxAll.push(...box.filter(Boolean));
-  });
-}
-if (boxCountEl) boxCountEl.textContent = String(boxAll.length);
-
-if (boxListEl) {
-  boxAll.forEach((p) => {
-    const li = document.createElement("li");
-    li.textContent = getPokeName(p) || "Pokémon";
-    boxListEl.appendChild(li);
-  });
-}
-
+    let boxAll = [];
+    if (game.box_data && Array.isArray(game.box_data.boxes)) {
+        game.box_data.boxes.forEach(box => {
+            if (Array.isArray(box)) boxAll.push(...box.filter(Boolean));
+        });
+    }
+    if (boxCountEl) boxCountEl.textContent = String(boxAll.length);
+    boxAll.forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = getPokeName(p);
+        boxListEl?.appendChild(li);
+    });
 }
 
 // --- MODAL EDICIÓN ---
 function openAdminEditModal() {
-    if(!selectedPlayerFullData) return;
+    if(!selectedPlayerFullData) {
+        alert("Primero selecciona un jugador de la lista.");
+        return;
+    }
     const inv = selectedPlayerFullData.inventoryData;
     const eco = inv.economy || { biIncome:0, savings:0, spent:0 };
 
@@ -266,8 +275,6 @@ function openAdminEditModal() {
     document.getElementById("adm-input-spent").value = eco.spent;
     document.getElementById("adm-input-xp").value = inv.xp || 0;
     document.getElementById("adm-input-achievements").value = inv.achievements || "";
-    
-    // Actualizar visualización de Pokédex Real
     document.getElementById("adm-pokedex-display").textContent = `${inv.pokedex || 0} registrados`;
 
     const container = document.getElementById("adm-item-manager-container");
@@ -280,63 +287,44 @@ function openAdminEditModal() {
 }
 
 async function saveTargetData() {
-  if (!selectedPlayerFullData) return;
-  const targetId = selectedPlayerFullData.id;
-  const inv = JSON.parse(JSON.stringify(selectedPlayerFullData.inventoryData));
-  const newName = document.getElementById("adm-input-name").value.trim();
+    if (!selectedPlayerFullData) return;
+    const targetId = selectedPlayerFullData.id;
+    const inv = JSON.parse(JSON.stringify(selectedPlayerFullData.inventoryData));
+    const newName = document.getElementById("adm-input-name").value.trim();
 
-  // 1. Economía
-  if (!inv.economy) inv.economy = { biIncome: 0, savings: 0, spent: 0 };
-  inv.economy.biIncome = parseInt(document.getElementById("adm-input-income").value) || 0;
-  inv.economy.savings = parseInt(document.getElementById("adm-input-savings").value) || 0;
-  inv.economy.spent = parseInt(document.getElementById("adm-input-spent").value) || 0;
+    if (!inv.economy) inv.economy = { biIncome: 0, savings: 0, spent: 0 };
+    inv.economy.biIncome = parseInt(document.getElementById("adm-input-income").value) || 0;
+    inv.economy.savings = parseInt(document.getElementById("adm-input-savings").value) || 0;
+    inv.economy.spent = parseInt(document.getElementById("adm-input-spent").value) || 0;
+    inv.xp = parseInt(document.getElementById("adm-input-xp").value) || 0;
+    inv.achievements = document.getElementById("adm-input-achievements").value.trim();
 
-  // 2. Progreso
-  inv.xp = parseInt(document.getElementById("adm-input-xp").value) || 0;
-  inv.achievements = document.getElementById("adm-input-achievements").value.trim();
+    const realCount = await syncPokedexCount(targetId);
+    inv.pokedex = String(realCount || 0);
 
-  // 3. Sincronizar Pokédex automáticamente al guardar
-  const realCount = await syncPokedexCount(targetId);
-  inv.pokedex = String(realCount || 0);
+    if (!inv.items) inv.items = {};
+    if (!inv.balls) inv.balls = {};
+    Object.keys(LABELS).forEach(k => {
+        const val = parseInt(document.getElementById(`adm-qty-${k}`).value) || 0;
+        if (["poke", "super", "ultra"].includes(k)) inv.balls[k] = val;
+        else inv.items[k] = val;
+    });
 
-  // 4. Inventario
-  if (!inv.items) inv.items = {};
-  if (!inv.balls) inv.balls = {};
-  Object.keys(LABELS).forEach(k => {
-    const val = parseInt(document.getElementById(`adm-qty-${k}`).value) || 0;
-    if (["poke", "super", "ultra"].includes(k)) inv.balls[k] = val;
-    else inv.items[k] = val;
-  });
+    try {
+        await window.supabaseClient.from(GAME_TABLE).update({ trainer_name: newName }).eq("id", targetId);
+        await window.supabaseClient.from(TRAINER_TABLE).upsert(
+            { user_id: targetId, inventory: inv, updated_at: new Date().toISOString() },
+            { onConflict: "user_id" }
+        );
 
-  try {
-    // Update nombre (y valida error real)
-    const { error: nameErr } = await window.supabaseClient
-      .from(GAME_TABLE)
-      .update({ trainer_name: newName })
-      .eq("id", targetId);
-
-    if (nameErr) throw nameErr;
-
-    // Upsert inventario con onConflict para evitar 409
-    const { error: invErr } = await window.supabaseClient
-      .from(TRAINER_TABLE)
-      .upsert(
-        { user_id: targetId, inventory: inv, updated_at: new Date().toISOString() },
-        { onConflict: "user_id" }
-      );
-
-    if (invErr) throw invErr;
-
-    alert("¡Guardado y Sincronizado!");
-    closeModal("modal-admin-edit");
-    await fetchPlayerList();
-    await selectPlayer(targetId, document.querySelector(".player-row.active"));
-  } catch (e) {
-    console.error("Error al guardar:", e);
-    alert(`Error al guardar: ${e?.message || e}`);
-  }
+        alert("¡Guardado y Sincronizado!");
+        closeModal("modal-admin-edit");
+        await fetchPlayerList();
+        await selectPlayer(targetId, null);
+    } catch (e) {
+        console.error("Error al guardar:", e);
+    }
 }
-
 
 async function syncPokedexCount(targetId) {
     try {
@@ -364,15 +352,15 @@ async function handleApiSearch() {
         document.getElementById("api-preview-img").classList.add("visible");
         document.getElementById("poke-input-type").value = data.types.map(t => t.type.name).join(" / ");
         document.getElementById("poke-input-season").value = REGION_MAP[dataSpec.generation.name] || "Desconocida";
-    } catch (e) { alert("No encontrado"); }
+    } catch (e) { alert("Pokémon no encontrado en PokeAPI"); }
 }
 
 function openPokeModal() {
-    // Limpiar modal y cargar lista de checkbox
     const listDiv = document.getElementById("poke-user-list");
     listDiv.innerHTML = "";
     allPlayers.forEach(p => {
         const label = document.createElement("label");
+        label.style.display = "block";
         label.innerHTML = `<input type="checkbox" value="${p.id}" data-name="${p.trainer_name}" class="poke-user-check"> ${p.trainer_name}`;
         listDiv.appendChild(label);
     });
@@ -381,12 +369,13 @@ function openPokeModal() {
 
 async function saveNewDiscovery() {
     const name = document.getElementById("poke-input-name").value.trim();
-    if(!name) return;
+    if(!name) return alert("El nombre es obligatorio");
+    
     const checks = document.querySelectorAll(".poke-user-check:checked");
     const selectedUsers = Array.from(checks).map(c => ({ id: c.value, name: c.dataset.name }));
 
     try {
-        const { data: pData } = await window.supabaseClient.from(POKE_TABLE).insert({ 
+        const { data: pData, error: pErr } = await window.supabaseClient.from(POKE_TABLE).insert({ 
             name, 
             image_url: document.getElementById("poke-input-img").value,
             type: document.getElementById("poke-input-type").value,
@@ -394,14 +383,19 @@ async function saveNewDiscovery() {
             season: document.getElementById("poke-input-season").value
         }).select();
         
+        if (pErr) throw pErr;
+
         if (selectedUsers.length > 0) {
             const discRows = selectedUsers.map(u => ({ pokedex_id: pData[0].id, user_id: u.id, trainer_name: u.name }));
             await window.supabaseClient.from(DISC_TABLE).insert(discRows);
-            // Sincronizar a los usuarios afectados
             for (const user of selectedUsers) { await syncPokedexCount(user.id); }
         }
-        alert("¡Pokémon Registrado!");
+        
+        alert("¡Pokémon Registrado con éxito!");
         closeModal("modal-new-poke");
         fetchPlayerList();
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error(e); 
+        alert("Error al registrar: " + e.message);
+    }
 }
