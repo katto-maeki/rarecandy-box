@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hub Social - Rare Candy!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght=400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="cajapkm.css" />
+  <link rel="stylesheet" href="trainer.css" />
+  <link rel="stylesheet" href="perfil.css" />
+  <style>
+    /* Estilos específicos para el Hub Social */
+    .social-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .trainer-directory-box {
+      max-height: 70vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-right: 4px;
+    }
+    .trainer-social-card {
+      background: white;
+      border: 1px solid #edf2f7;
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .trainer-social-card:hover {
+      transform: translateY(-2px);
+      border-color: #dac6f0;
+      box-shadow: 0 4px 10px rgba(175, 175, 175, 0.2);
+    }
+    .avatar-social-mini {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #f7fafc;
+      border: 2px solid #edf2f7;
+    }
+    .global-feed-box {
+      height: 70vh;
+    }
+    @media (max-width: 768px) {
+      .social-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body class="bg-main">
+  <div class="screen-frame">
+
+    <header class="top-bar">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="btn-menu" class="nav-btn-icon" title="Abrir Menú" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">
+          <i class="fa fa-bars"></i>
+        </button>
+        <span class="top-bar-title">Comunidad & Hub Social</span>
+      </div>
+      <div class="top-bar-right">
+        <span class="top-bar-trainer" id="trainer-label">Entrenador: ???</span>
+      </div>
+    </header>
+
+    <nav id="side-menu" class="side-nav hidden">
+      <div class="side-nav-content">
+        <button id="btn-close-menu" class="close-btn">&times;</button>
+        <h3 class="menu-title">MENÚ</h3>
+        <div class="menu-links">
+          <a href="perfil.html" class="menu-link"><i class="fa fa-user"></i> Perfil</a>
+          <a href="social.html" class="menu-link"><i class="fa fa-users"></i> Plaza Sorelle</a>
+          <a href="cajapkm.html" class="menu-link"><i class="fa fa-archive"></i> Caja pokémon</a>
+          <a href="trainer.html" class="menu-link"><i class="fa fa-money"></i> Inventario</a>
+          <a href="actividades.html" class="menu-link"><i class="fa fa-list-alt"></i> Actividades</a>
+          <a href="guarderia.html" class="menu-link"><i class="fa fa-asterisk"></i> Incubadora</a>
+          <a href="pokedex.html" class="menu-link"><i class="fa fa-search"></i> Pokédex Comunitaria</a>
+          <a href="tablas.html" class="menu-link"><i class="fa fa-question-circle"></i> Info. General</a>
+          <hr style="border: 0; border-top: 1px dashed #c957b0; margin: 10px 0;">
+          <a href="#" id="btn-logout-side" class="menu-link" style="color: #e53e3e;"><i class="fa fa-sign-out"></i> Salir</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="new-profile-layout">
+      <div class="social-grid">
+        
+        <div class="horizontal-row-card">
+          <div class="row-card-header">
+            <h3 class="row-card-title"><i class="fa fa-users text-green"></i> Directorio de Entrenadores</h3>
+          </div>
+          <div id="directory-container" class="trainer-directory-box">
+            <p style="font-size:0.8rem; color:#718096; padding:10px;">Buscando entrenadores en el mapa...</p>
+          </div>
+        </div>
+
+        <div class="horizontal-row-card">
+          <div class="row-card-header">
+            <h3 class="row-card-title"><i class="fa fa-globe text-gold"></i> Bitácora Global de Aventuras</h3>
+          </div>
+          <div id="global-history-feed" class="profile-feed-box global-feed-box">
+            <p style="font-size:0.8rem; color:#718096; padding:10px;">Sintonizando señales de radio del servidor...</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./core.js"></script>
+  <script src="./social.js"></script>
+</body>
+</html>

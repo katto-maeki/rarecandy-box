@@ -1,4 +1,4 @@
-// tablas.js - Control de pestañas y Menú Hamburguesa
+// tablas.js - Control de pestañas, FAQ y Menú Hamburguesa
 
 // ==========================================
 // LÓGICA DEL MENÚ HAMBURGUESA
@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 2. Inicializar Menú Hamburguesa
     initHamburgerMenu();
 
-    // 3. Lógica de Tabs (Pestañas de evolución)
+    // 3. Lógica de Tabs (Pestañas de evolución, XP y FAQ)
     const tabs = document.querySelectorAll(".tab-btn");
     const contents = document.querySelectorAll(".tab-content");
 
@@ -84,6 +84,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (targetContent) {
                     targetContent.classList.add("active");
                 }
+            });
+        });
+    }
+
+    // NUEVO 4. Lógica de apertura/cierre para el Acordeón de las FAQs
+    const faqQuestions = document.querySelectorAll(".faq-question");
+    if (faqQuestions.length > 0) {
+        faqQuestions.forEach(q => {
+            q.addEventListener("click", () => {
+                const item = q.parentElement;
+                item.classList.toggle("open");
             });
         });
     }

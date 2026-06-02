@@ -1,10 +1,12 @@
-// cajapkm.js - Versión Completa Corregida
-// =============================
-// Configuración y estado
-// =============================
-const STORAGE_KEY = "pokeBoxState_v1";
+// cajapkm.js - Versión Completa con Historial de Aventuras y Conexiones HTML
+// ===================================================================
 const POKEAPI_BASE = "https://pokeapi.co/api/v2";
 const TRAINER_META_KEY = "pokeTrainerMeta_v1";
+
+// Variables globales dinámicas calculadas en el momento correcto
+let boxUserId = null;
+let isOwnProfile = true;
+let boxTrainerName = "Entrenador";
 
 let state = {
   party: new Array(6).fill(null),
@@ -18,15 +20,27 @@ let state = {
 let allPokemonList = null; 
 let dragSourceIndex = null; 
 
-// Variables para el entrenamiento
 let currentTrainingPoke = null;
 let currentInventory = null;
+
+// Diccionarios globales para el formato estético en la vista de detalles
+const ACTIVITY_LABELS = { 
+  encounter: "Encounter 💥", 
+  coloreo: "Coloreo 🎨", 
+  obsequio: "Obsequio 🎁", 
+  intercambio: "Intercambio 🔄" 
+};
+
+const POKEBALL_LABELS = { 
+  pokeball: "Pokéball 🔴", 
+  superball: "Superball 🔵", 
+  ultraball: "Ultraball 🟡", 
+  masterball: "Masterball 🟣" 
+};
 
 // =============================
 // LÓGICA DE XP Y NIVELES
 // =============================
-
-// Calcula el nivel actual basándose en la XP TOTAL acumulada
 function getLevelFromTotalXP(totalXP) {
     if (totalXP < 50) return Math.min(5, Math.floor(totalXP / 10) + 1);
     if (totalXP < 125) return 5 + Math.floor((totalXP - 50) / 15) + 1;
@@ -35,11 +49,9 @@ function getLevelFromTotalXP(totalXP) {
     if (totalXP < 700) return 20 + Math.floor((totalXP - 350) / 35) + 1;
     if (totalXP < 1150) return 30 + Math.floor((totalXP - 700) / 45) + 1;
     if (totalXP < 1700) return 40 + Math.floor((totalXP - 1150) / 55) + 1;
-    // Nivel 51+ (Estimado a 100xp por nivel)
     return 50 + Math.floor((totalXP - 1700) / 100) + 1;
 }
 
-// Calcula cuánta XP total se necesita para alcanzar el INICIO de un nivel
 function getTotalXpForLevel(level) {
     if (level <= 1) return 0;
     if (level <= 5) return (level - 1) * 10;
@@ -52,29 +64,28 @@ function getTotalXpForLevel(level) {
     return 1700 + (level - 51) * 100;
 }
 
-// Nivel objetivo para evolucionar
 function getTargetLevelByClass(clase, stage) {
   const c = (clase || "Común").toLowerCase();
   if (c.includes("baby")) return 12;
   if (c.includes("raro")) return stage === 1 ? 19 : 38;
   if (c.includes("especial")) return stage === 1 ? 21 : 42;
-  return stage === 1 ? 16 : 32; // Común
+  return stage === 1 ? 16 : 32;
 }
 
-// =============================
-// Persistencia
-// =============================
+// ==========================================
+// PERSISTENCIA CONTROLADA AISLADA POR USUARIO
+// ==========================================
 async function saveState() {
+  if (!isOwnProfile || !boxUserId) return; 
+
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(`pokeBoxState_${boxUserId}_v1`, JSON.stringify(state));
   } catch (e) { console.error(e); }
 
   const supabase = window.supabaseClient;
-  const userId = window.currentUserId;
-
-  if (supabase && userId) {
+  if (supabase && boxUserId) {
       const payload = {
-        id: userId,
+        id: boxUserId,
         box_data: { boxes: state.boxes, currentBoxIndex: state.currentBoxIndex },
         party_data: state.party,
       };
@@ -83,6 +94,8 @@ async function saveState() {
 }
 
 async function saveGameData() {
+    if (!isOwnProfile) return; 
+
     const p1 = saveState(); 
     const supabase = window.supabaseClient;
     const userId = window.currentUserId;
@@ -96,15 +109,16 @@ async function saveGameData() {
 
 async function loadState() {
   const supabase = window.supabaseClient;
-  const userId = window.currentUserId;
+  const userId = boxUserId; 
   let loadedFromSupabase = false;
 
   if (supabase && userId) {
     try {
-      const { data, error } = await supabase.from("user_game_data").select("box_data, party_data").eq("id", userId);
+      const { data, error } = await supabase.from("user_game_data").select("box_data, party_data, trainer_name").eq("id", userId);
       if (error) console.error(error);
       else if (data && data.length > 0) {
         const row = data[0];
+        if (row.trainer_name) boxTrainerName = row.trainer_name; 
         if (Array.isArray(row.party_data)) state.party = row.party_data;
         if (row.box_data && Array.isArray(row.box_data.boxes)) {
           state.boxes = row.box_data.boxes;
@@ -112,17 +126,22 @@ async function loadState() {
         }
         loadedFromSupabase = true;
       } else {
-        // Crear fila inicial
-        const initialRow = { id: userId, box_data: { boxes: state.boxes, currentBoxIndex: 0 }, party_data: state.party };
-        await supabase.from("user_game_data").insert(initialRow);
+        state.party = new Array(6).fill(null);
+        state.boxes = [new Array(30).fill(null)];
+        state.currentBoxIndex = 0;
+
+        if (isOwnProfile) { 
+          const initialRow = { id: userId, box_data: { boxes: state.boxes, currentBoxIndex: 0 }, party_data: state.party };
+          await supabase.from("user_game_data").insert(initialRow);
+        }
         loadedFromSupabase = true;
       }
     } catch (e) { console.error(e); }
   }
 
-  if (!loadedFromSupabase) {
+  if (!loadedFromSupabase && userId) {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(`pokeBoxState_${userId}_v1`);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed.party) && Array.isArray(parsed.boxes)) state = parsed;
@@ -130,7 +149,6 @@ async function loadState() {
     } catch (e) { console.error(e); }
   }
 
-  // Estructura mínima garantizada
   if (!Array.isArray(state.party) || state.party.length !== 6) state.party = new Array(6).fill(null);
   if (!Array.isArray(state.boxes) || state.boxes.length === 0) state.boxes = [new Array(30).fill(null)];
   else {
@@ -158,6 +176,7 @@ const TYPE_MAP_ES = {
   steel: "acero", fairy: "hada",
 };
 
+// Corregido potencial error de asignación de variable indefinida
 function translateType(typeName) { return TYPE_MAP_ES[typeName] || typeName; }
 
 async function fetchPokemonList() {
@@ -194,6 +213,14 @@ function parseSpeciesIdFromUrl(url) {
   return parseInt(parts[parts.length - 1], 10);
 }
 
+function filterSuggestions(list, query, max = 7) {
+  if (!query || !list) return [];
+  const q = query.toLowerCase().trim();
+  if (!q) return [];
+  const isNum = /^\d+$/.test(q);
+  return list.filter((p) => !isNum && p.name.startsWith(q)).slice(0, max);
+}
+
 function getRegionSuffix(name) {
   const m = String(name).toLowerCase().match(/-(alola|galar|hisui|paldea)/);
   return m ? m[0] : null; 
@@ -227,8 +254,6 @@ async function getEvolutionOptions(pokemonId, pokemonName) {
     const resChain = await fetch(evoUrl);
     const chainData = await resChain.json();
 
-    // 1. DETERMINAR LA ETAPA ACTUAL
-    // Comparamos el nombre de la especie actual con la raíz de la cadena evolutiva
     const isBaseForm = (chainData.chain.species.name === speciesData.name);
     const evolutionStage = isBaseForm ? 1 : 2; 
 
@@ -247,7 +272,6 @@ async function getEvolutionOptions(pokemonId, pokemonName) {
         const vName = varEntry.pokemon.name;
         const regionSuffix = getRegionSuffix(vName);
         
-        // --- LÓGICA DE FILTRADO (Rockruff & Regionales) ---
         if (currentRegionSuffix && !vName.includes(currentRegionSuffix)) continue;
         if (!currentRegionSuffix && regionSuffix) continue; 
 
@@ -260,14 +284,13 @@ async function getEvolutionOptions(pokemonId, pokemonName) {
 
         if (Array.isArray(evNode.evolution_details)) {
           for (const detail of evNode.evolution_details) {
-            // Unificamos criterios: Piedras, Amistad y Tiempo
             if (detail.trigger?.name === "use-item" && detail.item?.name?.endsWith("stone")) requiresStone = true;
             if (detail.min_happiness > 0 || detail.min_affection > 0) requiresFriendship = true;
             if (detail.time_of_day) timeCondition = detail.time_of_day;
           }
         }
 
-        let displayName = capitalize(vName.replace(/-/g, " "));
+        const displayName = capitalize(vName.replace(/-/g, " "));
 
         options.push({
           id: evoPokemonId,
@@ -276,7 +299,7 @@ async function getEvolutionOptions(pokemonId, pokemonName) {
           requiresFriendship,
           requiresPassport,
           timeCondition: timeCondition,
-          evolutionStage: evolutionStage // <-- Crucial para que el Modal sepa qué nivel pedir
+          evolutionStage: evolutionStage 
         });
       }
     }
@@ -286,16 +309,9 @@ async function getEvolutionOptions(pokemonId, pokemonName) {
     return [];
   }
 }
-function filterSuggestions(list, query, max = 7) {
-  if (!query) return [];
-  const q = query.toLowerCase().trim();
-  if (!q) return [];
-  const isNum = /^\d+$/.test(q);
-  return list.filter((p) => !isNum && p.name.startsWith(q)).slice(0, max);
-}
 
 function handleMaxXP() {
-    if (!currentTrainingPoke || !currentInventory) return;
+    if (!currentTrainingPoke || !currentInventory || !isOwnProfile) return;
 
     const select = document.getElementById("train-evolution-select");
     const selectedOption = select.options[select.selectedIndex];
@@ -303,17 +319,14 @@ function handleMaxXP() {
     
     let amountToFill = 0;
 
-    // Si hay una evolución seleccionada, calculamos hasta el objetivo
     if (selectedOption && selectedOption.value) {
         const targetLvlRequired = parseInt(selectedOption.dataset.targetLevel);
         const totalNeededXP = getTotalXpForLevel(targetLvlRequired);
         const storedXP = currentTrainingPoke.storedXP || 0;
         
         const needed = Math.max(0, totalNeededXP - storedXP);
-        // Usamos lo que necesite, pero sin pasarnos de lo que tenemos en el inventario
         amountToFill = Math.min(needed, currentInventory.xp);
     } else {
-        // Si no hay evolución, calculamos para subir UN nivel
         const nextLevelXP = getTotalXpForLevel(currentTrainingPoke.nivel + 1);
         const currentXP = currentTrainingPoke.storedXP || 0;
         
@@ -321,21 +334,19 @@ function handleMaxXP() {
         amountToFill = Math.min(needed, currentInventory.xp);
     }
 
-    // Si por alguna razón el cálculo da negativo o el inventario es 0
     xpInput.value = amountToFill > 0 ? amountToFill : 0;
-    
-    // ¡IMPORTANTE! Llamar a esta función para que los botones de "Guardar" o "Evolucionar" se activen
     updateTrainingUI(); 
 }
 
-
 // =============================
-// Render de UI
+// Render de UI Controlado
 // =============================
 function renderTrainerName() {
-  const trainer = window.currentTrainerName || "Entrenador";
+  const trainer = isOwnProfile ? (window.currentTrainerName || "Entrenador") : boxTrainerName;
   const el = document.getElementById("trainer-label");
-  if (el) el.textContent = `Entrenador: ${trainer}`;
+  if (el) {
+    el.textContent = isOwnProfile ? `Entrenador: ${trainer}` : `Viendo la caja de: ${trainer}`;
+  }
 }
 
 function renderParty() {
@@ -414,7 +425,7 @@ function renderBox() {
     const slot = document.createElement("div");
     slot.className = "box-slot";
     slot.dataset.index = index;
-    slot.draggable = true;
+    slot.draggable = isOwnProfile; 
 
     if (!poke) {
       slot.classList.add("empty");
@@ -451,6 +462,7 @@ function renderBox() {
     });
 
     slot.addEventListener("dragstart", (e) => {
+      if (!isOwnProfile) return;
       dragSourceIndex = index;
       slot.classList.add("dragging");
       if (e.dataTransfer) {
@@ -461,7 +473,7 @@ function renderBox() {
 
     slot.addEventListener("dragover", (e) => {
       e.preventDefault();
-      if (dragSourceIndex === null || dragSourceIndex === index) return;
+      if (!isOwnProfile || dragSourceIndex === null || dragSourceIndex === index) return;
       slot.classList.add("drag-over");
       if (e.dataTransfer) {
         e.dataTransfer.dropEffect = "move";
@@ -475,7 +487,7 @@ function renderBox() {
     slot.addEventListener("drop", (e) => {
       e.preventDefault();
       slot.classList.remove("drag-over");
-      if (dragSourceIndex === null || dragSourceIndex === index) return;
+      if (!isOwnProfile || dragSourceIndex === null || dragSourceIndex === index) return;
 
       const boxRef = state.boxes[state.currentBoxIndex];
       const from = dragSourceIndex;
@@ -512,7 +524,6 @@ function renderDetail() {
   let source = null;
   let poke = null;
 
-  // 1. Determinamos el origen y el Pokémon seleccionado
   if (state.selectedPartyIndex != null && state.party[state.selectedPartyIndex]) {
     source = "party";
     poke = state.party[state.selectedPartyIndex];
@@ -526,7 +537,6 @@ function renderDetail() {
   const btnRelease = document.getElementById("btn-release-pokemon");
   const btnTrain = document.getElementById("btn-train-pokemon");
 
-  // 2. Si no hay ningún Pokémon seleccionado, limpiamos la vista
   if (!poke) {
     empty.classList.remove("hidden");
     content.classList.add("hidden");
@@ -538,43 +548,38 @@ function renderDetail() {
     return;
   }
 
-  // 3. Mostramos el contenido del detalle
   state.detailSource = source;
   empty.classList.add("hidden");
   content.classList.remove("hidden");
 
-  // Botón Actualizar
-  if (btnUpdate) btnUpdate.disabled = false;
+  if (!isOwnProfile) {
+    if (btnUpdate) btnUpdate.classList.add("hidden");
+    if (btnMove) btnMove.classList.add("hidden");
+    if (btnRelease) btnRelease.classList.add("hidden");
+    if (btnTrain) btnTrain.classList.add("hidden");
+  } else {
+    if (btnUpdate) { btnUpdate.disabled = false; btnUpdate.classList.remove("hidden"); }
+    if (btnRelease) { btnRelease.disabled = false; btnRelease.classList.remove("hidden"); }
+    
+    if (btnMove) {
+      btnMove.disabled = false;
+      btnMove.classList.remove("hidden");
+      btnMove.textContent = source === "party" ? "Retirar de equipo actual" : "Mover a equipo actual";
+    }
 
-  // Botón Mover (Cambia texto según el origen)
-  if (btnMove) {
-    btnMove.disabled = false;
-    btnMove.textContent = source === "party" ? "Retirar de equipo actual" : "Mover a equipo actual";
-  }
-
-  // Botón Liberar
-  if (btnRelease) {
-    btnRelease.disabled = false;
-}
-
-  // Botón Entrenar (Solo visible si el Pokémon está en la Party)
-  if (btnTrain) {
-    if (source === "party") {
-      btnTrain.classList.remove("hidden");
-      // Asignamos el evento de click de forma limpia
-      btnTrain.onclick = () => openTrainingModal(state.selectedPartyIndex);
-    } else {
-      btnTrain.classList.add("hidden");
+    if (btnTrain) {
+      if (source === "party") {
+        btnTrain.classList.remove("hidden");
+        btnTrain.onclick = () => openTrainingModal(state.selectedPartyIndex);
+      } else {
+        btnTrain.classList.add("hidden");
+      }
     }
   }
 
-  // --- RENDERIZADO DE DATOS DEL POKÉMON ---
-
-  // Sprite
   document.getElementById("detail-sprite").src = poke.sprite || "";
   document.getElementById("detail-sprite").alt = poke.apodo || poke.nombre;
 
-  // Título (Número + Nombre + Género + Shiny)
   const nn = document.getElementById("detail-number-name");
   let htmlTitulo = `${poke.numero} ${poke.nombre}`;
 
@@ -596,7 +601,6 @@ function renderDetail() {
   }
   nn.innerHTML = htmlTitulo;
 
-  // Tipos
   const typesContainer = document.getElementById("detail-types");
   typesContainer.innerHTML = "";
 
@@ -613,22 +617,40 @@ function renderDetail() {
     typesContainer.appendChild(pill);
   });
 
-  // Campos de texto básicos
   document.getElementById("detail-apodo").textContent = poke.apodo || "(Sin apodo)";
   document.getElementById("detail-nivel").textContent = poke.nivel || 1;
   document.getElementById("detail-personalidad").textContent = poke.personalidad || "(Sin definir)";
   
-  // Clase y Origen
   const claseMostrar = poke.clase || (typeof getPokemonClass === 'function' ? getPokemonClass(poke.nombre) : "Común");
   document.getElementById("detail-clase").textContent = claseMostrar;
   document.getElementById("detail-capturado-como").textContent = poke.capturadoComo || poke.nombre;
 
-const detailNotas = document.getElementById("detail-notas");
+  // RENDERIZADO DE LOS CAMPOS ADICIONALES
+  const actividadEl = document.getElementById("detail-actividad");
+  if (actividadEl) {
+    actividadEl.textContent = ACTIVITY_LABELS[poke.activity] || poke.activity || "(No especificado)";
+  }
+
+  const pokeballEl = document.getElementById("detail-pokeball");
+  if (pokeballEl) {
+    pokeballEl.textContent = POKEBALL_LABELS[poke.pokeball] || poke.pokeball || "(No especificado)";
+  }
+
+  const fechaEl = document.getElementById("detail-fecha-registro");
+  if (fechaEl) {
+    if (poke.registrationDate) {
+      const d = new Date(poke.registrationDate);
+      fechaEl.textContent = d.toLocaleDateString("es-ES");
+    } else {
+      fechaEl.textContent = "(Antes del registro)";
+    }
+  }
+
+  const detailNotas = document.getElementById("detail-notas");
   if (detailNotas) {
     detailNotas.textContent = poke.notes || "(Sin notas)";
   }
 
-  // Género detallado
   const generoEl = document.getElementById("detail-genero");
   if (generoEl) {
     generoEl.textContent = poke.gender || "-";
@@ -645,6 +667,7 @@ function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
 // LÓGICA MODAL ENTRENAMIENTO
 // =============================
 async function openTrainingModal(pokeIndex) {
+    if (!isOwnProfile) return;
     currentTrainingPoke = state.party[pokeIndex];
     if (!currentTrainingPoke) return;
 
@@ -657,7 +680,7 @@ async function openTrainingModal(pokeIndex) {
     currentInventory = { xp: 0, items: {} };
 
     if (supabase && userId) {
-        const { data } = await supabase.from("trainer_inventory").select("inventory").eq("user_id", userId).single();
+        const { data } = await supabase.from("trainer_inventory").select("inventory").eq("user_id", userId).maybeSingle();
         if (data && data.inventory) currentInventory = data.inventory;
     }
     if (typeof currentInventory.xp !== 'number') currentInventory.xp = 0;
@@ -682,26 +705,22 @@ async function openTrainingModal(pokeIndex) {
         return;
     }
 
-evolutions.forEach(evo => {
-    const option = document.createElement("option");
-    option.value = evo.id; 
-    option.textContent = evo.name;
-    
-    // Pasamos los datasets para que updateTrainingUI los lea
-    option.dataset.requiresStone = evo.requiresStone;
-    option.dataset.requiresFriendship = evo.requiresFriendship;
-    option.dataset.requiresPassport = evo.requiresPassport;
-    
-    const clase = currentTrainingPoke.clase;
-    
-    // DINÁMICO: Ahora usamos la etapa que detectó la API
-    // Si es Ivysaur, evo.evolutionStage será 2, y pedirá Nivel 32.
-    const targetLvl = getTargetLevelByClass(clase, evo.evolutionStage);
-    
-    option.dataset.targetLevel = targetLvl;
-    option.textContent += ` (Requiere Nivel ${targetLvl})`;
-    select.appendChild(option);
-});
+    evolutions.forEach(evo => {
+        const option = document.createElement("option");
+        option.value = evo.id; 
+        option.textContent = evo.name;
+        
+        option.dataset.requiresStone = evo.requiresStone;
+        option.dataset.requiresFriendship = evo.requiresFriendship;
+        option.dataset.requiresPassport = evo.requiresPassport;
+        
+        const clase = currentTrainingPoke.clase;
+        const targetLvl = getTargetLevelByClass(clase, evo.evolutionStage);
+        
+        option.dataset.targetLevel = targetLvl;
+        option.textContent += ` (Requiere Nivel ${targetLvl})`;
+        select.appendChild(option);
+    });
 
     openModal("modal-train");
     updateTrainingUI();
@@ -722,10 +741,8 @@ function updateTrainingUI() {
     const xpPercentage = document.getElementById("xp-percentage");
     const helpText = document.getElementById("train-evo-help");
 
-    // Validar si el input de XP supera lo que tiene el entrenador
     xpInput.style.borderColor = inputVal > currentInventory.xp ? "#e53e3e" : "";
 
-    // Caso: No hay evolución seleccionada (Solo entrenamiento de nivel)
     if (!selectedOption || !selectedOption.value) {
         btnSave.disabled = inputVal <= 0 || inputVal > currentInventory.xp;
         btnEvolve.disabled = true;
@@ -744,7 +761,6 @@ function updateTrainingUI() {
         return;
     }
 
-    // Caso: Evolución seleccionada
     const targetLvlRequired = parseInt(selectedOption.dataset.targetLevel);
     const requiresStone = selectedOption.dataset.requiresStone === "true";
     const requiresFriendship = selectedOption.dataset.requiresFriendship === "true";
@@ -754,7 +770,6 @@ function updateTrainingUI() {
     const storedXP = currentTrainingPoke.storedXP || 0;
     const currentTotalXP = storedXP + inputVal;
     
-    // Actualizar barra de progreso hacia la evolución
     let percentage = 0;
     if (totalNeededXP > 0) percentage = Math.min(100, Math.round((currentTotalXP / totalNeededXP) * 100));
     else percentage = 100;
@@ -763,7 +778,6 @@ function updateTrainingUI() {
     xpBarFill.style.width = `${percentage}%`;
     xpPercentage.textContent = `${percentage}%`;
 
-    // --- LÓGICA DE HABILITACIÓN DE BOTONES (CORREGIDA) ---
     if (currentTrainingPoke.nivel >= targetLvlRequired) {
         btnSave.disabled = true; 
         btnSave.style.opacity = "0.5";
@@ -777,14 +791,9 @@ function updateTrainingUI() {
     let canEvolve = true;
     let errors = [];
 
-    if (currentTotalXP < totalNeededXP) {
-        canEvolve = false;
-    }
-    if (inputVal > currentInventory.xp) {
-        canEvolve = false;
-    }
+    if (currentTotalXP < totalNeededXP) canEvolve = false;
+    if (inputVal > currentInventory.xp) canEvolve = false;
     
-    // Validar Items
     if (requiresStone && (currentInventory.items.evoStone || 0) < 1) { 
         canEvolve = false; 
         errors.push("Piedra Evolutiva"); 
@@ -798,7 +807,6 @@ function updateTrainingUI() {
         errors.push("Pasaporte Regional"); 
     }
 
-    // --- MOSTRAR MENSAJES DE ERROR O ESTADO ---
     if (errors.length > 0) {
         helpText.textContent = "Falta: " + errors.join(", ");
         helpText.style.display = "block";
@@ -815,14 +823,14 @@ function updateTrainingUI() {
         helpText.style.display = "none";
     }
 
-    // Estado final del botón evolucionar
     btnEvolve.disabled = !canEvolve;
     btnEvolve.style.backgroundColor = canEvolve ? "#48bb78" : "#a0aec0";
     btnEvolve.style.border = canEvolve ? "1px solid #38a169" : "1px solid #a0aec0";
     btnEvolve.style.cursor = canEvolve ? "pointer" : "not-allowed";
-} // <--- ESTA LLAVE CIERRA updateTrainingUI Y ARREGLA EL ERROR
+} 
 
 async function handleSaveXPAction() {
+    if (!isOwnProfile) return;
     const xpInput = document.getElementById("train-xp-input");
     const amount = parseInt(xpInput.value) || 0;
     
@@ -846,6 +854,15 @@ async function handleSaveXPAction() {
     }
 
     await saveGameData();
+
+    await window.supabaseClient.from("trainer_log").insert({
+      user_id: window.currentUserId,
+      activity_type: "exp_assign",
+      activity_name: currentTrainingPoke.apodo || currentTrainingPoke.nombre,
+      money_reward: 0,
+      xp_reward: amount
+    });
+
     alert(msg);
     closeModal("modal-train");
     renderParty(); 
@@ -853,22 +870,23 @@ async function handleSaveXPAction() {
 }
 
 async function handleEvolveAction() {
+    if (!isOwnProfile) return;
     const select = document.getElementById("train-evolution-select");
     const selectedOption = select.options[select.selectedIndex];
     
-    // Guard clause: Evitar errores si no hay selección
     if (!selectedOption || !selectedOption.value) return;
 
     const xpInput = document.getElementById("train-xp-input");
     const amount = parseInt(xpInput.value) || 0;
 
-    const targetId = selectedOption.value; // El ID de la variedad (ej. Lycanroc-Midnight)
+    const targetId = selectedOption.value; 
     const targetLvl = parseInt(selectedOption.dataset.targetLevel);
     const requiresStone = selectedOption.dataset.requiresStone === "true";
     const requiresFriendship = selectedOption.dataset.requiresFriendship === "true";
     const requiresPassport = selectedOption.dataset.requiresPassport === "true";
 
-    // 1. Descontar recursos
+    const nameBeforeEvo = currentTrainingPoke.apodo || currentTrainingPoke.nombre;
+
     currentInventory.xp -= amount; 
     if (!currentTrainingPoke.storedXP) currentTrainingPoke.storedXP = 0;
     currentTrainingPoke.storedXP += amount;
@@ -878,42 +896,42 @@ async function handleEvolveAction() {
     if (requiresPassport) currentInventory.items.passport--;
 
     try {
-        // 2. Obtener datos de la nueva especie/forma
         const basic = await fetchPokemonByNameOrId(targetId);
         
-        // 3. Transformación del Pokémon
         currentTrainingPoke.id = basic.id;
         currentTrainingPoke.numero = basic.numero;
         currentTrainingPoke.nombre = basic.nombre;
         currentTrainingPoke.tipos = basic.tipos;
         currentTrainingPoke.sprite = currentTrainingPoke.isShiny ? basic.spriteShiny : basic.spriteNormal;
 
-        // 4. CORRECCIÓN DE NIVEL Y XP (Punto Crítico)
-        // Forzamos el nivel al objetivo si el actual es menor.
         if (currentTrainingPoke.nivel < targetLvl) {
             currentTrainingPoke.nivel = targetLvl;
-            // Sincronizamos la XP acumulada para que coincida con el inicio del nivel de evolución
-            // Esto evita que "deba" XP en la siguiente etapa.
             const minXPForTarget = getTotalXpForLevel(targetLvl);
             if (currentTrainingPoke.storedXP < minXPForTarget) {
                 currentTrainingPoke.storedXP = minXPForTarget;
             }
         }
 
-        // 5. Actualizar Clase (si existe la función)
         if (typeof getPokemonClass === 'function') {
              currentTrainingPoke.clase = getPokemonClass(basic.nombre);
         }
 
-        // 6. Guardar en el origen correcto (Party o Caja)
         if (state.detailSource === 'party' && state.selectedPartyIndex !== null) {
             state.party[state.selectedPartyIndex] = currentTrainingPoke;
         } else if (state.detailSource === 'box' && state.selectedBoxSlotIndex !== null) {
             state.boxes[state.currentBoxIndex][state.selectedBoxSlotIndex] = currentTrainingPoke;
         }
 
-        // 7. Persistencia y actualización visual
         await saveGameData();
+
+        await window.supabaseClient.from("trainer_log").insert({
+          user_id: window.currentUserId,
+          activity_type: "evolution",
+          activity_name: `${nameBeforeEvo} a ${basic.nombre}`,
+          money_reward: 0,
+          xp_reward: 0
+        });
+
         alert(`¡Evolución exitosa a ${basic.nombre}!`);
         
         closeModal("modal-train");
@@ -930,17 +948,18 @@ async function handleEvolveAction() {
 // AÑADIR / EDITAR / MOVER
 // =============================
 async function handleAddPokemon() {
+  if (!isOwnProfile) return;
   const speciesInput = document.getElementById("add-species-input");
   const nicknameInput = document.getElementById("add-nickname-input");
   const personalityField = document.getElementById("add-personality-select");
   const levelInput = document.getElementById("add-level-input");
   const shinyInput = document.getElementById("add-shiny-input");
   const genderInput = document.querySelector('input[name="add-gender"]:checked');
+  
+  const activityField = document.getElementById("add-activity-select");
+  const pokeballField = document.getElementById("add-pokeball-select");
 
-  if (!speciesInput || !personalityField || !levelInput) {
-    console.error("Faltan elementos del formulario.");
-    return;
-  }
+  if (!speciesInput || !personalityField || !levelInput) return;
 
   const rawSpecies = speciesInput.value.trim();
   if (!rawSpecies) { alert("Escribe un nombre de Pokémon."); return; }
@@ -953,12 +972,15 @@ async function handleAddPokemon() {
 
   const isShiny = shinyInput ? shinyInput.checked : false;
   const gender = genderInput ? genderInput.value : "Sin género";
+  
+  const activity = activityField ? activityField.value : "";
+  const pokeball = pokeballField ? pokeballField.value : "";
+  const registrationDate = new Date().toISOString(); 
 
   let basic;
   try {
     basic = await fetchPokemonByNameOrId(rawSpecies);
   } catch (e) {
-    console.error(e);
     alert("No encontré ese Pokémon. Revisa el nombre.");
     return;
   }
@@ -988,13 +1010,25 @@ async function handleAddPokemon() {
     isShiny: isShiny,
     gender: gender,
     storedXP: initialXP,
-    notes: ""
+    notes: "",
+    activity: activity || null,
+    pokeball: pokeball || null,
+    registrationDate: registrationDate
   };
 
   box[emptyIndex] = newPoke;
   state.selectedBoxSlotIndex = emptyIndex;
 
-  saveState();
+  await saveState();
+
+  await window.supabaseClient.from("trainer_log").insert({
+    user_id: window.currentUserId,
+    activity_type: "box_add",
+    activity_name: newPoke.apodo ? `${newPoke.apodo} (${newPoke.nombre})` : newPoke.nombre,
+    money_reward: 0,
+    xp_reward: 0
+  });
+
   renderParty();
   renderBox();
   renderDetail();
@@ -1003,6 +1037,9 @@ async function handleAddPokemon() {
   nicknameInput.value = "";
   personalityField.value = "";
   if(shinyInput) shinyInput.checked = false; 
+  if(activityField) activityField.value = "";
+  if(pokeballField) pokeballField.value = "";
+  
   const radioMacho = document.querySelector('input[name="add-gender"][value="Macho"]');
   if(radioMacho) radioMacho.checked = true;
   const suggest = document.getElementById("add-suggest-list");
@@ -1012,11 +1049,11 @@ async function handleAddPokemon() {
 }
 
 async function handleUpdatePokemon() {
+  if (!isOwnProfile) return;
   const box = state.boxes[state.currentBoxIndex];
   let container = null;
   let index = null;
 
-  // 1. Identificar el origen del Pokémon (Equipo o Caja)
   if (state.detailSource === "party" && state.selectedPartyIndex != null && state.party[state.selectedPartyIndex]) {
     container = state.party;
     index = state.selectedPartyIndex;
@@ -1030,13 +1067,13 @@ async function handleUpdatePokemon() {
   const poke = container[index];
   if (!poke) return;
 
-  // 2. Referencias a los inputs del modal
   const nicknameInput = document.getElementById("edit-nickname-input");
-  const levelInput = document.getElementById("edit-level-input");
   const personalitySelect = document.getElementById("edit-personality-select");
   const notesInput = document.getElementById("edit-notes-input");
+  
+  const activitySelect = document.getElementById("edit-activity-select");
+  const pokeballSelect = document.getElementById("edit-pokeball-select");
 
-  // 3. Validación de límite de palabras (Máx 60)
   if (notesInput) {
     const text = notesInput.value.trim();
     const words = text.split(/\s+/).filter(w => w.length > 0);
@@ -1045,48 +1082,30 @@ async function handleUpdatePokemon() {
       alert(`Has superado el límite de palabras (${words.length}/60). Por favor, resume tus notas.`);
       return;
     }
-    // Guardar la nota en el objeto
     poke.notes = text;
   }
 
-  // 4. Actualizar datos básicos (Apodo, Nivel, Personalidad)
-  if (nicknameInput) {
-    poke.apodo = nicknameInput.value.trim();
-  }
+  if (nicknameInput) poke.apodo = nicknameInput.value.trim();
+  if (personalitySelect) poke.personalidad = personalitySelect.value; 
+  
+  if (activitySelect) poke.activity = activitySelect.value || null;
+  if (pokeballSelect) poke.pokeball = pokeballSelect.value || null;
 
-  if (levelInput) {
-    let newNivel = parseInt(levelInput.value, 10);
-    if (!Number.isNaN(newNivel) && newNivel >= 1 && newNivel <= 100) {
-      if (newNivel !== poke.nivel) {
-        poke.nivel = newNivel;
-        // Recalcular XP base si el nivel cambió manualmente
-        if (typeof getTotalXpForLevel === 'function') {
-          poke.storedXP = getTotalXpForLevel(newNivel);
-        }
-      }
-    }
-  }
-
-  if (personalitySelect) {
-    poke.personalidad = personalitySelect.value; 
-  }
-
-  // 5. Persistencia y actualización de la interfaz
   container[index] = poke;
 
   try {
-    await saveState(); // Guarda en Supabase y LocalStorage
+    await saveState(); 
     renderParty();
     renderBox();
     renderDetail();
     closeModal("modal-edit");
   } catch (error) {
     console.error("Error al guardar los cambios:", error);
-    alert("Hubo un error al conectar con la base de datos.");
   }
 }
 
 function handleReleasePokemon() {
+  if (!isOwnProfile) return;
   const box = state.boxes[state.currentBoxIndex];
   let poke = null;
   let releasingFrom = null;
@@ -1120,6 +1139,7 @@ function handleReleasePokemon() {
 }
 
 function handleMoveToParty() {
+  if (!isOwnProfile) return;
   const box = state.boxes[state.currentBoxIndex];
 
   if (state.detailSource === "party") {
@@ -1181,7 +1201,7 @@ function goToPrevBox() {
 function goToNextBox() {
     if (state.currentBoxIndex < state.boxes.length - 1) state.currentBoxIndex++;
     else {
-        state.boxes.push(new Array(30).fill(null));
+        if (isOwnProfile) state.boxes.push(new Array(30).fill(null));
         state.currentBoxIndex = state.boxes.length - 1;
     }
     state.selectedBoxSlotIndex = null;
@@ -1209,81 +1229,109 @@ const TYPE_META = {
     bicho: { color: "#A6B91A", label: "Bicho" }, bug: { color: "#A6B91A", label: "Bicho" },
     roca: { color: "#B6A136", label: "Roca" }, rock: { color: "#B6A136", label: "Roca" },
     fantasma: { color: "#735797", label: "Fantasma" }, ghost: { color: "#735797", label: "Fantasma" },
-    dragon: { color: "#6F35FC", label: "Dragón" }, dragon_en: { color: "#6F35FC", label: "Dragón" },
+    dragon: { color: "#6F35FC", label: "Dragón" },
     siniestro: { color: "#705746", label: "Siniestro" }, dark: { color: "#705746", label: "Siniestro" },
     acero: { color: "#B7B7CE", label: "Acero" }, steel: { color: "#B7B7CE", label: "Acero" },
     hada: { color: "#D685AD", label: "Hada" }, fairy: { color: "#D685AD", label: "Hada" },
 };
 
 // ==========================================
-// INICIALIZACIÓN ÚNICA
+// INICIALIZACIÓN CONFIGURADA EN TIEMPO REAL
 // ==========================================
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Lógica de protección y carga de datos
     const user = await initProtectedPage({ redirectToLogin: "index.html" });
     if (!user) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlId = urlParams.get("id");
+    boxUserId = urlId || window.currentUserId;
+    isOwnProfile = (boxUserId === window.currentUserId);
 
     if (typeof setupLogoutButton === "function") setupLogoutButton();
     if (typeof renderTrainerLabelFromGame === "function") await renderTrainerLabelFromGame();
 
+    await loadState(); 
     renderTrainerName();
-    await loadState();
     renderParty();
     renderBox();
     renderDetail();
 
-    // 2. Eventos de la Caja
     const prevBtn = document.getElementById("btn-prev-box");
     const nextBtn = document.getElementById("btn-next-box");
     if (prevBtn) prevBtn.addEventListener("click", goToPrevBox);
     if (nextBtn) nextBtn.addEventListener("click", goToNextBox);
 
     const btnAdd = document.getElementById("btn-add-pokemon");
-    if (btnAdd) btnAdd.addEventListener("click", () => openModal("modal-add"));
+    if (btnAdd) {
+      if (!isOwnProfile) btnAdd.classList.add("hidden");
+      else btnAdd.addEventListener("click", () => openModal("modal-add"));
+    }
     
     document.getElementById("btn-add-cancel")?.addEventListener("click", () => closeModal("modal-add"));
     document.getElementById("btn-add-confirm")?.addEventListener("click", handleAddPokemon);
-document.getElementById("btn-max-xp")?.addEventListener("click", handleMaxXP);
+    document.getElementById("btn-max-xp")?.addEventListener("click", handleMaxXP);
+    
+    // PRECARGA AUTOMÁTICA DE DATOS ACTUALES AL ABRIR EL MODAL EDITAR
     document.getElementById("btn-update-pokemon")?.addEventListener("click", () => {
+        const box = state.boxes[state.currentBoxIndex];
+        let poke = null;
+
+        if (state.detailSource === "party" && state.selectedPartyIndex != null && state.party[state.selectedPartyIndex]) {
+            poke = state.party[state.selectedPartyIndex];
+        } else if (state.selectedBoxSlotIndex != null && box[state.selectedBoxSlotIndex]) {
+            poke = box[state.selectedBoxSlotIndex];
+        }
+
+        if (poke) {
+            document.getElementById("edit-nickname-input").value = poke.apodo || "";
+            document.getElementById("edit-personality-select").value = poke.personalidad || "";
+            document.getElementById("edit-activity-select").value = poke.activity || "";
+            document.getElementById("edit-pokeball-select").value = poke.pokeball || "";
+            
+            const notesInput = document.getElementById("edit-notes-input");
+            if (notesInput) {
+                notesInput.value = poke.notes || "";
+                const words = notesInput.value.trim().split(/\s+/).filter(w => w.length > 0).length;
+                const wordCountDisplay = document.getElementById("word-count-display");
+                if (wordCountDisplay) wordCountDisplay.textContent = `Palabras: ${words} / 60`;
+            }
+        }
         openModal("modal-edit");
     });
 
     document.getElementById("btn-move-to-party")?.addEventListener("click", handleMoveToParty);
-
-// Evento para Liberar Pokémon
-document.getElementById("btn-release-pokemon")?.addEventListener("click", handleReleasePokemon);   
+    document.getElementById("btn-release-pokemon")?.addEventListener("click", handleReleasePokemon);   
     document.getElementById("btn-edit-cancel")?.addEventListener("click", () => closeModal("modal-edit"));
     document.getElementById("btn-edit-confirm")?.addEventListener("click", handleUpdatePokemon);
 
-    // 3. Eventos de entrenamiento
     document.getElementById("train-xp-input")?.addEventListener("input", updateTrainingUI);
     document.getElementById("train-evolution-select")?.addEventListener("change", updateTrainingUI);
     document.getElementById("btn-save-xp")?.addEventListener("click", handleSaveXPAction);
     document.getElementById("btn-do-evolve")?.addEventListener("click", handleEvolveAction);
     document.getElementById("btn-train-cancel")?.addEventListener("click", () => closeModal("modal-train"));
 
-    // 4. LÓGICA DEL MENÚ HAMBURGUESA (Corregida)
     const btnMenu = document.getElementById("btn-menu");
     const sideMenu = document.getElementById("side-menu");
     const btnClose = document.getElementById("btn-close-menu");
 
     if (btnMenu && sideMenu) {
-        btnMenu.onclick = () => {
-            console.log("Menú abierto");
-            sideMenu.classList.remove("hidden");
-        };
-        if (btnClose) {
-            btnClose.onclick = () => sideMenu.classList.add("hidden");
-        }
-        sideMenu.onclick = (e) => {
-            if (e.target === sideMenu) sideMenu.classList.add("hidden");
-        };
+        btnMenu.onclick = () => { sideMenu.classList.remove("hidden"); };
+        if (btnClose) { btnClose.onclick = () => sideMenu.classList.add("hidden"); }
+        sideMenu.onclick = (e) => { if (e.target === sideMenu) sideMenu.classList.add("hidden"); };
     }
 
-    // 5. Sugerencias PokeAPI
     const addSpeciesInput = document.getElementById("add-species-input");
     const addSuggestList = document.getElementById("add-suggest-list");
     if (addSpeciesInput && addSuggestList) {
         setupSuggest(addSpeciesInput, addSuggestList);
     }
 });
+
+// ==========================================
+// CONEXIONES FINALES CON EL HTML
+// ==========================================
+window.toggleSelection = toggleSelection;
+window.closeSummaryModal = () => document.getElementById("modal-summary").classList.add("hidden");
+window.confirmIncubationFromModal = confirmIncubationFromModal;
+window.hatchIncubation = hatchIncubation;
+window.closeHatchModal = () => document.getElementById("modal-hatch").classList.add("hidden");

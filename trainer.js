@@ -1,21 +1,22 @@
-// trainer.js - VERSIÓN FINAL INTEGRADA Y CORREGIDA
-// ===============================================
+// trainer.js - VERSIÓN FINAL INTEGRADA Y CORREGIDA CON LOGS AUTOMÁTICOS
+// ===================================================================
 
 const TRAINER_META_KEY = "pokeTrainerMeta_v1";
 const TRAINER_TABLE = "trainer_inventory";
 const GAME_TABLE = "user_game_data";
+const LOG_TABLE = "trainer_log"; // Añadido para prevenir futuros ReferenceError en deleteLogEntry
 
-// CONFIGURACIÓN DE PRECIOS
+// CONFIGURACIÓN DE PRECIOS ACTUALIZADA
 const ITEM_PRICES = {
-  egg: 600, rareCandy: 150, tradeToken: 150, evoStone: 300,
-  friendship: 300, passport: 100, poke: 50, super: 100, ultra: 150
+  egg: 600, tradeToken: 150, evoStone: 300, friendship: 300, 
+  passport: 100, panquecito: 100, poke: 50, super: 100, ultra: 150, master: 300, 
 };
 
-// ETIQUETAS
+// ETIQUETAS ACTUALIZADAS
 const ITEM_LABELS_MAP = {
-  egg: "Huevo Pokémon", rareCandy: "Rare Candy", tradeToken: "Token Intercambio",
-  evoStone: "Piedra Evolución", friendship: "Pulsera Amistad", passport: "Pasaporte Regional",
-  poke: "Poké Ball", super: "Super Ball", ultra: "Ultra Ball"
+  egg: "Huevo Pokémon", tradeToken: "Ticket de Intercambio", evoStone: "Piedra Evolución", 
+  friendship: "Pulsera Amistad", passport: "Pasaporte Regional", panquecito: "Panquecito", poke: "Poké Ball", 
+  super: "Super Ball", ultra: "Ultra Ball", master: "Master Ball"
 };
 
 // ESTADO GLOBAL
@@ -27,25 +28,28 @@ let currentStep = 1; // 1: Inventario, 2: Resumen, 3: Perfil
 const defaultMeta = {
   xp: 0, achievements: "", pokedex: "0", notes: "",
   economy: { biIncome: 0, savings: 0, spent: 0 },
-  items: { egg: 0, rareCandy: 0, tradeToken: 0, evoStone: 0, friendship: 0, passport: 0 },
-  balls: { poke: 0, super: 0, ultra: 0 },
+  items: { egg: 0, tradeToken: 0, evoStone: 0, friendship: 0, passport: 0, panquecito: 0 },
+  balls: { poke: 0, super: 0, ultra: 0, master: 0 },
   lastUpdated: null,
 };
 
+// VISUALIZACIÓN DINÁMICA DE LA MOCHILA
 const INVENTORY_ITEMS_VISUAL = [
   { key: "egg", label: "Huevo", iconUrl: "https://i.ibb.co/zV0rqtqp/Huevo-DP.png", countId: "item-egg" },
-  { key: "rareCandy", label: "Rare Candy", iconUrl: "https://i.ibb.co/qYWj4L1G/Caramelo-raro.png", countId: "item-rare-candy" },
-  { key: "tradeToken", label: "Token Intercambio", iconUrl: "https://i.ibb.co/0yTnfxPN/Iris-ticket.png", countId: "item-trade-token" },
+  { key: "tradeToken", label: "Ticket de Intercambio", iconUrl: "https://i.ibb.co/0yTnfxPN/Iris-ticket.png", countId: "item-trade-token" },
   { key: "evoStone", label: "Piedra Evolución", iconUrl: "https://i.ibb.co/Lyh4XR3/shiny-stone.png", countId: "item-evo-stone" },
   { key: "friendship", label: "Pulsera Amistad", iconUrl: "https://i.ibb.co/QF4xxhVY/Cascabel-alivio.png", countId: "item-friendship" },
   { key: "passport", label: "Pasaporte Regional", iconUrl: "https://i.ibb.co/R4HdLphw/eon-ticket.png", countId: "item-passport" },
+  { key: "panquecito", label: "Panquecito", iconUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/lumiose-galette.png", countId: "item-panquecito" },
 ];
 
 // HELPERS
 function $(id) { return document.getElementById(id); }
 function setText(id, value) { const el = $(id); if (el) el.textContent = String(value ?? ""); }
 function setValue(id, value) { const el = $(id); if (el) el.value = value ?? ""; }
-function getItemCategory(key) { return ["poke", "super", "ultra"].includes(key) ? "balls" : "items"; }
+
+// MODIFICADO: Ahora 'master' se reconoce automáticamente dentro de la categoría 'balls'
+function getItemCategory(key) { return ["poke", "super", "ultra", "master"].includes(key) ? "balls" : "items"; }
 function getItemCount(key) { return currentMeta[getItemCategory(key)][key] || 0; }
 function formatDate(date) {
   if (!date) return "—";
@@ -57,15 +61,11 @@ function formatDate(date) {
 // SINCRONIZACIÓN CON SUPABASE
 // ================================
 
-// trainer.js
-
-// Modifica initTrainerMeta para que siempre mande la Nube
 async function initTrainerMeta() {
   try {
     const userId = window.currentUserId;
     if (!userId) return;
 
-    // ELIMINAR el cache local para obligar a leer la base de datos
     localStorage.removeItem(TRAINER_META_KEY); 
 
     const { data: invRow } = await window.supabaseClient
@@ -89,19 +89,15 @@ async function initTrainerMeta() {
       await saveMeta(currentMeta);
     }
     
-    // Guardar la versión fresca de la DB en el local
     localStorage.setItem(TRAINER_META_KEY, JSON.stringify(currentMeta));
   } catch (e) { 
     console.error("Error initTrainerMeta:", e); 
-    // Solo si falla la red, intenta cargar del local
     const raw = localStorage.getItem(TRAINER_META_KEY);
     currentMeta = raw ? JSON.parse(raw) : { ...defaultMeta };
   }
 }
 
-// Modifica openProfileModal para refrescar antes de mostrar
 async function openProfileModal() {
-  // CLAVE: Antes de mostrar el modal, descargamos la corrección del Admin
   await initTrainerMeta(); 
   
   currentStep = 3; 
@@ -110,14 +106,13 @@ async function openProfileModal() {
   
   await updatePokedexCountFromDiscoveries();
 
-  // Ahora los inputs tendrán lo que puso el Admin (la corrección)
-  setValue("input-trainer-name", window.currentTrainerName || "");
-  setValue("input-bi-income", currentMeta.economy.biIncome);
-  setValue("input-savings-readonly", currentMeta.economy.savings);
-  setValue("input-xp", currentMeta.xp);
-  setValue("input-achievements", currentMeta.achievements || ""); // Añade esto si no estaba
+  if ($("input-trainer-name")) {
+    $("input-trainer-name").value = window.currentTrainerName || "";
+    $("input-trainer-name").disabled = true; 
+    $("input-trainer-name").style.background = "#edf2f7"; 
+    $("input-trainer-name").style.cursor = "not-allowed";
+  }
   
-// NUEVO: Cargar notas y configurar contador
   const notesInput = $("input-inventory-notes");
   if (notesInput) {
     notesInput.value = currentMeta.notes || "";
@@ -128,13 +123,6 @@ async function openProfileModal() {
     };
     notesInput.oninput = updateCount;
     updateCount();
-  }
-
-  const px = $("input-pokedex");
-  if (px) { 
-    px.value = currentMeta.pokedex || "0"; 
-    px.readOnly = true; 
-    px.style.backgroundColor = "#edf2f7"; 
   }
 
   $("btn-save-edit").textContent = "Guardar Perfil";
@@ -167,23 +155,18 @@ async function saveMeta(meta) {
 
 function openInventoryModal() {
   loadMeta();
-  // Limpiamos selecciones previas
   tempPurchases = {}; 
   tempGifts = {}; 
   currentStep = 1; 
   
-  // 1. Alternar visibilidad: Ocultar perfil, mostrar inventario
   if ($("section-basic-data")) $("section-basic-data").style.display = "none";
   if ($("section-item-management")) $("section-item-management").style.display = "block";
   
-  // 2. Mostrar texto de ayuda
   const helpText = $("item-help-text");
   if (helpText) helpText.style.display = "block";
 
-  // 3. Dibujar la lista de ítems (conteo desde cero)
   renderModalItems();
   
-  // 4. Ajustar botones del footer
   $("btn-save-edit").textContent = "Siguiente";
   $("btn-cancel-edit").textContent = "Cancelar";
   
@@ -199,10 +182,7 @@ function renderModalItems() {
     const row = document.createElement("div");
     row.className = "item-manager-row";
     
-    // Solo mostramos la suma de lo que el usuario está haciendo en esta sesión
     const qtySelected = (tempPurchases[key] || 0) + (tempGifts[key] || 0);
-    
-    // Estilos dinámicos: Rojo si resta, Azul si suma
     const qtyColor = qtySelected < 0 ? "#e53e3e" : (qtySelected > 0 ? "#3182ce" : "#2d3748");
     const qtyLabel = qtySelected > 0 ? `+${qtySelected}` : qtySelected;
 
@@ -230,7 +210,6 @@ window.updateItemCount = function(key, change, action) {
   const currentInInventory = getItemCount(key); 
   const currentSessionTotal = tempPurchases[key] + tempGifts[key];
   
-  // VALIDACIÓN: No permitir gastar más de lo que el usuario posee en total
   if (change < 0 && (currentInInventory + currentSessionTotal + change) < 0) {
     alert(`No puedes gastar más de lo que tienes (${currentInInventory} disponibles).`);
     return;
@@ -239,7 +218,6 @@ window.updateItemCount = function(key, change, action) {
   if (action === 'buy') tempPurchases[key] += change;
   else if (action === 'obtain') tempGifts[key] += change;
   else if (action === 'remove') {
-    // Si presiona el botón "－", intentamos reducir primero compras temporales, luego regalos/gasto
     if (tempPurchases[key] > 0) tempPurchases[key] += change;
     else tempGifts[key] += change; 
   }
@@ -288,7 +266,7 @@ function showPurchaseSummary() {
         <div style="margin-top:5px;">${u_html || "Ninguno"}</div>
       </div>
     </div>
-    <div style="margin-top:15px; padding:12px; background:#2d3748; color:white; border-radius:8px; display:flex; justify-content:space-between; font-weight:bold;">
+    <div style="grid-column: span 2; margin-top:15px; padding:12px; background:#2d3748; color:white; border-radius:8px; display:flex; justify-content:space-between; font-weight:bold;">
       <span>DINERO A DESCONTAR:</span><span>₽${totalSpent.toLocaleString()}</span>
     </div>`;
   
@@ -296,11 +274,12 @@ function showPurchaseSummary() {
 }
 
 // ========================
-// GUARDADO FINAL
+// GUARDADO FINAL CONTROLADO
 // ========================
 
 async function handleSave() {
   const meta = loadMeta();
+  const userId = window.currentUserId;
   const available = (meta.economy.savings + meta.economy.biIncome) - meta.economy.spent;
 
   if (currentStep === 1) {
@@ -318,14 +297,51 @@ async function handleSave() {
   } else {
     if (currentStep === 2) {
       const total = parseInt($("item-management-container").dataset.totalSpent) || 0;
+      const logsToInsert = [];
+
       Object.keys(ITEM_LABELS_MAP).forEach(key => {
         const cat = getItemCategory(key);
-        meta[cat][key] += (tempPurchases[key] || 0) + (tempGifts[key] || 0);
+        const p = tempPurchases[key] || 0;
+        const g = tempGifts[key] || 0;
+
+        meta[cat][key] += p + g;
+
+        if (p > 0) {
+          logsToInsert.push({
+            user_id: userId,
+            activity_type: "purchase",
+            activity_name: `Mochila: Compró ${p}x ${ITEM_LABELS_MAP[key]}`,
+            money_reward: -(p * ITEM_PRICES[key]),
+            xp_reward: 0
+          });
+        }
+        if (g > 0) {
+          logsToInsert.push({
+            user_id: userId,
+            activity_type: "otros",
+            activity_name: `Mochila: Recibió regalo de ${g}x ${ITEM_LABELS_MAP[key]}`,
+            money_reward: 0,
+            xp_reward: 0
+          });
+        }
+        if ((p + g) < 0) {
+          logsToInsert.push({
+            user_id: userId,
+            activity_type: "consume", 
+            activity_name: `${Math.abs(p + g)}x ${ITEM_LABELS_MAP[key]}`,
+            money_reward: 0,
+            xp_reward: 0
+          });
+        }
       });
+      
       meta.economy.spent += total;
+
+      if (logsToInsert.length > 0) {
+        await window.supabaseClient.from("trainer_log").insert(logsToInsert);
+      }
     } 
     else if (currentStep === 3) {
-      // 1. Validar el límite de palabras en las notas antes de proceder
       const notesInput = $("input-inventory-notes");
       const notesVal = notesInput ? notesInput.value.trim() : "";
       const wordCount = notesVal.split(/\s+/).filter(w => w.length > 0).length;
@@ -335,39 +351,23 @@ async function handleSave() {
         return; 
       }
 
-      // 2. Actualizar el nombre del entrenador en la tabla user_game_data
-      const newName = ($("input-trainer-name")?.value || "").trim();
-      if (newName && window.currentUserId) {
-        await window.supabaseClient.from(GAME_TABLE).upsert({ 
-          id: window.currentUserId, 
-          trainer_name: newName 
-        }, { onConflict: "id" });
-        window.currentTrainerName = newName;
-      }
-
-      // 3. Mapear los datos del modal al objeto meta de inventario
-      meta.economy.biIncome = parseInt($("input-bi-income")?.value) || 0;
-      meta.xp = parseInt($("input-xp")?.value) || 0;
-      meta.notes = notesVal; // Guardar la nota en el JSONB de inventario
+      meta.notes = notesVal; 
     }
     
-    // Guardar cambios finales en Supabase
     meta.lastUpdated = new Date().toISOString();
     await saveMeta(meta);
     renderView();
     closeModal();
   }
 }
+
 function renderView() {
-    // 1. Cargar metadatos (asegurándonos de que no sea null)
     const meta = loadMeta() || defaultMeta; 
     const trainerName = window.currentTrainerName || "Entrenador";
 
-    // 2. Mostrar nombre en la barra y en el perfil
     setText("trainer-name-display", trainerName.toUpperCase());
     setText("trainer-label", `Entrenador: ${trainerName}`);
 
-    // 3. Lógica de Dinero
     const eco = meta.economy || { savings: 0, biIncome: 0, spent: 0 };
     const available = (eco.savings + eco.biIncome) - eco.spent;
 
@@ -376,14 +376,11 @@ function renderView() {
     setText("money-spent", eco.spent.toLocaleString());
     setText("money-savings", eco.savings.toLocaleString());
     
-    // 4. Progreso y Otros datos
-    // Forzamos el valor de logros; si el Admin puso "0", mostrará "0".
     setText("xp-value", meta.xp ?? 0);
     setText("achievements-value", (meta.achievements !== undefined && meta.achievements !== "") ? meta.achievements : "—");
     setText("pokedex-value", meta.pokedex || "0");
     setText("last-updated", formatDate(meta.lastUpdated));
 
-    // 5. Inventario Visual (Ítems y Balls)
     if (meta.items) {
         INVENTORY_ITEMS_VISUAL.forEach(i => {
             setText(i.countId, meta.items[i.key] ?? 0);
@@ -394,6 +391,12 @@ function renderView() {
         setText("ball-poke", meta.balls.poke ?? 0);
         setText("ball-super", meta.balls.super ?? 0);
         setText("ball-ultra", meta.balls.ultra ?? 0);
+        setText("ball-master", meta.balls.master ?? 0); 
+    }
+
+    const mainNotesArea = $("inventory-notes-area");
+    if (mainNotesArea) {
+        mainNotesArea.value = meta.notes || "";
     }
 }
 
@@ -403,13 +406,214 @@ function renderView() {
 
 async function handleClosePeriod() {
   const meta = loadMeta();
+  const userId = window.currentUserId;
+  if (!userId) return;
+
+  const totalIncome = meta.economy.biIncome || 0;
   const currentAvailable = (meta.economy.savings + meta.economy.biIncome) - meta.economy.spent;
-  if (confirm(`¿Cerrar bimestre? El saldo de ₽${currentAvailable} pasará a Ahorros.`)) {
-    meta.economy.savings = currentAvailable;
-    meta.economy.biIncome = 0;
-    meta.economy.spent = 0;
-    await saveMeta(meta);
-    renderView();
+
+  try {
+    const { data: gameData } = await window.supabaseClient
+      .from(GAME_TABLE)
+      .select("box_data, party_data")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const typeCounts = {};
+    if (gameData) {
+      const allPkm = [];
+      if (Array.isArray(gameData.party_data)) allPkm.push(...gameData.party_data.filter(p => p));
+      if (gameData.box_data?.boxes) {
+        gameData.box_data.boxes.forEach(box => {
+          if (Array.isArray(box)) allPkm.push(...box.filter(p => p));
+        });
+      }
+      
+      allPkm.forEach(p => {
+        if (p && Array.isArray(p.tipos) && p.tipos[0]) {
+          const primaryType = p.tipos[0].toLowerCase().trim();
+          typeCounts[primaryType] = (typeCounts[primaryType] || 0) + 1;
+        }
+      });
+    }
+
+    let logQuery = window.supabaseClient
+      .from("trainer_log")
+      .select("activity_type")
+      .eq("user_id", userId);
+
+    if (meta.economy.lastClosedAt) {
+      const startingDate = new Date(meta.economy.lastClosedAt);
+      if (!Number.isNaN(startingDate.getTime())) {
+        logQuery = logQuery.gte("created_at", startingDate.toISOString());
+      }
+    }
+
+    const { data: logs } = await logQuery;
+
+    const activityCounts = {};
+    if (logs) {
+      logs.forEach(log => {
+        const actType = log.activity_type || "otros";
+        activityCounts[actType] = (activityCounts[actType] || 0) + 1;
+      });
+    }
+
+    let hatchQuery = window.supabaseClient
+      .from("trainer_incubations")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("hatched", true);
+
+    if (meta.economy.lastClosedAt) {
+      const startingDate = new Date(meta.economy.lastClosedAt);
+      if (!Number.isNaN(startingDate.getTime())) {
+        hatchQuery = hatchQuery.gte("hatch_date", startingDate.toISOString());
+      }
+    }
+
+    const { count: hatchCount } = await hatchQuery;
+
+    const typeNames = {
+      encounter: "Encounter", quest: "Quest", pokedex_comu: "Pokédex Comu.",
+      pokedex_legen: "Pokédex Leg.", pokewords: "Pokéwords", freemode: "Freemode",
+      passport: "Passport", evolution: "Evolución", trade: "Intercambio",
+      checkpoint: "Checkpoint", otros: "Otros"
+    };
+
+    const typeStrings = [];
+    Object.keys(typeCounts).forEach(t => {
+      const typeLabel = t.charAt(0).toUpperCase() + t.slice(1);
+      typeStrings.push(`Tipo ${typeLabel} (+${typeCounts[t]})`);
+    });
+    
+    let typesInlineHTML = typeStrings.length > 0
+      ? `<p style="color: #4a5568; line-height: 1.5; padding-left: 4px;">${typeStrings.join(', ')}</p>`
+      : `<p style="color: #718096; font-style: italic; padding-left: 4px;">Ningún Pokémon registrado en cajas o equipo.</p>`;
+
+    const actStrings = [];
+    Object.keys(activityCounts).forEach(a => {
+      const label = typeNames[a] || a;
+      actStrings.push(`${label} (+${activityCounts[a]})`);
+    });
+
+    let actsInlineHTML = actStrings.length > 0
+      ? `<p style="color: #4a5568; line-height: 1.5; padding-left: 4px;">${actStrings.join(', ')}</p>`
+      : `<p style="color: #718096; font-style: italic; padding-left: 4px;">No has registrado actividades en este ciclo.</p>`;
+
+    const itemStrings = [];
+    if (meta.items) {
+      Object.keys(meta.items).forEach(key => {
+        const count = meta.items[key] || 0;
+        if (count > 0) {
+          const label = ITEM_LABELS_MAP[key] || key;
+          itemStrings.push(`${label} (${count})`);
+        }
+      });
+    }
+    if (meta.balls) {
+      Object.keys(meta.balls).forEach(key => {
+        const count = meta.balls[key] || 0;
+        if (count > 0) {
+          const label = ITEM_LABELS_MAP[key] || key;
+          itemStrings.push(`${label} (${count})`);
+        }
+      });
+    }
+
+    let itemsInlineHTML = itemStrings.length > 0
+      ? `<p style="color: #4a5568; line-height: 1.5; padding-left: 4px;">${itemStrings.join(', ')}</p>`
+      : `<p style="color: #718096; font-style: italic; padding-left: 4px;">Mochila vacía para el próximo bimestre.</p>`;
+
+    const fechaTexto = meta.economy.lastClosedAt 
+      ? `desde tu último corte el ${new Date(meta.economy.lastClosedAt).toLocaleDateString("es-ES")}` 
+      : `Historial Completo Acumulado (Primer Cierre)`;
+
+    const contentContainer = document.getElementById("period-summary-content");
+    if (contentContainer) {
+      contentContainer.innerHTML = `
+        <p style="margin-bottom: 14px; color: #4b5563; font-size: 0.8rem;">Estadísticas recopiladas: <strong>${fechaTexto}</strong>.</p>
+        
+        <div style="background: #e6fffa; border: 1px solid #b2f5ea; padding: 12px 14px; border-radius: 12px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; color: #234e52; font-size: 0.8rem;">TOTAL INGRESO BIMESTRE:</span>
+            <span style="font-weight: 800; color: #2b6cb0; font-size: 1rem; font-family: 'Press Start 2P', monospace;">₽${totalIncome.toLocaleString()}</span>
+          </div>
+          <div style="border-top: 1px dashed #b2f5ea; margin: 2px 0;"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; color: #234e52; font-size: 0.8rem;">SALDO TRANSFERIDO A AHORROS:</span>
+            <span style="font-weight: 800; color: #0fb86b; font-size: 1.1rem; font-family: 'Press Start 2P', monospace;">₽${currentAvailable.toLocaleString()}</span>
+          </div>
+        </div>
+
+        <h4 class="modal-subtitle" style="margin-bottom: 8px; color: #373b5c; border-bottom: 1px solid #edf2f7; padding-bottom: 4px;">📦 Pokémon por tipo principal</h4>
+        <div style="margin-bottom: 16px;">${typesInlineHTML}</div>
+
+        <h4 class="modal-subtitle" style="margin-bottom: 8px; color: #373b5c; border-bottom: 1px solid #edf2f7; padding-bottom: 4px;">📝 Actividades registradas</h4>
+        <div style="margin-bottom: 16px;">${actsInlineHTML}</div>
+
+        <h4 class="modal-subtitle" style="margin-bottom: 8px; color: #373b5c; border-bottom: 1px solid #edf2f7; padding-bottom: 4px;">🎒 Ítems disponibles de mochila</h4>
+        <div style="margin-bottom: 16px;">${itemsInlineHTML}</div>
+
+        <h4 class="modal-subtitle" style="margin-bottom: 6px; color: #373b5c; border-bottom: 1px solid #edf2f7; padding-bottom: 4px;">🥚 Incubación</h4>
+        <p style="padding-left: 4px; margin-bottom: 16px; color: #4a5568;"><strong>Huevos pokémon eclosionados:</strong> ${hatchCount || 0}</p>
+        
+        <div style="border-top: 2px dashed #dac6f0; margin: 12px 0 8px 0;"></div>
+      `;
+    }
+
+    const modalPeriod = document.getElementById("modal-period-summary");
+    if (!modalPeriod) throw new Error("No se encontró el contenedor '#modal-period-summary' en el HTML.");
+    
+    modalPeriod.classList.remove("hidden");
+
+    const btnCancel = document.getElementById("btn-cancel-period-summary");
+    if (btnCancel) {
+      btnCancel.onclick = () => { modalPeriod.classList.add("hidden"); };
+    }
+
+    // CORRECCIÓN AQUÍ: Declaramos y enlazamos btnConfirm usando el helper $() con el ID correcto del HTML
+    const btnConfirm = $("btn-confirm-period-summary");
+    if (btnConfirm) {
+      btnConfirm.onclick = async () => {
+        const finalSavings = currentAvailable; 
+
+        meta.economy.savings = currentAvailable;
+        meta.economy.biIncome = 0;
+        meta.economy.spent = 0;
+        meta.economy.lastClosedAt = new Date().toISOString();
+        
+        await saveMeta(meta);
+
+        // COMPILAMOS EL RESUMEN EN UN OBJETO DETALLADO
+        const closureSummary = {
+          displayTitle: `Cierre de Bimestre (Ahorros acumulados: ₽${finalSavings.toLocaleString()})`,
+          income: totalIncome,
+          savings: finalSavings,
+          types: typeStrings.length > 0 ? typeStrings.join(', ') : "Ningún Pokémon registrado",
+          activities: actStrings.length > 0 ? actStrings.join(', ') : "No se registraron actividades",
+          items: itemStrings.length > 0 ? itemStrings.join(', ') : "Mochila vacía",
+          hatched: hatchCount || 0
+        };
+
+        // GUARDAMOS EL HISTORIAL DIRECTAMENTE EN FORMATO JSON
+        await window.supabaseClient.from("trainer_log").insert({
+          user_id: userId,
+          activity_type: "bimonthly_close",
+          activity_name: JSON.stringify(closureSummary), 
+          money_reward: 0,
+          xp_reward: 0
+        });
+
+        renderView();
+        modalPeriod.classList.add("hidden");
+        alert("¡Bimestre cerrado con éxito! Tus ahorros y la fecha de corte han sido actualizados.");
+      };
+    }
+
+  } catch (err) {
+    console.error("Error al generar el modal de cierre:", err);
+    alert(`Error de ejecución: ${err.message}`);
   }
 }
 
@@ -457,34 +661,22 @@ function initHamburgerMenu() {
     const btnLogoutSide = $("btn-logout-side");
 
     if (btnMenu && sideMenu) {
-        // Abrir menú
-        btnMenu.onclick = () => {
-            sideMenu.classList.remove("hidden");
-        };
+        btnMenu.onclick = () => { sideMenu.classList.remove("hidden"); };
 
-        // Cerrar menú con la X
         if (btnClose) {
-            btnClose.onclick = () => {
-                sideMenu.classList.add("hidden");
-            };
+            btnClose.onclick = () => { sideMenu.classList.add("hidden"); };
         }
 
-        // Cerrar al hacer clic en el fondo oscuro (backdrop)
         sideMenu.onclick = (e) => {
-            if (e.target === sideMenu) {
-                sideMenu.classList.add("hidden");
-            }
+            if (e.target === sideMenu) { sideMenu.classList.add("hidden"); }
         };
     }
 
-    // Vincular el botón de salir del menú lateral al logout original
     if (btnLogoutSide) {
         btnLogoutSide.onclick = (e) => {
             e.preventDefault();
             const originalLogoutBtn = $("btn-logout");
-            if (originalLogoutBtn) {
-                originalLogoutBtn.click(); // Simula el clic en el botón de salida original
-            }
+            if (originalLogoutBtn) { originalLogoutBtn.click(); }
         };
     }
 }
@@ -493,7 +685,6 @@ function initHamburgerMenu() {
 // INICIALIZACIÓN (DOMContentLoaded)
 // ==========================================
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Render de lista estática de ítems
     const list = $("inventory-list");
     if (list) {
         list.innerHTML = "";
@@ -510,7 +701,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // 2. Protección de página y carga de datos
     const user = await initProtectedPage();
     if (!user) return;
 
@@ -521,10 +711,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     await updateCapturedCountFromSupabase();
     await updatePokedexCountFromDiscoveries();
 
-    // 3. Inicializar Menú Hamburguesa
     initHamburgerMenu();
 
-    // 4. Listeners de botones
     $("btn-edit-profile")?.addEventListener("click", openProfileModal);
     $("btn-edit-inventory")?.addEventListener("click", openInventoryModal);
     $("btn-cancel-edit")?.addEventListener("click", handleCancel);
@@ -538,11 +726,9 @@ window.deleteLogEntry = async function() {
     if (!confirm("¿Eliminar actividad? Se restará el dinero y EXP de tu perfil.")) return;
 
     try {
-        // 1. Buscamos los datos para saber qué restar
         const { data: activity } = await window.supabaseClient
             .from(LOG_TABLE).select("money_reward, xp_reward").eq("id", id).single();
 
-        // 2. Restamos del inventario
         const { data: invRow } = await window.supabaseClient
             .from(TRAINER_TABLE).select("inventory").eq("user_id", window.currentUserId).single();
 
@@ -550,15 +736,11 @@ window.deleteLogEntry = async function() {
         meta.economy.biIncome -= activity.money_reward;
         meta.xp -= activity.xp_reward;
 
-        // 3. Guardamos inventario y BORRAMOS el log
         await window.supabaseClient.from(TRAINER_TABLE).upsert({ user_id: window.currentUserId, inventory: meta });
         await window.supabaseClient.from(LOG_TABLE).delete().eq("id", id);
 
-        // --- LA CLAVE ESTÁ AQUÍ ---
         alert("¡Borrado con éxito!");
         closeEditModal();
-        
-        // Esto obliga a la página a leer todo de nuevo de Supabase
         location.reload(); 
 
     } catch (err) {

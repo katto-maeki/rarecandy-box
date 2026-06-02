@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Perfil de Entrenador - Rare Candy!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="cajapkm.css" />
+  <link rel="stylesheet" href="trainer.css" />
+  <link rel="stylesheet" href="perfil.css" />
+</head>
+
+<body class="bg-main">
+  <div class="screen-frame">
+
+    <header class="top-bar">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="btn-menu" class="nav-btn-icon" title="Abrir Menú" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">
+          <i class="fa fa-bars"></i>
+        </button>
+        <span class="top-bar-title">Perfil de isleño (｡･∀･)ﾉﾞ</span>
+      </div>
+      <div class="top-bar-right" style="display: flex; align-items: center; gap: 12px;">
+        <button id="btn-noti-bell" class="btn-tiny hidden" style="background: #ffffff; color: #232542; border: 1px solid #ffffff; position: relative; padding: 6px 12px; font-weight: 700; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s;">
+          <i class="fa fa-bell" style="color: #c957b0; margin-right: 2px;"></i> <span id="noti-count" style="color: #c957b0;">0</span> Alerta(s)
+        </button>
+        <span class="top-bar-trainer" id="trainer-label">Entrenador: ???</span>
+      </div>
+    </header>
+
+    <nav id="side-menu" class="side-nav hidden">
+      <div class="side-nav-content">
+        <button id="btn-close-menu" class="close-btn">&times;</button>
+        <h3 class="menu-title">MENÚ</h3>
+        <div class="menu-links">
+          <a href="perfil.html" class="menu-link"><i class="fa fa-user"></i> Perfil</a>
+          <a href="social.html" class="menu-link"><i class="fa fa-users"></i> Plaza Sorelle</a>
+          <a href="cajapkm.html" class="menu-link"><i class="fa fa-archive"></i> Caja pokémon</a>
+          <a href="trainer.html" class="menu-link"><i class="fa fa-money"></i> Inventario</a>
+          <a href="actividades.html" class="menu-link"><i class="fa fa-list-alt"></i> Actividades</a>
+          <a href="guarderia.html" class="menu-link"><i class="fa fa-asterisk"></i> Incubadora</a>
+          <a href="pokedex.html" class="menu-link"><i class="fa fa-search"></i> Pokédex Comunitaria</a>
+          <a href="tablas.html" class="menu-link"><i class="fa fa-question-circle"></i> Info. General</a>
+          <hr style="border: 0; border-top: 1px dashed #c957b0; margin: 10px 0;">
+          <a href="#" id="btn-logout-side" class="menu-link" style="color: #e53e3e;"><i class="fa fa-sign-out"></i> Salir</a>
+        </div>
+      </div>
+    </nav>
+    <main class="new-profile-layout">
+      
+      <section class="profile-card-top">
+        <div id="profile-banner" class="banner-cover"></div>
+        
+        <div class="profile-identity-bar">
+          <div class="avatar-container">
+            <img id="profile-avatar" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/mystery-egg.png" alt="Avatar" class="avatar-image-static" />
+          </div>
+          
+          <div class="identity-info">
+            <div class="name-row">
+              <h1 class="trainer-name-v2" id="trainer-name-display">ENTRENADOR</h1>
+              <span class="user-hashtag" id="user-tag-display">#0000</span>
+            </div>
+            <p class="profile-phrase-v2" id="profile-phrase-display">"¡Sin frase de perfil aún! (˶ᵔ ᵕ ᵔ˶)"</p>
+            <div class="profile-tags-container" id="profile-tags-display"></div>
+          </div>
+
+          <div id="profile-actions-wrapper" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button id="btn-open-edit" class="btn-edit"><i class="fa fa-pencil"></i> Editar Perfil</button>
+            <button id="btn-view-box" class="btn-edit hidden" style="background: #3182ce; color: white;"><i class="fa fa-archive"></i> Ver Caja</button>
+            <button id="btn-propose-trade" class="btn-edit hidden" style="background: #48bb78; color: white;"><i class="fa fa-refresh"></i> Proponer Intercambio</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="horizontal-row-card">
+        <div class="row-card-header">
+          <h3 class="row-card-title" style="font-family: 'Press Start 2P', monospace !important; font-size: 0.7rem !important; letter-spacing: -0.5px !important; font-weight: normal !important;"><i class="fa fa-star text-gold"></i> Lista de Deseos (Wishlist)</h3>
+        </div>
+        <div id="wishlist-container" class="horizontal-scroller"></div>
+      </div>
+
+      <div class="horizontal-row-card">
+        <div class="row-card-header">
+          <h3 class="row-card-title" style="font-family: 'Press Start 2P', monospace !important; font-size: 0.7rem !important; letter-spacing: -0.5px !important; font-weight: normal !important;"><i class="fa fa-refresh text-green"></i> Pokémon para Intercambio</h3>
+        </div>
+        <div id="trade-pool-container" class="horizontal-scroller"></div>
+      </div>
+
+      <div class="profile-bottom-grid">
+        <div class="horizontal-row-card">
+          <h3 class="row-card-title" style="font-family: 'Press Start 2P', monospace !important; font-size: 0.7rem !important; letter-spacing: -0.5px !important; font-weight: normal !important; margin: 0 0 4px 0;"><i class="fa fa-history"></i> Interacciones Recientes</h3>
+          <div id="action-history-feed" class="profile-feed-box"></div>
+        </div>
+        
+        <div class="horizontal-row-card">
+          <h3 class="row-card-title" style="font-family: 'Press Start 2P', monospace !important; font-size: 0.7rem !important; letter-spacing: -0.5px !important; font-weight: normal !important; margin: 0 0 4px 0;"><i class="fa fa-calendar-check-o"></i> Cierres de Bimestre</h3>
+          <div id="closures-history-feed" class="profile-feed-box"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modal-edit-profile">
+    <div class="modal" style="width: 580px; max-width: 95%;">
+      <h3 class="modal-title">⚙️ Ajustes de Perfil</h3>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #edf2f7;">
+          <h4 class="modal-subtitle" style="margin-bottom: 8px;">Estética e Identidad</h4>
+          <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+            <button class="btn-tiny" onclick="$('modal-input-avatar').click()"><i class="fa fa-image"></i> Subir Foto</button>
+            <input type="file" id="modal-input-avatar" accept="image/*" class="hidden" />
+            <label class="label" style="font-size: 0.75rem;">Color Portada:</label>
+            <input type="color" id="modal-banner-color" value="#c957b0" class="color-input" />
+          </div>
+          <div class="modal-row" style="margin-bottom: 8px;">
+            <label class="label">Nombre de Entrenador</label>
+            <input type="text" id="modal-trainer-name" class="input" placeholder="Tu nombre oficial de entrenador..." />
+          </div>
+          <div class="modal-row">
+            <label class="label">Frase de Perfil</label>
+            <input type="text" id="modal-bio" class="input" placeholder="Escribe tu frase aquí..." />
+          </div>
+          <div class="modal-row" style="margin-top: 8px;">
+            <label class="label">Etiquetas de Entrenador (Separadas por comas)</label>
+            <input type="text" id="modal-tags" class="input" placeholder="Ej. Shiny Hunter, Casual, Coleccionista" />
+          </div>
+        </div>
+        <div style="background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #edf2f7;">
+          <h4 class="modal-subtitle" style="margin-bottom: 4px;">Gestionar Lista de Deseos (Máx. 6)</h4>
+          <div class="suggest-box">
+            <input type="text" id="modal-wishlist-search" class="input" placeholder="Escribe el nombre de un Pokémon..." />
+            <ul id="modal-wishlist-suggest" class="suggest-ul hidden"></ul>
+          </div>
+          <div id="modal-wishlist-container" style="display: flex; gap: 8px; overflow-x: auto; padding-top: 8px;"></div>
+        </div>
+        <div style="background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #edf2f7;">
+          <h4 class="modal-subtitle" style="margin-bottom: 4px;">Seleccionar Pokémon para Intercambio</h4>
+          <p style="font-size: 0.7rem; color: #718096; margin-bottom: 6px;">Marca las casillas de los Pokémon de tus cajas que deseas ofrecer:</p>
+          <div id="modal-trade-pool-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; max-height: 160px; overflow-y: auto; background: white; padding: 6px; border-radius: 6px; border: 1px solid #e2e8f0;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-close-edit-modal">Salir</button>
+        <button class="btn-primary" id="btn-save-edit-modal">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modal-trade-proposal">
+    <div class="modal" style="width: 780px; max-width: 95%; display: flex; flex-direction: column; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+      <h3 class="modal-title" style="padding: 20px 20px 0 20px; margin: 0;">🤝 Proponer Intercambio Pokémon</h3>
+      
+      <div id="trade-step-select" class="modal-body" style="padding: 16px 20px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="background: #f7fafc; padding: 14px; border-radius: 12px; border: 1px solid #edf2f7; display: flex; flex-direction: column; gap: 8px;">
+            <h4 class="modal-subtitle" style="color: #2b6cb0; margin: 0 0 2px 0; font-size: 0.85rem; font-weight: 700;">¿Qué Pokémon deseas?</h4>
+            <div id="proposal-receiver-pool" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 8px; max-height: 220px; overflow-y: auto; background: white; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; min-height: 120px;"></div>
+            <div id="stats-receiver-preview" style="font-size: 0.75rem; color: #4a5568; line-height: 1.5; background:#edf2f7; padding: 10px; border-radius: 8px; min-height: 65px; border: 1px solid #e2e8f0; box-sizing: border-box;">Selecciona un objetivo...</div>
+          </div>
+          
+          <div style="background: #f7fafc; padding: 14px; border-radius: 12px; border: 1px solid #edf2f7; display: flex; flex-direction: column; gap: 8px;">
+            <h4 class="modal-subtitle" style="color: #38a169; margin: 0 0 2px 0; font-size: 0.85rem; font-weight: 700;">¿Qué Pokémon ofreces a cambio?</h4>
+            <div id="proposal-sender-pool" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 8px; max-height: 220px; overflow-y: auto; background: white; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; min-height: 120px;"></div>
+            <div id="stats-sender-preview" style="font-size: 0.75rem; color: #4a5568; line-height: 1.5; background:#edf2f7; padding: 10px; border-radius: 8px; min-height: 65px; border: 1px solid #e2e8f0; box-sizing: border-box;">Selecciona tu oferta...</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="trade-step-confirm" class="modal-body hidden" style="padding: 35px 20px; text-align: center;">
+        <h4 style="font-family: 'Press Start 2P', monospace; font-size: 0.75rem; color: #232542; margin-bottom: 20px; line-height: 1.6;">¿ESTÁS DE ACUERDO CON LA PROPUESTA?</h4>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 30px; background: #f7fafc; padding: 20px; border-radius: 12px; border: 1px dashed #dac6f0; margin-bottom: 20px; max-width: 520px; margin-left: auto; margin-right: auto;">
+          <div>
+            <div style="font-weight: 800; color:#38a169; font-size: 0.8rem;">OFRECES:</div>
+            <div id="confirm-txt-sender" style="font-size:0.9rem; margin-top:6px; font-weight:700; color: #2d3748;">—</div>
+          </div>
+          <div style="font-size: 1.8rem; color: #a0aec0;"><i class="fa fa-exchange"></i></div>
+          <div>
+            <div style="font-weight: 800; color:#2b6cb0; font-size: 0.8rem;">PIDES:</div>
+            <div id="confirm-txt-receiver" style="font-size:0.9rem; margin-top:6px; font-weight:700; color: #2d3748;">—</div>
+          </div>
+        </div>
+        <p style="font-size: 0.8rem; color: #718096; margin: 0;">Se enviará la solicitud al isleño para su revisión.</p>
+      </div>
+
+      <div class="modal-footer" style="padding: 14px 20px; border-top: 1px solid #edf2f7; display: flex; justify-content: flex-end; gap: 10px; background: #ffffff; margin: 0;">
+        <button class="btn-secondary" id="btn-trade-cancel">Cancelar</button>
+        <button class="btn-primary" id="btn-trade-next" style="background:#48bb78; color: white;" disabled>Siguiente</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modal-view-proposal">
+    <div class="modal" style="width: 520px; max-width: 95%;">
+      <h3 class="modal-title">📬 Propuesta de Intercambio Entrante</h3>
+      <div class="modal-body" style="padding: 10px 0;">
+        <p id="view-proposal-headline" style="font-size: 0.82rem; margin-bottom: 14px; color: #4a5568; text-align:center;">Cargando propuesta...</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f7fafc; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
+          <div id="view-card-sender" style="text-align: center; background: white; padding: 8px; border-radius: 6px; border: 1px solid #edf2f7;"></div>
+          <div id="view-card-receiver" style="text-align: center; background: white; padding: 8px; border-radius: 6px; border: 1px solid #edf2f7;"></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between;">
+        <button class="btn-secondary" id="btn-proposal-decline" style="background: #e53e3e; color:white; border-color:#c53030;">Rechazar</button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-secondary" id="btn-proposal-close">Cerrar</button>
+          <button class="btn-primary" id="btn-proposal-accept" style="background: #48bb78;">Aceptar Intercambio</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modal-notification-inbox">
+    <div class="modal" style="width: 480px; max-width: 95%; border-radius: 14px; overflow: hidden; background: white;">
+      <h3 class="modal-title" style="margin: 0; background: #dac6f0; color: #232542;"><i class="fa fa-envelope-open"></i> Buzón de Notificaciones</h3>
+      <div class="modal-body" style="padding: 16px 20px;">
+        <p style="font-size: 0.78rem; color: #718096; margin-bottom: 12px; font-weight: 600;">Selecciona una notificación:</p>
+        <div id="inbox-list-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto;"></div>
+      </div>
+      <div class="modal-footer" style="padding: 12px 20px; background: #f7fafc; border-top: 1px solid #edf2f7; display: flex; justify-content: flex-end;">
+        <button class="btn-secondary" onclick="$('modal-notification-inbox').classList.add('hidden')">Cerrar Buzón</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modal-noti-status">
+    <div class="modal" style="width: 460px; max-width: 95%; border-radius: 14px; overflow: hidden; background: white;">
+      <h3 class="modal-title" style="margin: 0; background: #c957b0; color: white;"><i class="fa fa-bullhorn"></i> Alerta de Intercambio</h3>
+      
+      <div class="modal-body" style="text-align: center; padding: 30px 20px; display: flex; flex-direction: column; gap: 12px; align-items: center;">
+        <p id="noti-status-message" style="font-size: 0.88rem; color: #2d3748; line-height: 1.6; font-weight: 600; margin: 0; padding: 0 10px;"></p>
+      </div>
+      
+      <div class="modal-footer" style="padding: 12px 20px; background: #f7fafc; border-top: 1px solid #edf2f7; display: flex; justify-content: center;">
+        <button class="btn-primary" id="btn-noti-status-close" style="background: #c957b0; color: white; padding: 6px 30px; border-radius: 6px; font-weight: 700; border: none; cursor: pointer;">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./core.js"></script>
+  <script src="./perfil.js"></script>
+</body>
+</html>

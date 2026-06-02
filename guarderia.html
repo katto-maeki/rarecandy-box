@@ -31,12 +31,14 @@
         <button id="btn-close-menu" class="close-btn">&times;</button>
         <h3 class="menu-title">MENÚ</h3>
         <div class="menu-links">
+          <a href="perfil.html" class="menu-link"><i class="fa fa-user"></i> Perfil</a>
+          <a href="social.html" class="menu-link"><i class="fa fa-users"></i> Plaza Sorelle</a>
           <a href="cajapkm.html" class="menu-link"><i class="fa fa-archive"></i> Caja pokémon</a>
-          <a href="trainer.html" class="menu-link"><i class="fa fa-user"></i> Inventario</a>
+          <a href="trainer.html" class="menu-link"><i class="fa fa-money"></i> Inventario</a>
           <a href="actividades.html" class="menu-link"><i class="fa fa-list-alt"></i> Actividades</a>
           <a href="guarderia.html" class="menu-link"><i class="fa fa-asterisk"></i> Incubadora</a>
           <a href="pokedex.html" class="menu-link"><i class="fa fa-search"></i> Pokédex Comunitaria</a>
-          <a href="tablas.html" class="menu-link"><i class="fa fa-level-up"></i> Info. Evoluciones</a>
+          <a href="tablas.html" class="menu-link"><i class="fa fa-question-circle"></i> Info. General</a>
           <hr style="border: 0; border-top: 1px dashed #c957b0; margin: 10px 0;">
           <a href="#" id="btn-logout-side" class="menu-link" style="color: #e53e3e;"><i class="fa fa-sign-out"></i> Salir</a>
         </div>
@@ -45,7 +47,7 @@
 
     <main class="daycare-layout">
       <section class="column pool-info-section">
-        <h2 class="column-title">Selecciona 4 Pokémon de Hoenn</h2>
+        <h2 class="column-title">Selecciona 4 Pokémon de Galar</h2>
         <div class="pool-tabs">
           <button class="info-tab-btn active" data-type="comun">Común</button>
           <button class="info-tab-btn" data-type="raro">Raro</button>
@@ -55,7 +57,7 @@
         <div class="selection-footer">
           <div class="selection-info-box">
             <p id="selection-count">Seleccionados: 0 / 4</p>
-            <p id="johto-notice" class="hint-text">Al confirmar, se añadirán 2 Pokémon de Johto al azar.</p>
+            <p id="unova-notice" class="hint-text">Al confirmar, se añadirán 2 Pokémon de Unova al azar.</p>
           </div>
           <button id="btn-incubar" class="btn-primary" disabled>Incubar</button>
         </div>
@@ -101,7 +103,7 @@
         <div class="modal-row" id="container-special-incubator">
           <label class="checkbox-option">
             <input type="checkbox" id="special-incubator" />
-            Usar incubadora especial (-7 días, costo: 100 Pokecoins)
+            Usar incubator especial (-7 días, costo: 100 Pokecoins)
           </label>
         </div>
       </div>

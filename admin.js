@@ -5,9 +5,11 @@ const TRAINER_TABLE = "trainer_inventory";
 const POKE_TABLE = "sorelle_pokedex";
 const DISC_TABLE = "sorelle_discoveries";
 
+// LABELS ACTUALIZADO: Sincronizado con Master Ball y Panquecito
 const LABELS = {
-    egg: "Huevo", rareCandy: "Rare Candy", tradeToken: "Token", evoStone: "Piedra Evo",
-    friendship: "Pulsera", poke: "Poké Ball", super: "Super Ball", ultra: "Ultra Ball"
+    egg: "Huevo", tradeToken: "Ticket Intercambio", evoStone: "Piedra Evo",
+    friendship: "Pulsera Amistad", passport: "Pasaporte Regional", panquecito: "Panquecito",
+    poke: "Poké Ball", super: "Super Ball", ultra: "Ultra Ball", master: "Master Ball"
 };
 
 const REGION_MAP = {
@@ -42,7 +44,6 @@ function closeSuggestions() {
 // Carga inicial de nombres para el autocompletado (PokeAPI)
 async function loadAllPokemonNames() {
     try {
-        // Subimos a 2000 para capturar variantes y formas regionales
         const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=2000");
         const data = await res.json();
         globalPokemonList = data.results;
@@ -86,7 +87,6 @@ function initHamburgerMenu() {
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("Iniciando Panel de Admin...");
 
-    // 1. Protección y Header
     let user = null;
     try {
         if (typeof initProtectedPage === "function") {
@@ -103,16 +103,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         trainerLabel.textContent = "Sin Conexión";
     }
 
-    // 2. Inicializar Menú
     initHamburgerMenu();
 
-    // 3. Cargar datos base
     if (window.supabaseClient) {
         await fetchPlayerList();
         loadAllPokemonNames();
     }
 
-    // 4. Listeners de Botones y Buscador
     document.getElementById("admin-search")?.addEventListener("input", handleSearch);
     document.getElementById("btn-admin-edit")?.addEventListener("click", openAdminEditModal);
     document.getElementById("btn-adm-cancel")?.addEventListener("click", () => closeModal("modal-admin-edit"));
@@ -123,36 +120,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("btn-poke-save")?.addEventListener("click", saveNewDiscovery);
     document.getElementById("btn-api-search")?.addEventListener("click", handleApiSearch);
     
-    // Autocomplete Logic
     const apiInput = document.getElementById("api-search-input");
     if (apiInput) {
-apiInput.addEventListener("input", function() {
-    const val = this.value.toLowerCase().trim();
-    closeSuggestions();
-    if (val.length < 2) return; // Esperar a que escriba al menos 2 letras
+        apiInput.addEventListener("input", function() {
+            const val = this.value.toLowerCase().trim();
+            closeSuggestions();
+            if (val.length < 2) return;
 
-    // CAMBIO CLAVE: usamos .includes en lugar de .startsWith
-    const matches = globalPokemonList
-        .filter(p => p.name.includes(val)) 
-        .slice(0, 10); // Mostramos hasta 10 sugerencias
+            const matches = globalPokemonList
+                .filter(p => p.name.includes(val)) 
+                .slice(0, 10);
 
-    if (matches.length > 0) {
-        const list = document.getElementById("api-suggestions");
-        list.classList.add("active");
-        matches.forEach(match => {
-            const li = document.createElement("li");
-            li.className = "suggestion-item";
-            // Reemplazamos guiones por espacios para que se vea más limpio
-            li.textContent = match.name.replace(/-/g, " "); 
-            li.onclick = () => {
-                apiInput.value = match.name;
-                closeSuggestions();
-                handleApiSearch();
-            };
-            list.appendChild(li);
+            if (matches.length > 0) {
+                const list = document.getElementById("api-suggestions");
+                list.classList.add("active");
+                matches.forEach(match => {
+                    const li = document.createElement("li");
+                    li.className = "suggestion-item";
+                    li.textContent = match.name.replace(/-/g, " "); 
+                    li.onclick = () => {
+                        apiInput.value = match.name;
+                        closeSuggestions();
+                        handleApiSearch();
+                    };
+                    list.appendChild(li);
+                });
+            }
         });
-    }
-});
     }
 
     document.addEventListener("click", (e) => {
@@ -204,6 +198,9 @@ async function selectPlayer(targetId, cardElement) {
 
     selectedPlayerFullData = { id: targetId, gameData: resGame.data || {}, inventoryData: resInv.data?.inventory || {} };
     renderDetailPanel(selectedPlayerFullData);
+    
+    // LLAMADA AUTOMÁTICA PARA CARGAR ACTIVIDADES E INTERACCIONES EN MODO ADMIN
+    await fetchAndRenderAdminLogs(targetId, resInv.data?.inventory || {});
 }
 
 function renderDetailPanel(data) {
@@ -226,11 +223,11 @@ function renderDetailPanel(data) {
     iList.innerHTML = "";
     const items = inv.items||{}; const balls = inv.balls||{};
     Object.keys(LABELS).forEach(k => {
-        let v = ["poke","super","ultra"].includes(k) ? (balls[k]||0) : (items[k]||0);
+        let v = ["poke","super","ultra","master"].includes(k) ? (balls[k]||0) : (items[k]||0);
         if(v > 0) iList.innerHTML += `<div style="display:flex; justify-content:space-between"><span>${LABELS[k]}</span><strong>${v}</strong></div>`;
     });
 
-    // --- Pokémon: Equipo y Caja ---
+    // --- Pokémon: Equipo y Caja CORREGIDO (Muestra la especie con prioridad) ---
     const partyListEl = document.getElementById("det-party-list");
     const boxListEl = document.getElementById("det-box-list");
     const partyCountEl = document.getElementById("det-party-count");
@@ -241,7 +238,14 @@ function renderDetailPanel(data) {
 
     const getPokeName = (p) => {
         if (!p) return null;
-        return (typeof p === "string") ? p : (p.apodo || p.nickname || p.name || p.species || "Pokémon");
+        if (typeof p === "string") return p;
+        
+        // Prioriza el nombre de la especie sobre la palabra genérica "Pokémon"
+        const speciesName = p.nombre || p.species || p.name || "Pokémon";
+        if (p.apodo && p.apodo.trim() !== "" && p.apodo !== speciesName) {
+            return `${p.apodo} (${speciesName})`;
+        }
+        return speciesName;
     };
 
     const party = (Array.isArray(game.party_data) ? game.party_data : []).filter(Boolean);
@@ -266,6 +270,117 @@ function renderDetailPanel(data) {
     });
 }
 
+// --- NUEVA FUNCIÓN: LOGS DE ACTIVIDADES DEL BIMESTRE E INTERACCIONES ---
+async function fetchAndRenderAdminLogs(targetId, inv) {
+    const actList = document.getElementById("det-activities-list");
+    const intList = document.getElementById("det-interactions-list");
+    
+    if (actList) actList.innerHTML = "Cargando actividades del ciclo...";
+    if (intList) intList.innerHTML = "Cargando historial...";
+    
+    const lastClosedAt = inv.economy?.lastClosedAt;
+    
+    // 1) Actividades ordinarias en curso
+    let actQuery = window.supabaseClient
+        .from("trainer_log")
+        .select("*")
+        .eq("user_id", targetId)
+        .order("created_at", { ascending: false });
+        
+    if (lastClosedAt) {
+        const startingDate = new Date(lastClosedAt);
+        if (!Number.isNaN(startingDate.getTime())) {
+            actQuery = actQuery.gte("created_at", startingDate.toISOString());
+        }
+    }
+    
+    const { data: logs, error: logErr } = await actQuery;
+    
+    if (logErr) {
+        if (actList) actList.innerHTML = "Error al cargar la bitácora.";
+    } else if (!logs || logs.length === 0) {
+        if (actList) actList.innerHTML = "<div style='color:#94a3b8; font-style:italic;'>Sin actividades en este ciclo.</div>";
+    } else {
+        actList.innerHTML = "";
+        logs.forEach(log => {
+            const dateStr = new Date(log.created_at).toLocaleDateString();
+            const rewardStr = log.money_reward !== 0 ? ` (${log.money_reward > 0 ? '+' : ''}${log.money_reward}₽)` : '';
+            const xpStr = log.xp_reward !== 0 ? ` (+${log.xp_reward} XP)` : '';
+            
+            let labelIcon = "📝";
+            if(log.activity_type === "purchase") labelIcon = "🛍️";
+            if(log.activity_type === "consume") labelIcon = "🎒";
+            if(log.activity_type === "box_add") labelIcon = "📥";
+            if(log.activity_type === "exp_assign") labelIcon = "🎯";
+            if(log.activity_type === "checkpoint") labelIcon = "📌";
+
+            actList.innerHTML += `<div style="margin-bottom:6px; border-bottom:1px dashed #f1f5f9; padding-bottom:4px; line-height:1.4;">
+                <span style="color:#94a3b8; font-size:0.8em;">[${dateStr}]</span> 
+                <strong>${labelIcon}</strong> ${log.activity_name}${rewardStr}${xpStr}
+            </div>`;
+        });
+    }
+    
+    // 2) Historial Crítico Modificado con Nodos DOM Activos
+    const { data: interLogs, error: intErr } = await window.supabaseClient
+        .from("trainer_log")
+        .select("*")
+        .eq("user_id", targetId)
+        .in("activity_type", ["trade", "evolution", "bimonthly_close"])
+        .order("created_at", { ascending: false })
+        .limit(25);
+        
+    if (intErr) {
+        if (intList) intList.innerHTML = "Error al cargar interacciones.";
+    } else if (!interLogs || interLogs.length === 0) {
+        if (intList) intList.innerHTML = "<div style='color:#94a3b8; font-style:italic;'>Sin interacciones registradas.</div>";
+    } else {
+        intList.innerHTML = "";
+        interLogs.forEach(log => {
+            const dateStr = new Date(log.created_at).toLocaleDateString();
+            let typeBadge = "📋 Detalle";
+            let badgeColor = "#4b5563";
+            
+            let isClose = (log.activity_type === "bimonthly_close");
+            let displayTitle = log.activity_name;
+            let summaryPayload = null;
+
+            if (isClose) {
+                typeBadge = "🏁 Cierre Bimestral"; 
+                badgeColor = "#059669";
+                try {
+                    summaryPayload = JSON.parse(log.activity_name);
+                    displayTitle = summaryPayload.displayTitle;
+                } catch(e) { }
+            } else if(log.activity_type === "trade") { 
+                typeBadge = "🔄 Intercambio"; badgeColor = "#2563eb"; 
+            } else if(log.activity_type === "evolution") { 
+                typeBadge = "✨ Evolución"; badgeColor = "#d97706"; 
+            }
+
+            const row = document.createElement("div");
+            row.style.cssText = "margin-bottom:6px; border-bottom:1px dashed #f1f5f9; padding-bottom:4px; line-height:1.4;";
+            row.innerHTML = `
+                <span style="color:#94a3b8; font-size:0.8em;">[${dateStr}]</span> 
+                <span style="color:${badgeColor}; font-weight:bold;">${typeBadge}:</span> ${displayTitle}
+            `;
+
+            // Si es un cierre con empaquetado JSON, lo volvemos clickable para auditoría
+            if (isClose && summaryPayload) {
+                row.style.cursor = "pointer";
+                row.title = "Haz clic para auditar estadísticas completas de este cierre";
+                row.onclick = () => {
+                    if (typeof window.showClosureSummaryModal === "function") {
+                        window.showClosureSummaryModal(summaryPayload, dateStr);
+                    }
+                };
+            }
+
+            intList.appendChild(row);
+        });
+    }
+}
+
 // --- MODAL EDICIÓN ---
 function openAdminEditModal() {
     if(!selectedPlayerFullData) {
@@ -286,7 +401,7 @@ function openAdminEditModal() {
     const container = document.getElementById("adm-item-manager-container");
     container.innerHTML = "";
     Object.keys(LABELS).forEach(k => {
-        let v = ["poke","super","ultra"].includes(k) ? (inv.balls?.[k]||0) : (inv.items?.[k]||0);
+        let v = ["poke","super","ultra","master"].includes(k) ? (inv.balls?.[k]||0) : (inv.items?.[k]||0);
         container.innerHTML += `<div class="item-manager-row"><span>${LABELS[k]}</span><input type="number" class="input" style="width:70px" value="${v}" id="adm-qty-${k}"></div>`;
     });
     openModal("modal-admin-edit");
@@ -312,7 +427,7 @@ async function saveTargetData() {
     if (!inv.balls) inv.balls = {};
     Object.keys(LABELS).forEach(k => {
         const val = parseInt(document.getElementById(`adm-qty-${k}`).value) || 0;
-        if (["poke", "super", "ultra"].includes(k)) inv.balls[k] = val;
+        if (["poke", "super", "ultra", "master"].includes(k)) inv.balls[k] = val;
         else inv.items[k] = val;
     });
 
@@ -350,7 +465,6 @@ async function handleApiSearch() {
         const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${query}`);
         const data = await res.json();
         
-        // El nombre lo formateamos para que se vea bien (Raichu-alola -> Raichu Alola)
         const cleanName = data.name.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
         document.getElementById("poke-input-name").value = cleanName;
 
@@ -360,7 +474,6 @@ async function handleApiSearch() {
         document.getElementById("api-preview-img").classList.add("visible");
         document.getElementById("poke-input-type").value = data.types.map(t => t.type.name).join(" / ");
 
-        // Intentamos obtener la generación de la especie
         try {
             const resSpec = await fetch(data.species.url);
             const dataSpec = await resSpec.json();

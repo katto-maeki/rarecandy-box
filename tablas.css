@@ -86,9 +86,11 @@
 
 .tab-content {
   display: none; /* Oculto por defecto */
-  height: 100%;
   flex-direction: column;
   animation: fadeIn 0.3s ease;
+  /* CORRECCIÓN: flex y min-height en lugar de height fija para heredar el espacio */
+  flex: 1;
+  min-height: 0;
 }
 
 .tab-content.active {
@@ -227,3 +229,70 @@
 }
 
 .text-red { color: #e53e3e !important; }
+
+/* --- ACORDEÓN DE PREGUNTAS FRECUENTES (FAQ) --- */
+.faq-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 15px;
+  
+  /* ESTAS LÍNEAS ACTIVAN EL SCROLL INTERNO */
+  flex: 1;
+  overflow-y: auto; 
+  min-height: 0;
+  padding-right: 8px; /* Un pequeño espacio para que la barra de scroll no tape los botones de + o - */
+}
+
+.faq-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  flex-shrink: 0; /* CORRECCIÓN: ¡Evita rotundamente que Flexbox aplaste los contenedores! */
+}
+
+.faq-question {
+  background: #eff6ff; /* Fondo azul clarito */
+  padding: 14px 18px;
+  font-family: "Nunito", sans-serif;
+  font-weight: 700;
+  color: #1e3a8a; /* Texto azul oscuro */
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.faq-question:hover {
+  background: #dbeafe;
+}
+
+.faq-answer {
+  padding: 0 18px;
+  max-height: 0; /* Oculta la respuesta por defecto */
+  overflow: hidden; /* Evita que el texto se desborde al estar oculto */
+  transition: all 0.25s ease-out;
+  color: #334155;
+  font-family: "Nunito", sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Cuando se le hace clic, el JS le añade la clase .open y se despliega */
+.faq-item.open .faq-answer {
+  padding: 14px 18px;
+  max-height: 500px; /* Le da espacio suficiente para desplegarse */
+  border-top: 1px solid #e2e8f0;
+}
+
+.faq-question::after {
+  content: '➕';
+  font-size: 0.8rem;
+}
+
+.faq-item.open .faq-question::after {
+  content: '➖';
+}
