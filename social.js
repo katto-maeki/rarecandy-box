@@ -149,7 +149,6 @@ async function loadAndRenderGlobalFeed() {
   };
 
   logs.forEach(log => {
-    // CORREGIDO: Si el log pertenece a la cuenta de pruebas, lo saltamos silenciosamente
     if (HIDDEN_USERS.includes(log.user_id)) return;
 
     const date = new Date(log.created_at).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
@@ -163,7 +162,7 @@ async function loadAndRenderGlobalFeed() {
         logContent = `🛒 ${authorPrefix} realizó una compra: "${log.activity_name}"`;
         break;
       case "incubation":
-        logContent = `🥚 ${authorPrefix} activó su incubadora con un <strong>${log.activity_name}</strong>`;
+        logContent = `🥚 ${authorPrefix} activó su incubator con un <strong>${log.activity_name}</strong>`;
         break;
       case "box_add":
         logContent = `📦 ${authorPrefix} guardó a <strong>${log.activity_name}</strong> en su caja`;
@@ -180,15 +179,37 @@ async function loadAndRenderGlobalFeed() {
       case "checkpoint":
         logContent = `🏁 ${authorPrefix} timbró un hito oficial: <em>${log.activity_name}</em>`;
         break;
-// MODIFICADO: Formateador inteligente para diferenciar intercambios exitosos de rechazos
       case "trade":
         if (log.activity_name.includes("Rechazó") || log.activity_name.includes("rechazo")) {
-          // Si es un rechazo, usamos un icono de alerta/cruz y suavizamos las mayúsculas del inicio
           const cleanText = log.activity_name.charAt(0).toLowerCase() + log.activity_name.slice(1);
           logContent = `❌ ${authorPrefix} ${cleanText}`;
         } else {
-          // Si fue un intercambio exitoso, mantenemos el apretón de manos estándar
           logContent = `🤝 ${authorPrefix}: ${log.activity_name}`;
+        }
+        break;
+      // REPARADO: Ahora incluye tipos y actividades de manera elegante
+      case "bimonthly_close":
+        try {
+          const closeData = JSON.parse(log.activity_name);
+          const titleText = closeData.displayTitle || "Cierre de Bimestre";
+          
+          let details = "";
+          if (closeData.types) {
+            details += `<br>★ <strong>Tipos entrenados:</strong> ${closeData.types}`;
+          }
+          if (closeData.activities) {
+            details += `<br>★ <strong>Actividades:</strong> ${closeData.activities}`;
+          }
+          if (closeData.items) {
+            details += `<br>★ <strong>Objetos en mochila:</strong> ${closeData.items}`;
+          }
+          if (closeData.hatched && parseInt(closeData.hatched) > 0) {
+            details += `<br>★ <strong>Huevos eclosionados:</strong> ${closeData.hatched}`;
+          }
+          
+          logContent = `📅 ¡${authorPrefix} completó su <strong>${titleText}</strong>!${details}`;
+        } catch (e) {
+          logContent = `📅 ¡${authorPrefix} completó su <strong>Cierre de Bimestre</strong>!`;
         }
         break;
       default:

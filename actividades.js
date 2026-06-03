@@ -50,9 +50,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const user = await initProtectedPage();
     if (!user) return;
     
-  await renderTrainerLabelFromGame();
-   initHamburgerMenu();
-    // Inicializar Menú
+    await renderTrainerLabelFromGame();
+    
+    // Inicializar Menú (Limpiado el duplicado)
     initHamburgerMenu();
     
     // Cargar historial
@@ -145,7 +145,6 @@ async function handleRegisterActivity() {
         if (fetchErr) throw new Error("Error al obtener inventario: " + fetchErr.message);
 
         // 5. Preparar el objeto Meta (Inventario)
-        // Si no existe el registro, creamos uno con la estructura base
         let meta = inv?.inventory || { 
             economy: { biIncome: 0, savings: 0, spent: 0 }, 
             xp: 0,
@@ -153,10 +152,8 @@ async function handleRegisterActivity() {
             balls: {}
         };
 
-        // Aseguramos que la sub-estructura de economía exista
         if (!meta.economy) meta.economy = { biIncome: 0, savings: 0, spent: 0 };
         
-        // Realizamos la suma de premios
         meta.economy.biIncome = (meta.economy.biIncome || 0) + finalMoney;
         meta.xp = (meta.xp || 0) + finalXP;
         meta.lastUpdated = new Date().toISOString();
@@ -184,87 +181,101 @@ async function handleRegisterActivity() {
 
 async function loadActivityLog() {
     const container = document.getElementById("activity-log-container");
-    const { data, error } = await window.supabaseClient
-        .from(LOG_TABLE)
-        .select("*")
-        .eq("user_id", window.currentUserId)
-        .order("created_at", { ascending: false });
+    
+    try {
+        const { data, error } = await window.supabaseClient
+            .from(LOG_TABLE)
+            .select("*")
+            .eq("user_id", window.currentUserId)
+            .order("created_at", { ascending: false });
 
-    if (error) return console.error(error);
+        // Protección 1: Si falla la conexión o query, actualiza la UI informando al usuario
+        if (error) {
+            console.error("Error de Supabase:", error);
+            container.innerHTML = `<p class="empty-msg">Error al conectar con la base de datos.</p>`;
+            return;
+        }
 
-    if (!data?.length) {
-        container.innerHTML = `<p class="empty-msg">No hay actividades recientes.</p>`;
-        return;
-    }
+        if (!data || data.length === 0) {
+            container.innerHTML = `<p class="empty-msg">No hay actividades recientes.</p>`;
+            return;
+        }
 
-    const typeNames = {
-        encounter: "Encounter", quest: "Quest", pokedex_comu: "Pokedex Comu.",
-        pokedex_legen: "Pokedex Leg.", pokewords: "Pokéwords", freemode: "Freemode",
-        passport: "Passport", evolution: "Evolución", trade: "Intercambio",
-        checkpoint: "Checkpoint", otros: "Otros"
-    };
+        const typeNames = {
+            encounter: "Encounter", quest: "Quest", pokedex_comu: "Pokedex Comu.",
+            pokedex_legen: "Pokedex Leg.", pokewords: "Pokéwords", freemode: "Freemode",
+            passport: "Passport", evolution: "Evolución", trade: "Intercambio",
+            checkpoint: "Checkpoint", otros: "Otros"
+        };
 
-    // Estructura de la tabla con FECHA al inicio
-    let tableHTML = `
-        <div class="log-table-container">
-            <table class="activities-table">
-                <thead>
-                    <tr>
-                        <th style="width: 60px;">Fecha</th>
-                        <th>Nombre</th>
-                        <th>Actividad</th>
-                        <th>Part.</th>
-                        <th>Recompensa</th>
-                        <th style="text-align: center;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
+        let tableHTML = `
+            <div class="log-table-container">
+                <table class="activities-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Fecha</th>
+                            <th>Nombre</th>
+                            <th>Actividad</th>
+                            <th>Part.</th>
+                            <th>Recompensa</th>
+                            <th style="text-align: center;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
 
-    data.forEach(act => {
-        // Formateamos la fecha (Ej: 03/04)
-        const dateObj = new Date(act.created_at);
-        const dateStr = dateObj.toLocaleDateString('es-ES', {
-            day: '2-digit', month: '2-digit'
+        data.forEach(act => {
+            const dateObj = new Date(act.created_at);
+            const dateStr = dateObj.toLocaleDateString('es-ES', {
+                day: '2-digit', month: '2-digit'
+            });
+
+            const typeLabel = typeNames[act.activity_type] || act.activity_type || "Otros";
+            
+            // Protección 2: Fallback seguro si 'participation' es nulo o indefinido
+            const participationStr = act.participation || "individual";
+            const partLabel = participationStr.charAt(0).toUpperCase() + participationStr.slice(1);
+
+            tableHTML += `
+                <tr>
+                    <td class="td-date">${dateStr}</td>
+                    
+                    <td>
+                        <div class="td-activity-name">${act.activity_name || "Sin nombre"}</div>
+                        <a href="${act.link || '#'}" target="_blank" class="td-link">Ver post <i class="fa fa-external-link"></i></a>
+                    </td>
+                    
+                    <td><span class="badge badge-type">${typeLabel}</span></td>
+                    
+                    <td><span class="badge badge-part">${partLabel}</span></td>
+                    
+                    <td>
+                        <div class="td-money">+₽${act.money_reward || 0}</div>
+                        <div class="td-xp">+${act.xp_reward || 0} XP</div>
+                    </td>
+                    
+                    <td>
+                        <div class="actions-cell">
+                            <button class="btn-action-table btn-edit-table" onclick="openEditModal('${act.id}', '${act.activity_name || ""}', '${act.link || ""}')">
+                                <i class="fa fa-pencil"></i>
+                            </button>
+                            <button class="btn-action-table btn-delete-table" onclick="deleteLogEntryInline('${act.id}')">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
         });
 
-        const typeLabel = typeNames[act.activity_type] || act.activity_type;
-        const partLabel = act.participation.charAt(0).toUpperCase() + act.participation.slice(1);
+        tableHTML += `</tbody></table></div>`;
+        container.innerHTML = tableHTML;
 
-        tableHTML += `
-            <tr>
-                <td class="td-date">${dateStr}</td>
-                
-                <td>
-                    <div class="td-activity-name">${act.activity_name}</div>
-                    <a href="${act.link}" target="_blank" class="td-link">Ver post <i class="fa fa-external-link"></i></a>
-                </td>
-                
-                <td><span class="badge badge-type">${typeLabel}</span></td>
-                
-                <td><span class="badge badge-part">${partLabel}</span></td>
-                
-                <td>
-                    <div class="td-money">+₽${act.money_reward}</div>
-                    <div class="td-xp">+${act.xp_reward} XP</div>
-                </td>
-                
-                <td>
-                    <div class="actions-cell">
-                        <button class="btn-action-table btn-edit-table" onclick="openEditModal('${act.id}', '${act.activity_name}', '${act.link}')">
-                            <i class="fa fa-pencil"></i>
-                        </button>
-                        <button class="btn-action-table btn-delete-table" onclick="deleteLogEntryInline('${act.id}')">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    });
-
-    tableHTML += `</tbody></table></div>`;
-    container.innerHTML = tableHTML;
+    } catch (globalErr) {
+        // Captura cualquier otro error fatal imprevisto en el procesamiento de datos
+        console.error("Error crítico en loadActivityLog:", globalErr);
+        container.innerHTML = `<p class="empty-msg">Error inesperado al procesar los registros.</p>`;
+    }
 }
 
 // ==========================================
@@ -343,7 +354,7 @@ window.deleteLogEntry = async function() {
         meta.xp = Math.max(0, (meta.xp || 0) - activity.xp_reward);
         meta.lastUpdated = new Date().toISOString();
 
-        // PASO 4: Actualizar inventario (Upsert con onConflict)
+        // PASO 4: Actualizar inventario
         const { error: upsertErr } = await window.supabaseClient
             .from(TRAINER_TABLE)
             .upsert(
@@ -363,7 +374,7 @@ window.deleteLogEntry = async function() {
 
         // PASO 6: Éxito
         alert("Actividad eliminada y puntos restados correctamente.");
-        closeEditModal(); // Por si acaso estaba abierto el de edición
+        closeEditModal();
         location.reload(); 
 
     } catch (err) {
@@ -372,13 +383,10 @@ window.deleteLogEntry = async function() {
     }
 };
 
-// Esta función es el puente para el icono de basura de la tabla
 window.deleteLogEntryInline = function(id) {
-    // 1. Ponemos el ID en el campo oculto que usa tu función principal
     const idInput = document.getElementById("edit-log-id");
     if (idInput) {
         idInput.value = id;
-        // 2. Ejecutamos la función de borrado que ya tienes
         window.deleteLogEntry();
     }
 };
