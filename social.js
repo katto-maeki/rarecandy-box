@@ -187,7 +187,6 @@ async function loadAndRenderGlobalFeed() {
           logContent = `🤝 ${authorPrefix}: ${log.activity_name}`;
         }
         break;
-      // REPARADO: Ahora incluye tipos y actividades de manera elegante
       case "bimonthly_close":
         try {
           const closeData = JSON.parse(log.activity_name);
@@ -195,7 +194,8 @@ async function loadAndRenderGlobalFeed() {
           
           let details = "";
           if (closeData.types) {
-            details += `<br>★ <strong>Tipos entrenados:</strong> ${closeData.types}`;
+            // CORREGIDO: Se cambió "Tipos entrenados" por "Pokes atrapados"
+            details += `<br>★ <strong>Pokes atrapados:</strong> ${closeData.types}`;
           }
           if (closeData.activities) {
             details += `<br>★ <strong>Actividades:</strong> ${closeData.activities}`;
