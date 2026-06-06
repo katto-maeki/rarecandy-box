@@ -497,6 +497,7 @@ const POKEMON_CLASSES = {
     "sinistea": "Raro",
     "sirfetchd": "Raro",       // Sin apóstrofe
     "snom": "Raro",
+    "slowpoke-galar" : "Raro",
     "sobble": "Raro",
     "stonjourner": "Raro",
     "stunfisk-galar": "Raro",  // Variante regional
@@ -518,6 +519,8 @@ const POKEMON_CLASSES = {
     "duraludon": "Especial",
     "frosmoth": "Especial",
     "grimmsnarl": "Especial",
+    "slowbro-galar" : "Especial",
+    "slowking-galar" : "Especial",
     "hatterene": "Especial",
 
     // --- PALDEA (Raros) ---
@@ -598,6 +601,7 @@ const POKEMON_CLASSES = {
     "sneasel-hisui": "Raro",
     "typhlosion-hisui": "Raro",
     "zorua-hisui": "Raro",
+    "voltorb-hisui" : "Raro",
 
     // --- HISUI (Especiales) ---
     "basculegion": "Especial",
