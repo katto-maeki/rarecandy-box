@@ -9,7 +9,7 @@ const LOG_TABLE = "trainer_log"; // Añadido para prevenir futuros ReferenceErro
 // CONFIGURACIÓN DE PRECIOS ACTUALIZADA
 const ITEM_PRICES = {
   egg: 600, tradeToken: 150, evoStone: 300, friendship: 300, 
-  passport: 100, panquecito: 100, poke: 50, super: 100, ultra: 150, master: 300, 
+  passport: 150, panquecito: 100, poke: 50, super: 100, ultra: 150, master: 300, 
 };
 
 // ETIQUETAS ACTUALIZADAS

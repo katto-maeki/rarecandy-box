@@ -62,9 +62,12 @@
                             <select id="select-activity" class="input">
                                 <option value="">-- Seleccionar --</option>
                                 <option value="encounter">Encounter</option>
+                                <option value="exploration">Exploración</option>
                                 <option value="quest">Quest</option>
+                                <option value="egg_challenge">Reto Huevo</option>
                                 <option value="pokedex_comu">Pokédex Comunitaria</option>
                                 <option value="pokedex_legen">Pokédex Legendaria</option>
+                                <option value="coloring">Coloreo</option>
                                 <option value="pokewords">Pokéwords</option>
                                 <option value="freemode">Freemode</option>
                                 <option value="passport">Passport</option>
@@ -76,10 +79,10 @@
                         </div>
 
                         <div class="modal-row hidden" id="encounter-qty-row">
-            <label class="label">¿Cuántos Pokémon mencionaste?</label>
-            <input type="number" id="input-qty-pkm" class="input" value="1" min="1">
-            <small style="font-size: 0.7rem; color: #7a47ff;">* Recompensa multiplicada por ejemplar.</small>
-        </div>
+                            <label class="label">¿Cuántos Pokémon mencionaste / coloreaste?</label>
+                            <input type="number" id="input-qty-pkm" class="input" value="1" min="1">
+                            <small style="font-size: 0.7rem; color: #7a47ff;">* Recompensa multiplicada por ejemplar.</small>
+                        </div>
 
                         <div class="modal-row" id="participation-row">
                             <label class="label">Participación</label>
@@ -110,34 +113,37 @@
                     </div>
                 </section>
 
-<section class="trainer-column">
+                <section class="trainer-column">
                     <h2 class="column-title">DIARIO DE ACTIVIDADES</h2>
                     <div id="activity-log-container" class="log-scroll-area">
                         <p class="empty-msg">Cargando registros...</p>
                     </div>
                 </section>
-<div id="modal-edit-log" class="modal-backdrop hidden">
-            <div class="modal" style="width: 450px;">
-                <h3 class="modal-title">Editar Registro</h3>
                 
-                <div class="modal-body">
-                    <input type="hidden" id="edit-log-id">
-                    
-                    <div class="modal-row">
-                        <label class="label">Nombre de la Actividad</label>
-                        <input type="text" id="edit-log-name" class="input">
+                <div id="modal-edit-log" class="modal-backdrop hidden">
+                    <div class="modal" style="width: 450px;">
+                        <h3 class="modal-title">Editar Registro</h3>
+                        
+                        <div class="modal-body">
+                            <input type="hidden" id="edit-log-id">
+                            
+                            <div class="modal-row">
+                                <label class="label">Nombre de la Actividad</label>
+                                <input type="text" id="edit-log-name" class="input">
+                            </div>
+                            
+                            <div class="modal-row" style="margin-top: 10px;">
+                                <label class="label">Enlace / Link</label>
+                                <input type="url" id="edit-log-link" class="input">
+                            </div>
+                        </div>
+                        <button class="btn-secondary" onclick="closeEditModal()">Cancelar</button>
+                        <button class="btn-primary" onclick="saveLogEdit()">Guardar Cambios</button>
                     </div>
-                    
-                    <div class="modal-row" style="margin-top: 10px;">
-                        <label class="label">Enlace / Link</label>
-                        <input type="url" id="edit-log-link" class="input">
-                    </div>
-                </div>
-                    <button class="btn-secondary" onclick="closeEditModal()">Cancelar</button>
-                    <button class="btn-primary" onclick="saveLogEdit()">Guardar Cambios</button>
                 </div>
             </div>
-        </div>
+        </main>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./core.js"></script>
     <script src="./actividades.js"></script>

@@ -4,16 +4,19 @@ const LOG_TABLE = "trainer_log";
 const TRAINER_TABLE = "trainer_inventory";
 
 const REWARDS_CONFIG = {
-    encounter: { individual: [100, 80], pareja: [150, 100], grupal: [200, 120] },
-    quest:     { individual: [120, 100], pareja: [170, 120], grupal: [220, 140] },
+    encounter:     { individual: [100, 80], pareja: [150, 100], grupal: [200, 120] },
+    exploration:   { individual: [150, 80], pareja: [200, 100], grupal: [250, 120] },
+    coloring:      { individual: [80, 50] },
+    egg_challenge: { individual: [0, 150] },
+    quest:         { individual: [120, 100], pareja: [170, 120], grupal: [220, 140] },
     pokedex_comu:  { individual: [100, 80] },
     pokedex_legen: { individual: [100, 80] },
-    pokewords: { individual: [100, 100], pareja: [150, 120], grupal: [200, 140] },
-    freemode:  { individual: [100, 80], pareja: [150, 100], grupal: [200, 120] },
-    passport:  { individual: [80, 80], pareja: [130, 100], grupal: [180, 120] },
-    evolution: { individual: [100, 0] },
-    trade:     { pareja: [100, 0] },
-    checkpoint: { individual: [100, 0] }
+    pokewords:     { individual: [100, 100], pareja: [150, 120], grupal: [200, 140] },
+    freemode:      { individual: [100, 80], pareja: [150, 100], grupal: [200, 120] },
+    passport:      { individual: [80, 80], pareja: [130, 100], grupal: [180, 120] },
+    evolution:     { individual: [100, 0] },
+    trade:         { pareja: [100, 0] },
+    checkpoint:    { individual: [100, 0] }
 };
 
 // ==========================================
@@ -71,13 +74,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             qtyRow.classList.add("hidden");
             selectPart.disabled = false;
 
-            if (val === "encounter") {
+            if (val === "encounter" || val === "coloring") {
                 qtyRow.classList.remove("hidden");
             } 
             
             if (val === "otros") {
                 customRow.classList.remove("hidden");
-            } else if (["pokedex_comu", "pokedex_legen", "evolution", "checkpoint"].includes(val)) {
+            } else if (["pokedex_comu", "pokedex_legen", "evolution", "checkpoint", "coloring", "egg_challenge"].includes(val)) {
                 selectPart.value = "individual";
                 selectPart.disabled = true;
             } else if (val === "trade") {
@@ -116,8 +119,9 @@ async function handleRegisterActivity() {
         baseXP = reward[1];
     }
 
-    const finalMoney = type === "encounter" ? (baseMoney * quantity) : baseMoney;
-    const finalXP = type === "encounter" ? (baseXP * quantity) : baseXP;
+    const isMultiplied = (type === "encounter" || type === "coloring");
+    const finalMoney = isMultiplied ? (baseMoney * quantity) : baseMoney;
+    const finalXP = isMultiplied ? (baseXP * quantity) : baseXP;
 
     try {
         console.log("Iniciando registro para el usuario:", window.currentUserId);
@@ -125,7 +129,7 @@ async function handleRegisterActivity() {
         // 3. Insertar en el Log de Actividades
         const { error: logErr } = await window.supabaseClient.from(LOG_TABLE).insert([{
             user_id: window.currentUserId,
-            activity_name: type === "encounter" ? `${name} (x${quantity})` : name,
+            activity_name: isMultiplied ? `${name} (x${quantity})` : name,
             activity_type: type,
             participation: participation,
             money_reward: finalMoney,
@@ -205,7 +209,9 @@ async function loadActivityLog() {
             encounter: "Encounter", quest: "Quest", pokedex_comu: "Pokedex Comu.",
             pokedex_legen: "Pokedex Leg.", pokewords: "Pokéwords", freemode: "Freemode",
             passport: "Passport", evolution: "Evolución", trade: "Intercambio",
-            checkpoint: "Checkpoint", otros: "Otros"
+            checkpoint: "Checkpoint", otros: "Otros",
+            exploration: "Exploración", coloring: "Coloreo",
+            egg_challenge: "Reto Huevo"
         };
 
         let tableHTML = `
