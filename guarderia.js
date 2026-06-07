@@ -17,7 +17,7 @@ const EGG_DATA = {
   },
   raro: { 
     label: "Huevo Raro", 
-    pool: ["Meowth-Galar","Ponyta-Galar","Farfetchd-Galar","Weezing-Galar","Corsola-Galar","Yamask-Galar","Stunfisk-Galar","Grookey","Scorbunny","Sobble","Applin","Cramorant","Sinistea","Hatenna","Impidimp","Milcery","Falinks","Pincurchin","Snom","Stonjourner","Eiscue","Indeedee","Morpeko","Duraludon","Dreepy","Snivy","Tepig","Oshawott","Pansage","Pansear","Panpour","Audino","Throh","Sawk","Basculin","Maractus","Sigilyph","Zorua","Emolga","Alomomola","Axew","Cryogonal","Stunfisk","Mienfoo","Druddigon","Bouffalant","Rufflet","Vullaby","Heatmor","Durant","Deino","Larvesta"] 
+    pool: ["Meowth-Galar","Ponyta-Galar","Farfetchd-Galar","Corsola-Galar","Yamask-Galar","Stunfisk-Galar","Grookey","Scorbunny","Sobble","Applin","Cramorant","Sinistea","Hatenna","Impidimp","Milcery","Falinks","Pincurchin","Snom","Stonjourner","Eiscue","Indeedee","Morpeko","Duraludon","Dreepy","Snivy","Tepig","Oshawott","Pansage","Pansear","Panpour","Audino","Throh","Sawk","Basculin","Maractus","Sigilyph","Zorua","Emolga","Alomomola","Axew","Cryogonal","Stunfisk","Mienfoo","Druddigon","Bouffalant","Rufflet","Vullaby","Heatmor","Durant","Deino","Larvesta"] 
   },
   baby: { 
     label: "Huevo Baby", 
