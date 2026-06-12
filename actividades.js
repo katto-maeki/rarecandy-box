@@ -14,8 +14,8 @@ const REWARDS_CONFIG = {
     pokewords:     { individual: [100, 100], pareja: [150, 120], grupal: [200, 140] },
     freemode:      { individual: [100, 80], pareja: [150, 100], grupal: [200, 120] },
     passport:      { individual: [80, 80], pareja: [130, 100], grupal: [180, 120] },
-    evolution:     { individual: [100, 0] },
-    trade:         { pareja: [100, 0] },
+    evolution_narrative: { individual: [100, 0] },
+    trade_narrative:     { pareja: [100, 0] }, // <-- Cambiado aquí para diferenciar de la web
     checkpoint:    { individual: [100, 0] }
 };
 
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     await renderTrainerLabelFromGame();
     
-    // Inicializar Menú (Limpiado el duplicado)
+    // Inicializar Menú
     initHamburgerMenu();
     
     // Cargar historial
@@ -78,12 +78,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 qtyRow.classList.remove("hidden");
             } 
             
-            if (val === "otros") {
+            if (val === "otros_manual") {
                 customRow.classList.remove("hidden");
-            } else if (["pokedex_comu", "pokedex_legen", "evolution", "checkpoint", "coloring", "egg_challenge"].includes(val)) {
+            } else if (["pokedex_comu", "pokedex_legen", "evolution_narrative", "checkpoint", "coloring", "egg_challenge"].includes(val)) {
                 selectPart.value = "individual";
                 selectPart.disabled = true;
-            } else if (val === "trade") {
+            } else if (val === "trade_narrative") { // <-- Corregido para que bloquee el select con la nueva clave
                 selectPart.value = "pareja";
                 selectPart.disabled = true;
             }
@@ -110,7 +110,7 @@ async function handleRegisterActivity() {
     let baseXP = 0;
 
     // 2. Cálculo de recompensas
-    if (type === "otros") {
+    if (type === "otros_manual") {
         baseMoney = parseInt(document.getElementById("custom-money").value) || 0;
         baseXP = parseInt(document.getElementById("custom-xp").value) || 0;
     } else {
@@ -187,18 +187,39 @@ async function loadActivityLog() {
     const container = document.getElementById("activity-log-container");
     
     try {
-        const { data, error } = await window.supabaseClient
+        const { data: rawData, error } = await window.supabaseClient
             .from(LOG_TABLE)
             .select("*")
             .eq("user_id", window.currentUserId)
             .order("created_at", { ascending: false });
 
-        // Protección 1: Si falla la conexión o query, actualiza la UI informando al usuario
         if (error) {
             console.error("Error de Supabase:", error);
             container.innerHTML = `<p class="empty-msg">Error al conectar con la base de datos.</p>`;
             return;
         }
+
+        // =========================================================================
+        // LISTA BLANCA ESTRICTA: Ahora también filtra los intercambios automáticos ("trade")
+        // =========================================================================
+        const allowedTypes = [
+            "encounter", 
+            "exploration", 
+            "quest", 
+            "egg_challenge", 
+            "pokedex_comu", 
+            "pokedex_legen", 
+            "coloring", 
+            "pokewords", 
+            "freemode", 
+            "passport", 
+            "checkpoint", 
+            "evolution_narrative",
+            "otros_manual",
+            "trade_narrative" // <-- Cambiado de "trade" a "trade_narrative"
+        ];
+
+        const data = rawData ? rawData.filter(act => allowedTypes.includes(act.activity_type)) : [];
 
         if (!data || data.length === 0) {
             container.innerHTML = `<p class="empty-msg">No hay actividades recientes.</p>`;
@@ -208,8 +229,8 @@ async function loadActivityLog() {
         const typeNames = {
             encounter: "Encounter", quest: "Quest", pokedex_comu: "Pokedex Comu.",
             pokedex_legen: "Pokedex Leg.", pokewords: "Pokéwords", freemode: "Freemode",
-            passport: "Passport", evolution: "Evolución", trade: "Intercambio",
-            checkpoint: "Checkpoint", otros: "Otros",
+            passport: "Passport", evolution_narrative: "Evolución", trade_narrative: "Intercambio", // <-- Mapeado aquí
+            checkpoint: "Checkpoint", otros_manual: "Otros", 
             exploration: "Exploración", coloring: "Coloreo",
             egg_challenge: "Reto Huevo"
         };
@@ -237,8 +258,6 @@ async function loadActivityLog() {
             });
 
             const typeLabel = typeNames[act.activity_type] || act.activity_type || "Otros";
-            
-            // Protección 2: Fallback seguro si 'participation' es nulo o indefinido
             const participationStr = act.participation || "individual";
             const partLabel = participationStr.charAt(0).toUpperCase() + participationStr.slice(1);
 
@@ -278,7 +297,6 @@ async function loadActivityLog() {
         container.innerHTML = tableHTML;
 
     } catch (globalErr) {
-        // Captura cualquier otro error fatal imprevisto en el procesamiento de datos
         console.error("Error crítico en loadActivityLog:", globalErr);
         container.innerHTML = `<p class="empty-msg">Error inesperado al procesar los registros.</p>`;
     }
@@ -335,7 +353,6 @@ window.deleteLogEntry = async function() {
     }
 
     try {
-        // PASO 1: Obtener recompensas antes de borrar
         const { data: activity, error: fetchLogErr } = await window.supabaseClient
             .from(LOG_TABLE)
             .select("money_reward, xp_reward")
@@ -344,7 +361,6 @@ window.deleteLogEntry = async function() {
 
         if (fetchLogErr) throw new Error("No se pudo encontrar la actividad.");
 
-        // PASO 2: Obtener inventario actual
         const { data: invRow, error: fetchInvErr } = await window.supabaseClient
             .from(TRAINER_TABLE)
             .select("inventory")
@@ -355,12 +371,10 @@ window.deleteLogEntry = async function() {
 
         let meta = invRow.inventory;
 
-        // PASO 3: Restar valores
         meta.economy.biIncome = Math.max(0, (meta.economy.biIncome || 0) - activity.money_reward);
         meta.xp = Math.max(0, (meta.xp || 0) - activity.xp_reward);
         meta.lastUpdated = new Date().toISOString();
 
-        // PASO 4: Actualizar inventario
         const { error: upsertErr } = await window.supabaseClient
             .from(TRAINER_TABLE)
             .upsert(
@@ -370,15 +384,13 @@ window.deleteLogEntry = async function() {
 
         if (upsertErr) throw new Error("Error al actualizar el perfil.");
 
-        // PASO 5: Borrar el registro del Log
-        const { error: deleteError } = await window.supabaseClient
+        const { error: deleteError = null } = await window.supabaseClient
             .from(LOG_TABLE)
             .delete()
             .eq("id", id);
 
         if (deleteError) throw new Error("Error al borrar el registro.");
 
-        // PASO 6: Éxito
         alert("Actividad eliminada y puntos restados correctamente.");
         closeEditModal();
         location.reload(); 

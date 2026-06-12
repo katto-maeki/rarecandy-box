@@ -477,8 +477,8 @@ async function handleClosePeriod() {
     const typeNames = {
       encounter: "Encounter", quest: "Quest", pokedex_comu: "Pokédex Comu.",
       pokedex_legen: "Pokédex Leg.", pokewords: "Pokéwords", freemode: "Freemode",
-      passport: "Passport", evolution: "Evolución", trade: "Intercambio",
-      checkpoint: "Checkpoint", otros: "Otros"
+      passport: "Passport", evolution_narrative: "Evolución", trade_narrative: "Intercambio",
+      checkpoint: "Checkpoint", otros_manual: "Otros"
     };
 
     const typeStrings = [];

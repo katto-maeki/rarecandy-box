@@ -13,11 +13,11 @@ let activeIncubations = [];
 const EGG_DATA = {
   comun: { 
     label: "Huevo Común", 
-    pool: ["Zigzagoon-Galar","Skwovet","Rookidee","Blipbug","Nickit","Gossifleur","Wooloo","Chewtle","Yamper","Rolycoly","Silicobra","Arrokuda","Sizzlipede","Clobbopus","Cufant","Patrat","Lillipup","Purrloin","Munna","Pidove","Blitzle","Roggenrola","Woobat","Drilbur","Timburr","Tympole","Sewaddle","Venipede","Cottonee","Petilil","Sandile","Darumaka","Dwebble","Scraggy","Yamask","Trubbish","Minccino","Gothita","Solosis","Ducklett","Vanillite","Deerling","Karrablast","Foongus","Frillish","Joltik","Ferroseed","Klink","Tynamo","Elgyem","Litwick","Cubchoo","Shelmet","Golett","Pawniard"] 
+    pool: ["Skwovet","Rookidee","Blipbug","Nickit","Gossifleur","Wooloo","Chewtle","Yamper","Rolycoly","Silicobra","Arrokuda","Sizzlipede","Clobbopus","Cufant","Patrat","Lillipup","Purrloin","Munna","Pidove","Blitzle","Roggenrola","Woobat","Drilbur","Timburr","Tympole","Sewaddle","Venipede","Cottonee","Petilil","Sandile","Darumaka","Dwebble","Scraggy","Yamask","Trubbish","Minccino","Gothita","Solosis","Ducklett","Vanillite","Deerling","Karrablast","Foongus","Frillish","Joltik","Ferroseed","Klink","Tynamo","Elgyem","Litwick","Cubchoo","Shelmet","Golett","Pawniard"] 
   },
   raro: { 
     label: "Huevo Raro", 
-    pool: ["Meowth-Galar","Ponyta-Galar","Farfetchd-Galar","Corsola-Galar","Yamask-Galar","Stunfisk-Galar","Grookey","Scorbunny","Sobble","Applin","Cramorant","Sinistea","Hatenna","Impidimp","Milcery","Falinks","Pincurchin","Snom","Stonjourner","Eiscue","Indeedee","Morpeko","Duraludon","Dreepy","Snivy","Tepig","Oshawott","Pansage","Pansear","Panpour","Audino","Throh","Sawk","Basculin","Maractus","Sigilyph","Zorua","Emolga","Alomomola","Axew","Cryogonal","Stunfisk","Mienfoo","Druddigon","Bouffalant","Rufflet","Vullaby","Heatmor","Durant","Deino","Larvesta"] 
+    pool: ["Darumaka-Galar", "Slowpoke-Galar", "Zigzagoon-Galar", "Meowth-Galar","Ponyta-Galar","Farfetchd-Galar","Corsola-Galar","Yamask-Galar","Stunfisk-Galar","Grookey","Scorbunny","Sobble","Applin","Cramorant","Sinistea","Hatenna","Impidimp","Milcery","Falinks","Pincurchin","Snom","Stonjourner","Eiscue","Indeedee","Morpeko","Duraludon","Dreepy","Snivy","Tepig","Oshawott","Pansage","Pansear","Panpour","Audino","Throh","Sawk","Basculin","Maractus","Sigilyph","Zorua","Emolga","Alomomola","Axew","Cryogonal","Stunfisk","Mienfoo","Druddigon","Bouffalant","Rufflet","Vullaby","Heatmor","Durant","Deino","Larvesta"] 
   },
   baby: { 
     label: "Huevo Baby", 
@@ -27,7 +27,7 @@ const EGG_DATA = {
 
 const REGION_MAP = {
   /* GALAR */
-  "Zigzagoon-Galar": "galar", Skwovet: "galar", Rookidee: "galar", Blipbug: "galar", Nickit: "galar", 
+   "Darumaka-Galar": "galar", "Slowpoke-Galar": "galar",  "Zigzagoon-Galar": "galar", Skwovet: "galar", Rookidee: "galar", Blipbug: "galar", Nickit: "galar", 
   Gossifleur: "galar", Wooloo: "galar", Chewtle: "galar", Yamper: "galar", Rolycoly: "galar", 
   Silicobra: "galar", Arrokuda: "galar", Sizzlipede: "galar", Clobbopus: "galar", Cufant: "galar",
   "Meowth-Galar": "galar", "Ponyta-Galar": "galar", "Farfetchd-Galar": "galar", "Weezing-Galar": "galar", 

@@ -452,27 +452,31 @@ const POKEMON_CLASSES = {
     "salazzle-totem": "Especial",
     "silvally": "Especial",
 
-    // --- GALAR (Raros) ---
-
+// --- GALAR (Raros) ---
     "alcremie": "Raro",
     "appletun": "Raro",
     "applin": "Raro",
-    "centiskorch": "Raro",
     "cinderace": "Raro",
     "coalossal": "Raro",
     "copperajah": "Raro",
     "corviknight": "Raro",
     "corsola-galar": "Raro",   // Variante regional
+    "cursola": "Raro",
     "cramorant": "Raro",
-    "drednaw": "Raro",
+    "darumaka-galar" : "Raro",
+    "darmanitan-galar" : "Raro",
     "dreepy": "Raro",
     "drizzile": "Raro",
+    "duraludon": "Raro",
     "eiscue": "Raro",
     "falinks": "Raro",
     "farfetchd-galar": "Raro", // Sin apóstrofe + variante
     "flapple": "Raro",
+    "frosmoth": "Raro",        // Corregido: era Especial
+    "grimmsnarl": "Raro",      // Corregido: era Especial
     "grookey": "Raro",
     "hatenna": "Raro",
+    "hatterene": "Raro",       // Corregido: era Especial
     "hattrem": "Raro",
     "impidimp": "Raro",
     "indeedee": "Raro",        // API suele devolver "indeedee-male" o "female", pero este cubre el base
@@ -484,7 +488,6 @@ const POKEMON_CLASSES = {
     "mr-mime-galar": "Raro",   // Variante regional
     "mr-rime": "Raro",         // Guion en lugar de punto/espacio
     "obstagoon": "Raro",
-    "orbeetle": "Raro",
     "perrserker": "Raro",
     "pincurchin": "Raro",
     "polteageist": "Raro",
@@ -498,31 +501,29 @@ const POKEMON_CLASSES = {
     "sirfetchd": "Raro",       // Sin apóstrofe
     "snom": "Raro",
     "slowpoke-galar" : "Raro",
+    "slowbro-galar" : "Raro",
+    "slowking-galar" : "Raro",
     "sobble": "Raro",
     "stonjourner": "Raro",
     "stunfisk-galar": "Raro",  // Variante regional
     "thwackey": "Raro",
     "toxtricity": "Raro",
-    "toxel": "Raro",
     "weezing-galar": "Raro",   // Variante regional
     "yamask-galar": "Raro",    // Variante regional
+    "zigzagoon-galar" : "Raro",
+    "linoone-galar" : "Raro",
 
- 
     // --- GALAR (Especiales) ---
     "arctovish": "Especial",
     "arctozolt": "Especial",
-    "cursola": "Especial",
     "dracovish": "Especial",
     "dracozolt": "Especial",
     "dragapult": "Especial",
     "drakloak": "Especial",
-    "duraludon": "Especial",
-    "frosmoth": "Especial",
-    "grimmsnarl": "Especial",
-    "slowbro-galar" : "Especial",
-    "slowking-galar" : "Especial",
-    "hatterene": "Especial",
 
+ // --- GALAR (Baby) ---
+"Toxel": "Baby Pokémon",
+    
     // --- PALDEA (Raros) ---
     "bellibolt": "Raro",
     "bombirdier": "Raro",
