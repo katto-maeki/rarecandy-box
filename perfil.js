@@ -903,7 +903,7 @@ function renderHistoryPanels(logs) {
 
     switch (log.activity_type) {
       case "checkpoint":
-        logContent = `📌 <strong>Checkpoint Mensual:</strong> "${log.activity_name}" (Retroalimentación Foro)`;
+        logContent = `📌 <strong>Checkpoint Mensual:</strong> "${log.activity_name}"`;
         break;
       case "purchase":
         logContent = `🛒 <strong>Compra:</strong> "${log.activity_name}" gastando <span style="color:#e53e3e; font-weight:700;">-₽${Math.abs(log.money_reward)}</span>`;

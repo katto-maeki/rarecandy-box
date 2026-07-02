@@ -156,8 +156,18 @@ async function loadAndRenderGlobalFeed() {
     const authorName = userMap[log.user_id]?.name || "Entrenador Desconocido";
     const authorPrefix = `<span style="color: #4a5568; font-weight: 800;">${authorName}</span>`;
 
-    let logContent = "";
+let logContent = "";
     switch (log.activity_type) {
+      // 🎲 NUEVO: Registro de tiradas en la máquina Gachapón
+      case "gacha_roll":
+        logContent = `🎰 ${authorPrefix} probó su suerte la máquina de sobres: ¡Abrió un paquete de <strong>${log.activity_name}</strong>!`;
+        break;
+
+      // 🎁 NUEVO: Registro de hitos reclamados de la barra de progreso
+      case "gacha_reward":
+        logContent = `⭐ ¡Recompensa de Progreso de Álbum! ${authorPrefix} reclamó el <strong>${log.activity_name}</strong>`;
+        break;
+
       case "purchase":
         logContent = `🛒 ${authorPrefix} realizó una compra: "${log.activity_name}"`;
         break;
@@ -194,7 +204,6 @@ async function loadAndRenderGlobalFeed() {
           
           let details = "";
           if (closeData.types) {
-            // CORREGIDO: Se cambió "Tipos entrenados" por "Pokes atrapados"
             details += `<br>★ <strong>Pokes atrapados:</strong> ${closeData.types}`;
           }
           if (closeData.activities) {
