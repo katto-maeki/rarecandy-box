@@ -1,4 +1,4 @@
-// cajapkm.js - Versión Completa con Historial de Aventuras y Conexiones HTML
+// cajapkm.js - Versión Definitiva con Bypass de CDN e Imágenes Fluidas
 // ===================================================================
 const POKEAPI_BASE = "https://pokeapi.co/api/v2";
 const TRAINER_META_KEY = "pokeTrainerMeta_v1";
@@ -176,9 +176,34 @@ const TYPE_MAP_ES = {
   steel: "acero", fairy: "hada",
 };
 
-// Corregido potencial error de asignación de variable indefinida
 function translateType(typeName) { return TYPE_MAP_ES[typeName] || typeName; }
 
+// FUNCIÓN BYPASS MEJORADA: Repara datos corruptos antiguos y aplica el CDN
+function getSafeSpriteUrl(poke) {
+  if (!poke) return "";
+  
+  let url = poke.sprite;
+  
+  // AUTO-CURACIÓN: Si por errores antiguos el sprite quedó vacío o corrupto,
+  // lo reconstruimos de forma idéntica usando el ID del Pokémon
+  if (!url || url === "undefined" || url === "[object Object]") {
+    if (!poke.id) return "";
+    if (poke.isShiny) {
+      return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/home/shiny/${poke.id}.png`;
+    } else {
+      return `https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/home/${poke.id}.png`;
+    }
+  }
+  
+  // Si tiene URL de GitHub, la redirigimos al CDN espejo
+  if (url.includes("raw.githubusercontent.com/PokeAPI/sprites/master")) {
+    return url.replace(
+      "raw.githubusercontent.com/PokeAPI/sprites/master",
+      "cdn.jsdelivr.net/gh/PokeAPI/sprites@master"
+    );
+  }
+  return url;
+}
 async function fetchPokemonList() {
   if (allPokemonList) return allPokemonList;
   const res = await fetch(`${POKEAPI_BASE}/pokemon?limit=100000&offset=0`);
@@ -363,8 +388,9 @@ function renderParty() {
     } else {
       const img = document.createElement("img");
       img.className = "party-sprite";
-      img.src = poke.sprite || "";
       img.alt = poke.apodo || poke.nombre;
+      img.loading = "lazy";
+      img.src = getSafeSpriteUrl(poke); // <-- Corregido con CDN Bypass
 
       const main = document.createElement("div");
       main.className = "party-main";
@@ -432,8 +458,9 @@ function renderBox() {
     } else {
       const img = document.createElement("img");
       img.className = "box-slot-sprite";
-      img.src = poke.sprite || "";
       img.alt = poke.apodo || poke.nombre;
+      img.loading = "lazy";
+      img.src = getSafeSpriteUrl(poke); // <-- Corregido con CDN Bypass
 
       const label = document.createElement("div");
       label.className = "box-slot-label";
@@ -577,7 +604,7 @@ function renderDetail() {
     }
   }
 
-  document.getElementById("detail-sprite").src = poke.sprite || "";
+  document.getElementById("detail-sprite").src = getSafeSpriteUrl(poke); // <-- Corregido con CDN Bypass
   document.getElementById("detail-sprite").alt = poke.apodo || poke.nombre;
 
   const nn = document.getElementById("detail-number-name");
@@ -686,7 +713,7 @@ async function openTrainingModal(pokeIndex) {
     if (typeof currentInventory.xp !== 'number') currentInventory.xp = 0;
     if (!currentInventory.items) currentInventory.items = {};
 
-    document.getElementById("train-sprite").src = currentTrainingPoke.sprite;
+    document.getElementById("train-sprite").src = getSafeSpriteUrl(currentTrainingPoke.sprite);
     document.getElementById("train-name").textContent = currentTrainingPoke.apodo || currentTrainingPoke.nombre;
     document.getElementById("train-level-info").textContent = `Nivel: ${currentTrainingPoke.nivel} | Clase: ${currentTrainingPoke.clase}`;
     document.getElementById("global-xp-display").textContent = `${currentInventory.xp} XP`;
@@ -1328,10 +1355,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // ==========================================
-// CONEXIONES FINALES CON EL HTML
+// CONEXIONES FINALES CON EL HTML (Limpio)
 // ==========================================
-window.toggleSelection = toggleSelection;
 window.closeSummaryModal = () => document.getElementById("modal-summary").classList.add("hidden");
-window.confirmIncubationFromModal = confirmIncubationFromModal;
-window.hatchIncubation = hatchIncubation;
 window.closeHatchModal = () => document.getElementById("modal-hatch").classList.add("hidden");
