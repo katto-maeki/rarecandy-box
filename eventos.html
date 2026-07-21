@@ -551,16 +551,24 @@
   </div>
 </div>
 
-  <div class="modal-backdrop hidden" id="modal-promo-code">
-    <div class="gacha-reveal-modal" style="max-width: 400px; text-align: center;">
-      <h3 class="reveal-title">canjea tu código</h3>
-      <p class="reveal-subtitle">Introduce tu código especial para recibir sobres gratis</p>
-      <div style="display: flex; gap: 10px; justify-content: center;">
-        <button class="btn-primary" id="btn-submit-code" style="background: #27ae60; padding: 10px 20px;">Canjear</button>
-        <button class="btn-primary" id="btn-cancel-code" style="background: #7f8c8d; padding: 10px 20px;">Cancelar</button>
-      </div>
+<div class="modal-backdrop hidden" id="modal-promo-code">
+  <div class="gacha-reveal-modal" style="max-width: 400px; text-align: center;">
+    <h3 class="reveal-title">canjea tu código</h3>
+    <p class="reveal-subtitle">Introduce tu código especial para recibir sobres gratis</p>
+    <input 
+      type="text" 
+      id="input-promo-code" 
+      placeholder="CÓDIGO AQUÍ" 
+      autocomplete="off"
+      style="width: 85%; padding: 10px 14px; margin: 15px 0; border: 2px solid #c957b0; border-radius: 8px; font-size: 1rem; text-align: center; font-weight: bold; text-transform: uppercase; outline: none; box-sizing: border-box;"
+    />
+
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <button class="btn-primary" id="btn-submit-code" style="background: #27ae60; padding: 10px 20px;">Canjear</button>
+      <button class="btn-primary" id="btn-cancel-code" style="background: #7f8c8d; padding: 10px 20px;">Cancelar</button>
     </div>
   </div>
+</div>
 
   <div class="modal-backdrop hidden" id="modal-fichas-shop-container">
     <div class="gacha-reveal-modal" style="max-width: 750px; width: 90%;">
