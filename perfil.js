@@ -5,6 +5,7 @@ const GAME_TABLE = "user_game_data";
 const TRAINER_TABLE = "trainer_inventory";
 const LOG_TABLE = "trainer_log";
 const TRADE_TABLE = "trainer_trades";
+const DISCOVERY_TABLE = "sorelle_discoveries";
 const POKEAPI_BASE = "https://pokeapi.co/api/v2";
 
 let profileUserId = null; 
@@ -16,9 +17,7 @@ let visitorOwnTradePool = []; // Pool de intercambio exclusivo del Usuario A (vi
 // Variables de control del sistema de comercio y alertas
 let selectedReceiverPkm = null;
 let selectedSenderPkm = null;
-let tradeProposalStep = 1; 
-let activeReceivedTradeRow = null; 
-let activeNotificationsList = []; // Lista maestra de la bandeja de entrada
+let tradeProposalStep = 1;
 
 function $(id) { return document.getElementById(id); }
 
@@ -41,7 +40,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupProfileButtonsRole();
   await loadProfileData();
   setupModalAutocomplete();
-  await checkIncomingTradeNotifications(); // Sintonizar bandeja de entrada
 
   // Listeners de la tarjeta propia
   $("btn-open-edit").onclick = openEditModal;
@@ -65,135 +63,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // ==========================================
-// FUNCIONES HELPER GLOBALES DE REESCRITURA RPG
+// GESTIÓN DE ROL Y PROPUESTAS DE INTERCAMBIO
 // ==========================================
-function extractPokemonFromTrainer(gameRow, targetTemplate) {
-  if (Array.isArray(gameRow.party_data)) {
-    for (let i = 0; i < gameRow.party_data.length; i++) {
-      let p = gameRow.party_data[i];
-      if (p && p.id === targetTemplate.id && p.nombre === targetTemplate.nombre && p.nivel === targetTemplate.nivel && p.personalidad === targetTemplate.personalidad) {
-        let extracted = { ...p, forTrade: false }; 
-        gameRow.party_data[i] = null;
-        return extracted;
-      }
-    }
-  }
-  if (gameRow.box_data?.boxes) {
-    for (let b = 0; b < gameRow.box_data.boxes.length; b++) {
-      let box = gameRow.box_data.boxes[b];
-      if (Array.isArray(box)) {
-        for (let s = 0; s < box.length; s++) {
-          let p = box[s];
-          if (p && p.id === targetTemplate.id && p.nombre === targetTemplate.nombre && p.nivel === targetTemplate.nivel && p.personalidad === targetTemplate.personalidad) {
-            let extracted = { ...p, forTrade: false };
-            box[s] = null;
-            return extracted;
-          }
-        }
-      }
-    }
-  }
-  return null;
-}
-
-function injectPokemonIntoFirstEmptySlot(gameRow, pkmToInject) {
-  if (gameRow.box_data?.boxes) {
-    for (let b = 0; b < gameRow.box_data.boxes.length; b++) {
-      let box = gameRow.box_data.boxes[b];
-      if (Array.isArray(box)) {
-        let emptyIdx = box.findIndex(slot => slot === null);
-        if (emptyIdx !== -1) {
-          box[emptyIdx] = pkmToInject;
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-
-// ==========================================
-// MONITOR DE NOTIFICACIONES: BUZÓN INTEGRADO
-// ==========================================
-async function checkIncomingTradeNotifications() {
-  const supabase = window.supabaseClient;
-  const myId = window.currentUserId;
-
-  try {
-    activeNotificationsList = []; 
-
-    const { data: incoming } = await supabase.from(TRADE_TABLE).select("*").eq("receiver_id", myId).eq("status", "pending");
-    if (incoming) {
-      incoming.forEach(trade => {
-        activeNotificationsList.push({ type: "incoming_proposal", data: trade });
-      });
-    }
-
-    const { data: resolved } = await supabase.from(TRADE_TABLE).select("*").eq("sender_id", myId).in("status", ["accepted", "declined"]);
-    if (resolved) {
-      resolved.forEach(trade => {
-        activeNotificationsList.push({ type: "resolved_status", data: trade });
-      });
-    }
-
-    if (activeNotificationsList.length > 0) {
-      $("noti-count").textContent = activeNotificationsList.length;
-      $("btn-noti-bell").classList.remove("hidden");
-      $("btn-noti-bell").onclick = openNotificationInboxModal;
-    } else {
-      $("btn-noti-bell").classList.add("hidden");
-    }
-
-  } catch (err) { console.error("Error cargando buzón de alertas:", err); }
-}
-
-// ==========================================
-// COMPONENTE: RENDERIZAR LA LISTA DEL INBOX
-// ==========================================
-async function openNotificationInboxModal() {
-  const supabase = window.supabaseClient;
-  const container = $("inbox-list-container");
-  container.innerHTML = "";
-
-  const { data: allUsers } = await supabase.from(GAME_TABLE).select("id, trainer_name");
-  let nameMap = {};
-  if (allUsers) allUsers.forEach(u => nameMap[u.id] = u.trainer_name);
-
-  activeNotificationsList.forEach((item) => {
-    const row = document.createElement("div");
-    row.style.cssText = "display:flex; align-items:center; gap:10px; background:#f7fafc; border:1px solid #e2e8f0; padding:10px; border-radius:8px; cursor:pointer; transition:all 0.15s;";
-    
-    row.onmouseover = () => { row.style.borderColor = "#c957b0"; row.style.background = "#fffaf0"; };
-    row.onmouseout = () => { row.style.borderColor = "#e2e8f0"; row.style.background = "#f7fafc"; };
-
-    if (item.type === "incoming_proposal") {
-      const senderName = nameMap[item.data.sender_id] || "Entrenador";
-      row.innerHTML = `<span style="color:#2b6cb0; font-size:1.1rem;"><i class="fa fa-dot-circle-o"></i></span>
-                       <div style="flex:1; font-size:0.78rem; color:#2d3748;">Propuesta entrante de <strong>${senderName}</strong></div>`;
-      row.onclick = () => {
-        $("modal-notification-inbox").classList.add("hidden");
-        activeReceivedTradeRow = item.data;
-        openViewProposalModal();
-      };
-    } else if (item.type === "resolved_status") {
-      const receiverName = nameMap[item.data.receiver_id] || "Entrenador";
-      const iconColor = item.data.status === "declined" ? "#e53e3e" : "#48bb78";
-      const iconType = item.data.status === "declined" ? "fa-times-circle" : "fa-check-circle";
-      
-      row.innerHTML = `<span style="color:${iconColor}; font-size:1.1rem;"><i class="fa ${iconType}"></i></span>
-                       <div style="flex:1; font-size:0.78rem; color:#2d3748;">Respuesta de <strong>${receiverName}</strong> sobre tu oferta</div>`;
-      row.onclick = () => {
-        $("modal-notification-inbox").classList.add("hidden");
-        openResolvedStatusModal(item.data, nameMap[item.data.receiver_id]);
-      };
-    }
-
-    container.appendChild(row);
-  });
-
-  $("modal-notification-inbox").classList.remove("hidden");
-}
-
 function setupProfileButtonsRole() {
   if (isOwnProfile) {
     $("btn-open-edit")?.classList.remove("hidden");
@@ -298,7 +169,7 @@ async function openTradeProposalModal() {
         const shortName = poke.apodo ? `"${poke.apodo}"` : poke.nombre;
         box.innerHTML = `<img src="${poke.sprite}" style="height:35px;"/><div style="font-size:0.55rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${poke.nombre}">${shortName}</div>`;
         
-        box.onclick = () => {
+            box.onclick = () => {
           document.querySelectorAll("#proposal-sender-pool .pkm-profile-box").forEach(b => b.style.borderColor = "#3182ce");
           box.style.borderColor = "#38a169";
           selectedSenderPkm = poke;
@@ -371,229 +242,18 @@ async function submitTradeProposalToDatabase() {
 }
 
 // ==========================================
-// COMPONENTE: MODAL DE REVISIÓN ENTRANTE
-// ==========================================
-async function openViewProposalModal() {
-  if (!activeReceivedTradeRow) return;
-
-  const row = activeReceivedTradeRow;
-  const supabase = window.supabaseClient;
-
-  const { data: senderGame } = await supabase.from(GAME_TABLE).select("trainer_name").eq("id", row.sender_id).maybeSingle();
-  const senderName = senderGame?.trainer_name || "Un Entrenador";
-
-  $("view-proposal-headline").innerHTML = `<strong>${senderName}</strong> te propone el siguiente intercambio:`;
-
-  const pA = row.sender_pokemon;
-  $("view-card-sender").innerHTML = `
-    <span style="color:#38a169; font-weight:800; font-size:0.75rem;">TE OFRECE:</span><br>
-    <img src="${pA.sprite}" style="height:60px;"/><br>
-    <strong>${pA.nombre}</strong> (Lv.${pA.nivel})<br>${pA.isShiny ? '✨ SHINY':''}
-  `;
-
-  const pB = row.receiver_pokemon;
-  $("view-card-receiver").innerHTML = `
-    <span style="color:#2b6cb0; font-weight:800; font-size:0.75rem;">A CAMBIO DE TU:</span><br>
-    <img src="${pB.sprite}" style="height:60px;"/><br>
-    <strong>${pB.nombre}</strong> (Lv.${pB.nivel})<br>${pB.isShiny ? '✨ SHINY':''}
-  `;
-
-  $("btn-proposal-close").onclick = () => {
-    $("modal-view-proposal").classList.add("hidden");
-    $("modal-notification-inbox").classList.remove("hidden");
-  };
-  
-  $("btn-proposal-decline").onclick = () => processTradeResolution("declined");
-  $("btn-proposal-accept").onclick = () => processTradeResolution("accepted");
-
-  $("modal-view-proposal").classList.remove("hidden");
-}
-
-// ==========================================
-// RECLAMACIÓN Y CONSUMO CON ERROR CHECK (USUARIO A)
-// ==========================================
-function openResolvedStatusModal(trade, rawReceiverName) {
-  const supabase = window.supabaseClient;
-  const myId = window.currentUserId;
-  const receiverName = rawReceiverName || "un entrenador";
-
-  if (trade.status === "declined") {
-    $("noti-status-message").innerHTML = `Tu propuesta enviada a <strong>${receiverName}</strong> (<span style="color:#c957b0;">${trade.sender_pokemon.nombre}</span> por <span style="color:#2b6cb0;">${trade.receiver_pokemon.nombre}</span>) fue <strong>rechazada</strong>.`;
-    
-    $("btn-noti-status-close").onclick = async () => {
-      $("modal-noti-status").classList.add("hidden");
-      await supabase.from(TRADE_TABLE).update({ status: "archived_declined" }).eq("id", trade.id);
-      
-      await supabase.from(LOG_TABLE).insert({
-        user_id: myId,
-        activity_type: "trade",
-        activity_name: `Recibió un rechazo de intercambio por parte de ${receiverName} (${trade.sender_pokemon.nombre} por ${trade.receiver_pokemon.nombre})`,
-        money_reward: 0,
-        xp_reward: 0
-      });
-      location.reload();
-    };
-  } else if (trade.status === "accepted") {
-    const pkmA = trade.sender_pokemon; 
-    const pkmB = trade.receiver_pokemon;
-
-    $("noti-status-message").innerHTML = `¡Felicidades! Tu propuesta enviada a <strong>${receiverName}</strong> fue <strong>aceptada</strong>.<br>Al pulsar Entendido, se consumirá <span style="color:#c957b0;">1x Ticket de Intercambio</span> para transferir a <span style="color:#2b6cb0;">${pkmB.nombre}</span> a tu caja y retirar a ${pkmA.nombre}.`;
-    
-    $("btn-noti-status-close").onclick = async () => {
-      $("btn-noti-status-close").disabled = true;
-      $("btn-noti-status-close").textContent = "Transfiriendo...";
-
-      try {
-        const { data: invA } = await supabase.from(TRAINER_TABLE).select("inventory").eq("user_id", myId).maybeSingle();
-        const myMetaA = invA?.inventory || {};
-        myMetaA.items = myMetaA.items || {};
-        if ((myMetaA.items.tradeToken || 0) <= 0) {
-          throw new Error("No cuentas con tickets de intercambio para reclamar este Pokémon.");
-        }
-
-        const { data: gameA } = await supabase.from(GAME_TABLE).select("*").eq("id", myId).maybeSingle();
-        if (!gameA) throw new Error("No se encontraron tus casilleros de juego.");
-
-        myMetaA.items.tradeToken -= 1;
-
-        extractPokemonFromTrainer(gameA, pkmA);
-        const secureA = injectPokemonIntoFirstEmptySlot(gameA, { ...pkmB, forTrade: false });
-        if (!secureA) throw new Error("Tus cajas están totalmente llenas. Libera espacio para recibir el Pokémon.");
-
-        const { error: errorGame } = await supabase.from(GAME_TABLE).upsert({ id: myId, box_data: gameA.box_data, party_data: gameA.party_data });
-        if (errorGame) throw errorGame;
-
-        const { error: errorInv } = await supabase.from(TRAINER_TABLE).upsert(
-          { user_id: myId, inventory: myMetaA, updated_at: new Date().toISOString() },
-          { onConflict: "user_id" }
-        );
-        if (errorInv) throw errorInv;
-
-        await supabase.from(TRADE_TABLE).update({ status: "archived_accepted" }).eq("id", trade.id);
-
-        await supabase.from(LOG_TABLE).insert([
-          { user_id: myId, activity_type: "trade", activity_name: `Intercambió exitosamente a ${pkmA.nombre} por el ${pkmB.nombre} de ${receiverName}`, money_reward: 0, xp_reward: 0 },
-          { user_id: myId, activity_type: "consume", activity_name: "1x Ticket de Intercambio (Aprobado)", money_reward: 0, xp_reward: 0 }
-        ]);
-
-        $("modal-noti-status").classList.add("hidden");
-        location.reload();
-
-      } catch (err) {
-        alert("Fallo al reclamar la pieza: " + err.message);
-        $("btn-noti-status-close").disabled = false;
-        $("btn-noti-status-close").textContent = "Entendido";
-      }
-    };
-  }
-
-  $("modal-noti-status").classList.remove("hidden");
-}
-
-// ==========================================
-// MOTOR CRÍTICO CON ERROR CHECK (USUARIO B)
-// ==========================================
-async function processTradeResolution(resolutionType) {
-  if (!activeReceivedTradeRow) return;
-
-  const supabase = window.supabaseClient;
-  const tradeId = activeReceivedTradeRow.id;
-
-  if (resolutionType === "declined") {
-    if (!confirm("¿Deseas rechazar esta propuesta de intercambio?")) return;
-    try {
-      await supabase.from(TRADE_TABLE).update({ status: "declined" }).eq("id", tradeId);
-      
-      const sId = activeReceivedTradeRow.sender_id;
-      const rId = activeReceivedTradeRow.receiver_id;
-      const pkmA = activeReceivedTradeRow.sender_pokemon; 
-      const pkmB = activeReceivedTradeRow.receiver_pokemon; 
-
-      const { data: gameA } = await supabase.from(GAME_TABLE).select("trainer_name").eq("id", sId).maybeSingle();
-      const senderName = gameA?.trainer_name || "un entrenador";
-
-      await supabase.from(LOG_TABLE).insert({
-        user_id: rId,
-        activity_type: "trade",
-        activity_name: `Rechazó la propuesta de intercambio de ${senderName} (${pkmA.nombre} por su ${pkmB.nombre})`,
-        money_reward: 0,
-        xp_reward: 0
-      });
-
-      alert("Propuesta rechazada correctamente.");
-      location.reload(); 
-    } catch (err) { console.error(err); }
-    return;
-  }
-
-  if (!confirm("¿Estás listo para realizar el intercambio? El pokémon se añadirá a tu caja.")) return;
-
-  $("btn-proposal-accept").disabled = true;
-  $("btn-proposal-accept").textContent = "Transfiriendo...";
-
-  try {
-    const sId = activeReceivedTradeRow.sender_id;
-    const rId = activeReceivedTradeRow.receiver_id;
-    const pkmA = activeReceivedTradeRow.sender_pokemon; 
-    const pkmB = activeReceivedTradeRow.receiver_pokemon; 
-
-    const { data: invB } = await supabase.from(TRAINER_TABLE).select("inventory").eq("user_id", rId).maybeSingle();
-    const myMetaB = invB?.inventory || {};
-    myMetaB.items = myMetaB.items || {};
-    if ((myMetaB.items.tradeToken || 0) <= 0) {
-      throw new Error("No cuentas con tickets de intercambio para completar esta acción.");
-    }
-
-    const { data: gameB } = await supabase.from(GAME_TABLE).select("*").eq("id", rId).maybeSingle();
-    if (!gameB) throw new Error("No se pudieron verificar tus casilleros de entrenador.");
-
-    myMetaB.items.tradeToken -= 1;
-
-    const exactPkmFromB = extractPokemonFromTrainer(gameB, pkmB);
-    if (!exactPkmFromB) throw new Error(`Ya no tienes a ${pkmB.nombre} disponible en tu caja.`);
-
-    const secureB = injectPokemonIntoFirstEmptySlot(gameB, { ...pkmA, forTrade: false });
-    if (!secureB) throw new Error("Fallo de espacio: Tus cajas están totalmente llenas.");
-
-    const { error: errorGame = null } = await supabase.from(GAME_TABLE).upsert({ id: rId, box_data: gameB.box_data, party_data: gameB.party_data });
-    if (errorGame) throw errorGame;
-
-    const { error: errorInv } = await supabase.from(TRAINER_TABLE).upsert(
-      { user_id: rId, inventory: myMetaB, updated_at: new Date().toISOString() },
-      { onConflict: "user_id" }
-    );
-    if (errorInv) throw errorInv;
-
-    await supabase.from(TRADE_TABLE).update({ status: "accepted" }).eq("id", tradeId);
-
-    const { data: gameA } = await supabase.from(GAME_TABLE).select("trainer_name").eq("id", sId).maybeSingle();
-    const senderName = gameA?.trainer_name || "un entrenador";
-    
-    await supabase.from(LOG_TABLE).insert([
-      { user_id: rId, activity_type: "trade", activity_name: `Intercambió exitosamente a ${pkmB.nombre} por el ${pkmA.nombre} de ${senderName}`, money_reward: 0, xp_reward: 0 },
-      { user_id: rId, activity_type: "consume", activity_name: "1x Ticket de Intercambio (Aprobado)", money_reward: 0, xp_reward: 0 }
-    ]);
-
-    $("modal-view-proposal").classList.add("hidden");
-    alert(`¡Felicidades! ${pkmA.nombre} ahora es parte de tu equipo.\nNo olvides acordar con tu compañero tu escrito de intercambio y registrarlo en la publicación correspondiente.`);
-    location.reload();
-
-  } catch (err) {
-    alert("Fallo crítico en el enroque: " + err.message);
-    $("btn-proposal-accept").disabled = false;
-    $("btn-proposal-accept").textContent = "Aceptar Intercambio";
-  }
-}
-
-// ==========================================
 // CARGA DINÁMICA DE DATOS DESDE SUPABASE
 // ==========================================
 async function loadProfileData() {
   const supabase = window.supabaseClient;
 
   try {
-    const { data: gameData } = await supabase.from(GAME_TABLE).select("*").eq("id", profileUserId).maybeSingle();
-    
+    const [{ data: gameData }, { data: invRow }, { data: logs }] = await Promise.all([
+      supabase.from(GAME_TABLE).select("*").eq("id", profileUserId).maybeSingle(),
+      supabase.from(TRAINER_TABLE).select("inventory").eq("user_id", profileUserId).maybeSingle(),
+      supabase.from(LOG_TABLE).select("*").eq("user_id", profileUserId).order("created_at", { ascending: false }),
+    ]);
+
     const trainerName = gameData?.trainer_name || (isOwnProfile ? window.currentTrainerName : "Entrenador");
     $("trainer-name-display").textContent = trainerName.toUpperCase();
     $("trainer-label").textContent = `Entrenador: ${window.currentTrainerName || "Invitado"}`;
@@ -621,9 +281,9 @@ async function loadProfileData() {
         });
       }
     }
-    renderMainPageTrades(); 
+    renderMainPageTrades();
+    renderMainPageTeam();
 
-    const { data: invRow } = await supabase.from(TRAINER_TABLE).select("inventory").eq("user_id", profileUserId).maybeSingle();
     currentMeta = invRow?.inventory || {};
     if (!currentMeta.wishlist) currentMeta.wishlist = [];
     if (!currentMeta.tags) currentMeta.tags = []; 
@@ -633,10 +293,10 @@ async function loadProfileData() {
     if (currentMeta.bannerColor) $("profile-banner").style.backgroundColor = currentMeta.bannerColor;
     if (currentMeta.avatarUrl) $("profile-avatar").src = currentMeta.avatarUrl;
 
-    renderMainPageWishlist(); 
-    renderMainPageTags();     
+    renderMainPageWishlist();
+    renderMainPageTags();
+    await renderCommunityStats(trainerName);
 
-    const { data: logs } = await supabase.from(LOG_TABLE).select("*").eq("user_id", profileUserId).order("created_at", { ascending: false });
     renderHistoryPanels(logs);
 
   } catch (err) { console.error("Fallo al procesar perfil:", err); }
@@ -653,7 +313,7 @@ function renderMainPageWishlist() {
     const box = document.createElement("div");
     box.className = "pkm-profile-box";
     box.innerHTML = `
-      <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/images/pokemon/versions/generation-v/black-white/animated/${pkm.id}.gif" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pkm.id}.png'"/>
+      <img src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/images/pokemon/versions/generation-v/black-white/animated/${pkm.id}.gif" onerror="this.src='https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pkm.id}.png'"/>
       <div style="text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${pkm.name}</div>
     `;
     container.appendChild(box);
@@ -672,7 +332,26 @@ function renderMainPageTrades() {
     const card = document.createElement("div");
     card.className = "pkm-profile-box on-trade";
     card.innerHTML = `
-      <img src="${poke.sprite || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/mystery-egg.png'}" title="${poke.nombre}"/>
+      <img src="${window.toCdnSpriteUrl(poke.sprite, window.MYSTERY_EGG_SPRITE)}" title="${poke.nombre}"/>
+      <div style="text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${poke.apodo || poke.nombre}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function renderMainPageTeam() {
+  const container = $("team-container");
+  container.innerHTML = "";
+  const teamPokemon = ownedPokemonPool.filter(p => p.enEquipo === true);
+  if (teamPokemon.length === 0) {
+    container.innerHTML = `<p style="font-size:0.75rem; color:#718096; padding:10px;">Aún no se ha definido un equipo actual.</p>`;
+    return;
+  }
+  teamPokemon.forEach(poke => {
+    const card = document.createElement("div");
+    card.className = "pkm-profile-box";
+    card.innerHTML = `
+      <img src="${window.toCdnSpriteUrl(poke.sprite, window.MYSTERY_EGG_SPRITE)}" title="${poke.nombre}"/>
       <div style="text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${poke.apodo || poke.nombre}</div>
     `;
     container.appendChild(card);
@@ -693,13 +372,49 @@ function renderMainPageTags() {
   }
 }
 
+async function renderCommunityStats(trainerName) {
+  const achEl = $("profile-achievements-value");
+  if (achEl) {
+    achEl.textContent = (currentMeta.achievements !== undefined && currentMeta.achievements !== "") ? currentMeta.achievements : "—";
+  }
+
+  const pokedexEl = $("profile-pokedex-value");
+  if (!pokedexEl) return;
+
+  try {
+    const supabase = window.supabaseClient;
+
+    // Cuenta por user_id (vínculo estable, sobrevive a cambios de username) y,
+    // en paralelo, el respaldo por nombre para registros antiguos sin user_id.
+    const [{ count: byId, error: errId }, { count: legacyCount, error: errName }] = await Promise.all([
+      supabase.from(DISCOVERY_TABLE)
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", profileUserId),
+      trainerName
+        ? supabase.from(DISCOVERY_TABLE)
+            .select("*", { count: "exact", head: true })
+            .is("user_id", null)
+            .eq("trainer_name", trainerName)
+        : Promise.resolve({ count: 0, error: null }),
+    ]);
+    if (errId) throw errId;
+    if (errName) throw errName;
+
+    pokedexEl.textContent = (byId || 0) + (legacyCount || 0);
+  } catch (err) {
+    console.error("Error al calcular la Pokédex comunitaria:", err);
+    pokedexEl.textContent = currentMeta.pokedex || "0";
+  }
+}
+
 function openEditModal() {
   if ($("modal-trainer-name")) $("modal-trainer-name").value = window.currentTrainerName || "";
   $("modal-bio").value = currentMeta.bio || "";
   $("modal-banner-color").value = currentMeta.bannerColor || "#c957b0";
   $("modal-tags").value = (currentMeta.tags && Array.isArray(currentMeta.tags)) ? currentMeta.tags.join(", ") : "";
-  renderModalWishlist();
+  renderModalTeamPool();
   renderModalTradePool();
+  renderModalWishlist();
   $("modal-edit-profile").classList.remove("hidden");
 }
 
@@ -711,7 +426,7 @@ function renderModalWishlist() {
     box.className = "pkm-profile-box";
     box.innerHTML = `
       <button class="btn-del-wish" onclick="removeModalWishItem(${index})">&times;</button>
-      <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pkm.id}.png" style="height:40px;"/>
+      <img src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/${pkm.id}.png" style="height:40px;"/>
       <div style="font-size:0.65rem; text-overflow:ellipsis; overflow:hidden;">${pkm.name}</div>
     `;
     container.appendChild(box);
@@ -739,6 +454,35 @@ function renderModalTradePool() {
       <div style="font-size:0.6rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${poke.nombre}</div>
     `;
     container.appendChild(wrapper);
+  });
+}
+
+function renderModalTeamPool() {
+  const container = $("modal-team-pool-container");
+  container.innerHTML = "";
+  if (ownedPokemonPool.length === 0) {
+    container.innerHTML = `<p style="font-size:0.7rem; color:#718096; text-align:center; grid-column:1/-1;">No tienes Pokémon registrados.</p>`;
+    return;
+  }
+  ownedPokemonPool.forEach(poke => {
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "position:relative; border:1px solid #cbd5e0; padding:4px; text-align:center; background:white; border-radius:6px;";
+    wrapper.innerHTML = `
+      <input type="checkbox" style="position:absolute; top:2px; left:2px; scale:0.9;" class="modal-team-check" data-id="${poke.id}" data-name="${poke.nombre}" ${poke.enEquipo ? 'checked' : ''} />
+      <img src="${poke.sprite}" style="height:35px; object-fit:contain; margin-top:8px;" />
+      <div style="font-size:0.6rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${poke.nombre}</div>
+    `;
+    container.appendChild(wrapper);
+  });
+
+  container.querySelectorAll(".modal-team-check").forEach(chk => {
+    chk.addEventListener("change", () => {
+      const checkedCount = container.querySelectorAll(".modal-team-check:checked").length;
+      if (checkedCount > 6) {
+        chk.checked = false;
+        alert("Tu Equipo Actual ya está lleno (Máx. 6 Pokémon).");
+      }
+    });
   });
 }
 
@@ -809,11 +553,18 @@ async function saveAllModalChanges() {
     currentMeta.tags = tagsInput.split(",").map(t => t.trim()).filter(t => t.length > 0);
 
     const checkboxes = document.querySelectorAll(".modal-trade-check");
+    const teamCheckboxes = document.querySelectorAll(".modal-team-check");
+    const checkedTeamCount = document.querySelectorAll(".modal-team-check:checked").length;
+    if (checkedTeamCount > 6) {
+      alert("Tu Equipo Actual no puede tener más de 6 Pokémon. Desmarca alguno antes de guardar.");
+      return;
+    }
+
     const { data: gameData } = await supabase.from(GAME_TABLE).select("*").eq("id", userId).maybeSingle();
     if (gameData) {
       if (newName) {
         gameData.trainer_name = newName;
-        window.currentTrainerName = newName; 
+        window.currentTrainerName = newName;
       }
 
       checkboxes.forEach(chk => {
@@ -831,8 +582,24 @@ async function saveAllModalChanges() {
           });
         }
       });
-      
-      await supabase.from(GAME_TABLE).upsert({ 
+
+      teamCheckboxes.forEach(chk => {
+        const pId = parseInt(chk.dataset.id);
+        const pName = chk.dataset.name;
+        const isChecked = chk.checked;
+        if (Array.isArray(gameData.party_data)) {
+          gameData.party_data.forEach(p => { if (p && p.id === pId && p.nombre === pName) p.enEquipo = isChecked; });
+        }
+        if (gameData.box_data?.boxes) {
+          gameData.box_data.boxes.forEach(box => {
+            if (Array.isArray(box)) {
+              box.forEach(p => { if (p && p.id === pId && p.nombre === pName) p.enEquipo = isChecked; });
+            }
+          });
+        }
+      });
+
+      await supabase.from(GAME_TABLE).upsert({
         id: userId, 
         box_data: gameData.box_data, 
         party_data: gameData.party_data,
@@ -860,8 +627,8 @@ function renderHistoryPanels(logs) {
   const typeNames = {
     encounter: "Encounter", quest: "Quest", pokedex_comu: "Pokédex Comu.",
     pokedex_legen: "Pokédex Leg.", pokewords: "Pokéwords", freemode: "Freemode",
-    passport: "Passport", checkpoint: "Checkpoint Mensual", trade: "Intercambio", 
-    consume: "Consumo", bimonthly_close: "Cierre Bimestral", otros: "Otros"
+    passport: "Passport", checkpoint: "Checkpoint Mensual", trade: "Intercambio",
+    consume: "Consumo", bimonthly_close: "Cierre Bimestral", gacha_close: "Cierre de Evento", otros: "Otros"
   };
 
   if (!logs || logs.length === 0) {
@@ -1006,4 +773,5 @@ function initHamburgerMenu() {
     if (btnClose) { btnClose.onclick = () => sideMenu.classList.add("hidden"); }
     sideMenu.onclick = (e) => { if (e.target === sideMenu) sideMenu.classList.add("hidden"); };
   }
+  if (typeof setupLogoutButton === "function") setupLogoutButton("btn-logout-side");
 }

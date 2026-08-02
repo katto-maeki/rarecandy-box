@@ -5,8 +5,7 @@
   <title>Perfil de Entrenador - Rare Candy!</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-  <link rel="stylesheet" href="cajapkm.css" />
-  <link rel="stylesheet" href="trainer.css" />
+  <link rel="stylesheet" href="base.css" />
   <link rel="stylesheet" href="perfil.css" />
 </head>
 
@@ -74,18 +73,45 @@
         </div>
       </section>
 
-      <div class="horizontal-row-card">
-        <div class="row-card-header">
-          <h3 class="row-card-title" style="font-family: 'Press Start 2P', monospace !important; font-size: 0.7rem !important; letter-spacing: -0.5px !important; font-weight: normal !important;"><i class="fa fa-star text-gold"></i> Lista de Deseos (Wishlist)</h3>
+      <div class="profile-two-col-grid">
+        <div class="horizontal-row-card">
+          <div class="row-card-header">
+            <h3 class="row-card-title" style="font-family: 'Press Start 2P', monospace !important; font-size: 0.7rem !important; letter-spacing: -0.5px !important; font-weight: normal !important;"><i class="fa fa-shield text-green"></i> Equipo Actual</h3>
+          </div>
+          <div id="team-container" class="horizontal-scroller"></div>
         </div>
-        <div id="wishlist-container" class="horizontal-scroller"></div>
+
+        <div class="horizontal-row-card">
+          <div class="row-card-header">
+            <h3 class="row-card-title" style="font-family: 'Press Start 2P', monospace !important; font-size: 0.7rem !important; letter-spacing: -0.5px !important; font-weight: normal !important;"><i class="fa fa-users text-blue"></i> Comunidad Sorelle</h3>
+          </div>
+          <div class="community-stats">
+            <div class="community-stat-group">
+              <span class="community-stat-label">Logros obtenidos</span>
+              <span class="community-stat-value" id="profile-achievements-value">—</span>
+            </div>
+            <div class="community-stat-group">
+              <span class="community-stat-label">Pokédex comunitaria</span>
+              <span class="community-stat-value" id="profile-pokedex-value" style="color: #ff64c4;">0</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="horizontal-row-card">
-        <div class="row-card-header">
-          <h3 class="row-card-title" style="font-family: 'Press Start 2P', monospace !important; font-size: 0.7rem !important; letter-spacing: -0.5px !important; font-weight: normal !important;"><i class="fa fa-refresh text-green"></i> Pokémon para Intercambio</h3>
+      <div class="profile-two-col-grid">
+        <div class="horizontal-row-card">
+          <div class="row-card-header">
+            <h3 class="row-card-title" style="font-family: 'Press Start 2P', monospace !important; font-size: 0.7rem !important; letter-spacing: -0.5px !important; font-weight: normal !important;"><i class="fa fa-refresh text-green"></i> Pokémon para Intercambio</h3>
+          </div>
+          <div id="trade-pool-container" class="horizontal-scroller"></div>
         </div>
-        <div id="trade-pool-container" class="horizontal-scroller"></div>
+
+        <div class="horizontal-row-card">
+          <div class="row-card-header">
+            <h3 class="row-card-title" style="font-family: 'Press Start 2P', monospace !important; font-size: 0.7rem !important; letter-spacing: -0.5px !important; font-weight: normal !important;"><i class="fa fa-star text-gold"></i> Lista de Deseos (Wishlist)</h3>
+          </div>
+          <div id="wishlist-container" class="horizontal-scroller"></div>
+        </div>
       </div>
 
       <div class="profile-bottom-grid">
@@ -129,17 +155,22 @@
           </div>
         </div>
         <div style="background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #edf2f7;">
+          <h4 class="modal-subtitle" style="margin-bottom: 4px;">Seleccionar Equipo Actual (Máx. 6)</h4>
+          <p style="font-size: 0.7rem; color: #718096; margin-bottom: 6px;">Marca las casillas de los Pokémon de tus cajas que deseas mostrar como tu equipo:</p>
+          <div id="modal-team-pool-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; max-height: 160px; overflow-y: auto; background: white; padding: 6px; border-radius: 6px; border: 1px solid #e2e8f0;"></div>
+        </div>
+        <div style="background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #edf2f7;">
+          <h4 class="modal-subtitle" style="margin-bottom: 4px;">Seleccionar Pokémon para Intercambio</h4>
+          <p style="font-size: 0.7rem; color: #718096; margin-bottom: 6px;">Marca las casillas de los Pokémon de tus cajas que deseas ofrecer:</p>
+          <div id="modal-trade-pool-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; max-height: 160px; overflow-y: auto; background: white; padding: 6px; border-radius: 6px; border: 1px solid #e2e8f0;"></div>
+        </div>
+        <div style="background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #edf2f7;">
           <h4 class="modal-subtitle" style="margin-bottom: 4px;">Gestionar Lista de Deseos (Máx. 6)</h4>
           <div class="suggest-box">
             <input type="text" id="modal-wishlist-search" class="input" placeholder="Escribe el nombre de un Pokémon..." />
             <ul id="modal-wishlist-suggest" class="suggest-ul hidden"></ul>
           </div>
           <div id="modal-wishlist-container" style="display: flex; gap: 8px; overflow-x: auto; padding-top: 8px;"></div>
-        </div>
-        <div style="background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #edf2f7;">
-          <h4 class="modal-subtitle" style="margin-bottom: 4px;">Seleccionar Pokémon para Intercambio</h4>
-          <p style="font-size: 0.7rem; color: #718096; margin-bottom: 6px;">Marca las casillas de los Pokémon de tus cajas que deseas ofrecer:</p>
-          <div id="modal-trade-pool-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; max-height: 160px; overflow-y: auto; background: white; padding: 6px; border-radius: 6px; border: 1px solid #e2e8f0;"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -220,14 +251,14 @@
         <div id="inbox-list-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto;"></div>
       </div>
       <div class="modal-footer" style="padding: 12px 20px; background: #f7fafc; border-top: 1px solid #edf2f7; display: flex; justify-content: flex-end;">
-        <button class="btn-secondary" onclick="$('modal-notification-inbox').classList.add('hidden')">Cerrar Buzón</button>
+        <button class="btn-secondary" onclick="document.getElementById('modal-notification-inbox').classList.add('hidden')">Cerrar Buzón</button>
       </div>
     </div>
   </div>
 
   <div class="modal-backdrop hidden" id="modal-noti-status">
     <div class="modal" style="width: 460px; max-width: 95%; border-radius: 14px; overflow: hidden; background: white;">
-      <h3 class="modal-title" style="margin: 0; background: #c957b0; color: white;"><i class="fa fa-bullhorn"></i> Alerta de Intercambio</h3>
+      <h3 class="modal-title" id="noti-status-title" style="margin: 0; background: #c957b0; color: white;"><i class="fa fa-bullhorn"></i> Alerta de Intercambio</h3>
       
       <div class="modal-body" style="text-align: center; padding: 30px 20px; display: flex; flex-direction: column; gap: 12px; align-items: center;">
         <p id="noti-status-message" style="font-size: 0.88rem; color: #2d3748; line-height: 1.6; font-weight: 600; margin: 0; padding: 0 10px;"></p>
@@ -241,6 +272,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./core.js"></script>
+  <script src="./notifications.js"></script>
   <script src="./perfil.js"></script>
 </body>
 </html>

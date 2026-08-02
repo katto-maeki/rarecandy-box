@@ -40,7 +40,7 @@ const INVENTORY_ITEMS_VISUAL = [
   { key: "evoStone", label: "Piedra Evolución", iconUrl: "https://i.ibb.co/Lyh4XR3/shiny-stone.png", countId: "item-evo-stone" },
   { key: "friendship", label: "Pulsera Amistad", iconUrl: "https://i.ibb.co/QF4xxhVY/Cascabel-alivio.png", countId: "item-friendship" },
   { key: "passport", label: "Pasaporte Regional", iconUrl: "https://i.ibb.co/R4HdLphw/eon-ticket.png", countId: "item-passport" },
-  { key: "panquecito", label: "Panquecito", iconUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/lumiose-galette.png", countId: "item-panquecito" },
+  { key: "panquecito", label: "Panquecito", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/lumiose-galette.png", countId: "item-panquecito" },
 ];
 
 // HELPERS
@@ -377,8 +377,6 @@ function renderView() {
     setText("money-savings", eco.savings.toLocaleString());
     
     setText("xp-value", meta.xp ?? 0);
-    setText("achievements-value", (meta.achievements !== undefined && meta.achievements !== "") ? meta.achievements : "—");
-    setText("pokedex-value", meta.pokedex || "0");
     setText("last-updated", formatDate(meta.lastUpdated));
 
     if (meta.items) {
@@ -632,12 +630,28 @@ async function updateCapturedCountFromSupabase() {
 
 async function updatePokedexCountFromDiscoveries() {
   try {
+    const userId = window.currentUserId;
+    if (!userId) return;
+
+    // Cuenta por user_id (vínculo estable, sobrevive a cambios de username) y,
+    // en paralelo, el respaldo por nombre para registros antiguos sin user_id.
     const trainerName = window.currentTrainerName;
-    if (!trainerName) return;
-    const { count, error } = await window.supabaseClient.from("sorelle_discoveries").select("*", { count: "exact", head: true }).eq("trainer_name", trainerName);
-    if (error) throw error;
-    if (currentMeta) currentMeta.pokedex = String(count || 0);
-    setText("pokedex-value", count || 0);
+    const [{ count: byId, error: errId }, { count: legacyCount, error: errName }] = await Promise.all([
+      window.supabaseClient.from("sorelle_discoveries")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId),
+      trainerName
+        ? window.supabaseClient.from("sorelle_discoveries")
+            .select("*", { count: "exact", head: true })
+            .is("user_id", null)
+            .eq("trainer_name", trainerName)
+        : Promise.resolve({ count: 0, error: null }),
+    ]);
+    if (errId) throw errId;
+    if (errName) throw errName;
+
+    const total = (byId || 0) + (legacyCount || 0);
+    if (currentMeta) currentMeta.pokedex = String(total);
   } catch (e) { console.error(e); }
 }
 
@@ -658,7 +672,6 @@ function initHamburgerMenu() {
     const btnMenu = $("btn-menu");
     const sideMenu = $("side-menu");
     const btnClose = $("btn-close-menu");
-    const btnLogoutSide = $("btn-logout-side");
 
     if (btnMenu && sideMenu) {
         btnMenu.onclick = () => { sideMenu.classList.remove("hidden"); };
@@ -672,13 +685,7 @@ function initHamburgerMenu() {
         };
     }
 
-    if (btnLogoutSide) {
-        btnLogoutSide.onclick = (e) => {
-            e.preventDefault();
-            const originalLogoutBtn = $("btn-logout");
-            if (originalLogoutBtn) { originalLogoutBtn.click(); }
-        };
-    }
+    if (typeof setupLogoutButton === "function") setupLogoutButton("btn-logout-side");
 }
 
 // ==========================================
@@ -704,12 +711,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const user = await initProtectedPage();
     if (!user) return;
 
-    setupLogoutButton();
     await renderTrainerLabelFromGame();
     await initTrainerMeta();
     renderView();
-    await updateCapturedCountFromSupabase();
-    await updatePokedexCountFromDiscoveries();
+    await Promise.all([updateCapturedCountFromSupabase(), updatePokedexCountFromDiscoveries()]);
 
     initHamburgerMenu();
 

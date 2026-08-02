@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="trainer.css" />
+    <link rel="stylesheet" href="base.css" />
     <link rel="stylesheet" href="admin.css" />
   </head>
   <body class="bg-main">
@@ -20,6 +20,9 @@
           </div>
 
           <div class="top-bar-right">
+              <button id="btn-noti-bell" class="btn-tiny hidden" style="background: #ffffff; color: #232542; border: 1px solid #ffffff; position: relative; padding: 6px 12px; font-weight: 700; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s;">
+                <i class="fa fa-bell" style="color: #c957b0; margin-right: 2px;"></i> <span id="noti-count" style="color: #c957b0;">0</span> Alerta(s)
+              </button>
               <span class="top-bar-trainer" id="trainer-label">Entrenador: ???</span>
           </div>
       </header>
@@ -173,8 +176,54 @@
         </div>
     </div>
 
+    <div class="modal-backdrop hidden" id="modal-view-proposal">
+      <div class="modal" style="width: 520px; max-width: 95%;">
+        <h3 class="modal-title">📬 Propuesta de Intercambio Entrante</h3>
+        <div class="modal-body" style="padding: 10px 0;">
+          <p id="view-proposal-headline" style="font-size: 0.82rem; margin-bottom: 14px; color: #4a5568; text-align:center;">Cargando propuesta...</p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f7fafc; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
+            <div id="view-card-sender" style="text-align: center; background: white; padding: 8px; border-radius: 6px; border: 1px solid #edf2f7;"></div>
+            <div id="view-card-receiver" style="text-align: center; background: white; padding: 8px; border-radius: 6px; border: 1px solid #edf2f7;"></div>
+          </div>
+        </div>
+        <div class="modal-footer" style="display: flex; justify-content: space-between;">
+          <button class="btn-secondary" id="btn-proposal-decline" style="background: #e53e3e; color:white; border-color:#c53030;">Rechazar</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-secondary" id="btn-proposal-close">Cerrar</button>
+            <button class="btn-primary" id="btn-proposal-accept" style="background: #48bb78;">Aceptar Intercambio</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop hidden" id="modal-notification-inbox">
+      <div class="modal" style="width: 480px; max-width: 95%; border-radius: 14px; overflow: hidden; background: white;">
+        <h3 class="modal-title" style="margin: 0; background: #dac6f0; color: #232542;"><i class="fa fa-envelope-open"></i> Buzón de Notificaciones</h3>
+        <div class="modal-body" style="padding: 16px 20px;">
+          <p style="font-size: 0.78rem; color: #718096; margin-bottom: 12px; font-weight: 600;">Selecciona una notificación:</p>
+          <div id="inbox-list-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto;"></div>
+        </div>
+        <div class="modal-footer" style="padding: 12px 20px; background: #f7fafc; border-top: 1px solid #edf2f7; display: flex; justify-content: flex-end;">
+          <button class="btn-secondary" onclick="document.getElementById('modal-notification-inbox').classList.add('hidden')">Cerrar Buzón</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop hidden" id="modal-noti-status">
+      <div class="modal" style="width: 460px; max-width: 95%; border-radius: 14px; overflow: hidden; background: white;">
+        <h3 class="modal-title" id="noti-status-title" style="margin: 0; background: #c957b0; color: white;"><i class="fa fa-bullhorn"></i> Alerta de Intercambio</h3>
+        <div class="modal-body" style="text-align: center; padding: 30px 20px; display: flex; flex-direction: column; gap: 12px; align-items: center;">
+          <p id="noti-status-message" style="font-size: 0.88rem; color: #2d3748; line-height: 1.6; font-weight: 600; margin: 0; padding: 0 10px;"></p>
+        </div>
+        <div class="modal-footer" style="padding: 12px 20px; background: #f7fafc; border-top: 1px solid #edf2f7; display: flex; justify-content: center;">
+          <button class="btn-primary" id="btn-noti-status-close" style="background: #c957b0; color: white; padding: 6px 30px; border-radius: 6px; font-weight: 700; border: none; cursor: pointer;">Entendido</button>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./core.js"></script>
+    <script src="./notifications.js"></script>
     <script src="./admin.js"></script>
   </body>
 </html>

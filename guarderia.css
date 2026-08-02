@@ -1,3 +1,7 @@
+/* guarderia.css - Incubadora (guarderia.html)
+   Depende de base.css (reset, marco, barras, menú, botones, inputs)
+   y de cajapkm.css (usa .column / .column-title). */
+
 /* ================================
    LAYOUT GENERAL
    ================================ */
@@ -350,10 +354,6 @@
   #hatch-animation-area .egg-sprite {
     font-size: 4rem;
   }
-
-  .timer-display {
-    font-size: 0.52rem;
-  }
 }
 /* --- ESTADO SELECCIONADO --- */
 .pool-item {
@@ -384,6 +384,8 @@
     transform: scale(1.05);
 }
 
+/* Modal con look propio (fondo lila difuminado) distinto al modal
+   genérico de base.css, usado para el resumen de incubación. */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -393,10 +395,6 @@
   align-items: center;
   justify-content: center;
   z-index: 999;
-}
-
-.modal-backdrop.hidden {
-  display: none;
 }
 
 /* ================================
@@ -786,4 +784,18 @@ button,
     grid-template-columns: repeat(3, 70px) !important;
     grid-template-rows: repeat(2, 70px) !important;
     gap: 10px;
+}
+
+/* En pantallas angostas, el huevo y la cuadrícula de sprites no caben
+   lado a lado (huevo + 3 columnas de 70px superan el ancho de la
+   tarjeta), así que se apilan en vez de desbordarse. */
+@media (max-width: 640px) {
+    .inc-card-content {
+        flex-direction: column;
+    }
+
+    .inc-card-left,
+    .inc-card-right {
+        width: 100%;
+    }
 }

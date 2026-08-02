@@ -382,7 +382,7 @@ async function renderIncubations() {
         <div class="inc-card-content">
           <div class="inc-card-left">
             <div class="egg-visual-container">
-              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/mystery-egg.png" class="mystery-egg" />
+              <img src="${window.MYSTERY_EGG_SPRITE}" class="mystery-egg" />
             </div>
           </div>
           <div class="inc-card-right">${pokemonSprites.join("")}</div>
@@ -396,6 +396,111 @@ async function renderIncubations() {
 // ===============================
 // ECLOSIÓN Y HELPERS
 // ===============================
+
+const HATCH_BOX_SIZE = 32;
+
+const HATCH_NATURES = [
+  "Fuerte", "Huraño", "Valiente", "Firme", "Travieso", "Osado", "Dócil",
+  "Relajado", "Agitado", "Flojo", "Miedoso", "Serio", "Alegre", "Ingenuo",
+  "Modesto", "Afable", "Manso", "Alocado", "Excéntrico", "Sereno", "Amable",
+  "Descarado", "Cauto", "Tímido", "Impaciente"
+];
+
+const HATCH_TYPE_MAP_ES = {
+  normal: "normal", fire: "fuego", water: "agua", grass: "planta",
+  electric: "eléctrico", ice: "hielo", fighting: "lucha", poison: "veneno",
+  ground: "tierra", flying: "volador", psychic: "psíquico", bug: "bicho",
+  rock: "roca", ghost: "fantasma", dragon: "dragón", dark: "siniestro",
+  steel: "acero", fairy: "hada",
+};
+
+async function fetchHatchedPokemonBasic(name) {
+  const slug = name.toLowerCase().replace(" ", "-").replace(".", "");
+  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${slug}`);
+  if (!res.ok) throw new Error("No se encontró en PokeAPI: " + name);
+  const data = await res.json();
+  return {
+    id: data.id,
+    numero: "#" + String(data.id).padStart(3, "0"),
+    tipos: data.types.map((t) => HATCH_TYPE_MAP_ES[t.type.name] || t.type.name),
+    spriteNormal: data.sprites?.other?.home?.front_default || data.sprites?.front_default || "",
+    spriteShiny: data.sprites?.other?.home?.front_shiny || data.sprites?.front_shiny || "",
+  };
+}
+
+// Añade el pokémon eclosionado directamente a la caja del entrenador (nv.1,
+// género y personalidad al azar, como en los juegos). El usuario puede
+// ajustar la personalidad y el género después desde "Editar" en su caja.
+async function addHatchedPokemonToBox(speciesName, isShiny) {
+  const basic = await fetchHatchedPokemonBasic(speciesName);
+  const clase = typeof getPokemonClass === "function" ? getPokemonClass(speciesName) : "Común";
+  const personalidad = HATCH_NATURES[Math.floor(Math.random() * HATCH_NATURES.length)];
+  const gender = Math.random() < 0.5 ? "Macho" : "Hembra";
+
+  const newPoke = {
+    id: basic.id,
+    numero: basic.numero,
+    nombre: speciesName,
+    tipos: basic.tipos,
+    sprite: isShiny ? basic.spriteShiny : basic.spriteNormal,
+    apodo: "",
+    nivel: 1,
+    personalidad,
+    clase,
+    capturadoComo: speciesName,
+    isShiny: !!isShiny,
+    gender,
+    storedXP: 0,
+    notes: "",
+    activity: "huevo",
+    pokeball: null,
+    registrationDate: new Date().toISOString(),
+  };
+
+  const { data, error } = await bd.from("user_game_data").select("box_data, party_data").eq("id", user.id).maybeSingle();
+  if (error) throw error;
+
+  const boxData = data?.box_data;
+  const boxes = Array.isArray(boxData?.boxes)
+    ? boxData.boxes.map((b) => (Array.isArray(b) ? b.slice() : new Array(HATCH_BOX_SIZE).fill(null)))
+    : [new Array(HATCH_BOX_SIZE).fill(null)];
+  const boxNames = Array.isArray(boxData?.boxNames) ? boxData.boxNames.slice() : [];
+  while (boxNames.length < boxes.length) boxNames.push(null);
+  const currentBoxIndex = typeof boxData?.currentBoxIndex === "number" ? boxData.currentBoxIndex : 0;
+  const partyData = Array.isArray(data?.party_data) ? data.party_data : new Array(6).fill(null);
+
+  let placed = false;
+  for (const box of boxes) {
+    const idx = box.findIndex((slot) => slot === null);
+    if (idx !== -1) {
+      box[idx] = newPoke;
+      placed = true;
+      break;
+    }
+  }
+  if (!placed) {
+    const newBox = new Array(HATCH_BOX_SIZE).fill(null);
+    newBox[0] = newPoke;
+    boxes.push(newBox);
+    boxNames.push(null);
+  }
+
+  const { error: upsertError } = await bd.from("user_game_data").upsert(
+    { id: user.id, box_data: { boxes, boxNames, currentBoxIndex }, party_data: partyData },
+    { onConflict: "id" }
+  );
+  if (upsertError) throw upsertError;
+
+  await bd.from("trainer_log").insert({
+    user_id: user.id,
+    activity_type: "box_add",
+    activity_name: `${newPoke.nombre} (Eclosión)`,
+    money_reward: 0,
+    xp_reward: 0,
+  });
+
+  return newPoke;
+}
 
 async function hatchIncubation(id) {
   const inc = activeIncubations.find(i => i.id === id);
@@ -412,27 +517,52 @@ async function hatchIncubation(id) {
   const shiny = Math.random() < 0.10;
   await bd.from("trainer_incubations").update({ hatched: true, shiny, result_pokemon: winner }).eq("id", id);
   await loadIncubations();
-  startHatchAnimation(winner, shiny);
+
+  let addedPoke = null;
+  try {
+    addedPoke = await addHatchedPokemonToBox(winner, shiny);
+  } catch (e) {
+    console.error("Error al añadir automáticamente el Pokémon eclosionado a la caja:", e);
+  }
+
+  startHatchAnimation(winner, shiny, addedPoke);
 }
+
+// Cache en memoria por especie: evita volver a golpear PokeAPI para el mismo
+// pokémon cada vez que se re-renderizan las incubadoras (tabs, refrescos, etc).
+const speciesSpriteCache = new Map();
 
 async function getPokemonSprite(name, shiny = false) {
+  const key = name.toLowerCase();
   try {
-    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name.toLowerCase().replace(" ", "-").replace(".", "")}`);
-    const data = await res.json();
-    return shiny ? data.sprites.front_shiny : data.sprites.front_default;
-  } catch { return "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/mystery-egg.png"; }
+    let sprites = speciesSpriteCache.get(key);
+    if (!sprites) {
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${key.replace(" ", "-").replace(".", "")}`);
+      const data = await res.json();
+      sprites = { front_default: data.sprites.front_default, front_shiny: data.sprites.front_shiny };
+      speciesSpriteCache.set(key, sprites);
+    }
+    const raw = shiny ? sprites.front_shiny : sprites.front_default;
+    return window.toCdnSpriteUrl(raw, window.MYSTERY_EGG_SPRITE);
+  } catch { return window.MYSTERY_EGG_SPRITE; }
 }
 
-async function startHatchAnimation(p, s) {
+async function startHatchAnimation(p, s, addedPoke) {
   const modal = document.getElementById("modal-hatch");
   modal.classList.remove("hidden");
   document.getElementById("modal-hatch-footer").style.display = "none";
   document.getElementById("hatch-status").textContent = "¡El huevo se está moviendo!";
-  
+
   const sprite = await getPokemonSprite(p, s);
   setTimeout(() => {
     document.getElementById("hatch-animation-area").innerHTML = `<img src="${sprite}" class="pokeapi-sprite hatch-flash ${s ? 'shiny-glow' : ''}">`;
-    document.getElementById("hatch-status").textContent = s ? `✨ ¡INCREÍBLE! Ha nacido un ${p} SHINY ✨. Puedes añadirlo a tu caja en nv.1, con género y personalidad a elegir.` : `¡Felicidades! Ha nacido un ${p}. Puedes añadirlo a tu caja en nv.1, con género y personalidad a elegir.`;
+
+    const intro = s ? `✨ ¡INCREÍBLE! Ha nacido un ${p} SHINY ✨.` : `¡Felicidades! Ha nacido un ${p}.`;
+    const outro = addedPoke
+      ? ` Se añadió automáticamente a tu caja en nv.1, con género ${addedPoke.gender} y personalidad ${addedPoke.personalidad} al azar (puedes cambiarlos luego en "Editar").`
+      : ` No se pudo añadir automáticamente a tu caja; añádelo manualmente en nv.1, con género y personalidad a elegir.`;
+
+    document.getElementById("hatch-status").textContent = intro + outro;
     document.getElementById("modal-hatch-footer").style.display = "flex";
   }, 2000);
 }
@@ -459,6 +589,7 @@ function initHamburgerMenu() {
   if(b) b.onclick = () => m.classList.remove("hidden");
   const cb = document.getElementById("btn-close-menu");
   if(cb) cb.onclick = () => m.classList.add("hidden");
+  if (typeof setupLogoutButton === "function") setupLogoutButton("btn-logout-side");
 }
 
 // Globales para HTML

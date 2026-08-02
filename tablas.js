@@ -7,7 +7,6 @@ function initHamburgerMenu() {
     const btnMenu = document.getElementById("btn-menu");
     const sideMenu = document.getElementById("side-menu");
     const btnClose = document.getElementById("btn-close-menu");
-    const btnLogoutSide = document.getElementById("btn-logout-side");
 
     if (btnMenu && sideMenu) {
         // Abrir menú (desde la izquierda según tu CSS)
@@ -31,20 +30,7 @@ function initHamburgerMenu() {
     }
 
     // Botón de salir en el menú lateral
-    if (btnLogoutSide) {
-        btnLogoutSide.onclick = (e) => {
-            e.preventDefault();
-            const originalLogout = document.getElementById("btn-logout");
-            if (originalLogout) {
-                originalLogout.click();
-            } else {
-                // Fallback si no hay botón original en el DOM
-                window.supabaseClient.auth.signOut().then(() => {
-                    window.location.href = "index.html";
-                });
-            }
-        };
-    }
+    if (typeof setupLogoutButton === "function") setupLogoutButton("btn-logout-side");
 }
 
 // ==========================================
@@ -57,8 +43,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!user) return;
         
         if(typeof renderTrainerLabelFromGame === 'function') await renderTrainerLabelFromGame();
-        if(typeof setupLogoutButton === 'function') setupLogoutButton();
-    } catch (e) { 
+    } catch (e) {
         console.log("Init core skipped"); 
     }
 

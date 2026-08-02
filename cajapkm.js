@@ -2,6 +2,8 @@
 // ===================================================================
 const POKEAPI_BASE = "https://pokeapi.co/api/v2";
 const TRAINER_META_KEY = "pokeTrainerMeta_v1";
+const BOX_SIZE = 32;
+const DEFAULT_MAX_BOXES = 8;
 
 // Variables globales dinámicas calculadas en el momento correcto
 let boxUserId = null;
@@ -9,13 +11,21 @@ let isOwnProfile = true;
 let boxTrainerName = "Entrenador";
 
 let state = {
+  // "party" ya no tiene UI propia (columna "Equipo actual" eliminada). Se
+  // conserva vacío solo porque otras páginas (admin, perfil, intercambios)
+  // todavía leen/guardan el campo "party_data" en Supabase.
   party: new Array(6).fill(null),
-  boxes: [new Array(30).fill(null)],
+  boxes: [new Array(BOX_SIZE).fill(null)],
+  boxNames: [null],
   currentBoxIndex: 0,
   selectedBoxSlotIndex: null,
-  selectedPartyIndex: null,
-  detailSource: null, 
+  detailSource: null,
 };
+
+function getBoxName(index) {
+  const name = Array.isArray(state.boxNames) ? state.boxNames[index] : null;
+  return name || `Caja ${index + 1}`;
+}
 
 let allPokemonList = null; 
 let dragSourceIndex = null; 
@@ -24,11 +34,13 @@ let currentTrainingPoke = null;
 let currentInventory = null;
 
 // Diccionarios globales para el formato estético en la vista de detalles
-const ACTIVITY_LABELS = { 
-  encounter: "Encounter 💥", 
-  coloreo: "Coloreo 🎨", 
-  obsequio: "Obsequio 🎁", 
-  intercambio: "Intercambio 🔄" 
+const ACTIVITY_LABELS = {
+  encounter: "Encounter 💥",
+  coloreo: "Coloreo 🎨",
+  obsequio: "Obsequio 🎁",
+  intercambio: "Intercambio 🔄",
+  huevo: "Huevo 🥚",
+  evento: "Evento 🎉"
 };
 
 const POKEBALL_LABELS = { 
@@ -86,7 +98,7 @@ async function saveState() {
   if (supabase && boxUserId) {
       const payload = {
         id: boxUserId,
-        box_data: { boxes: state.boxes, currentBoxIndex: state.currentBoxIndex },
+        box_data: { boxes: state.boxes, boxNames: state.boxNames, currentBoxIndex: state.currentBoxIndex },
         party_data: state.party,
       };
       return supabase.from("user_game_data").upsert(payload, { onConflict: "id" });
@@ -122,16 +134,18 @@ async function loadState() {
         if (Array.isArray(row.party_data)) state.party = row.party_data;
         if (row.box_data && Array.isArray(row.box_data.boxes)) {
           state.boxes = row.box_data.boxes;
+          state.boxNames = Array.isArray(row.box_data.boxNames) ? row.box_data.boxNames : [];
           if (typeof row.box_data.currentBoxIndex === "number") state.currentBoxIndex = row.box_data.currentBoxIndex;
         }
         loadedFromSupabase = true;
       } else {
         state.party = new Array(6).fill(null);
-        state.boxes = [new Array(30).fill(null)];
+        state.boxes = [new Array(BOX_SIZE).fill(null)];
+        state.boxNames = [null];
         state.currentBoxIndex = 0;
 
-        if (isOwnProfile) { 
-          const initialRow = { id: userId, box_data: { boxes: state.boxes, currentBoxIndex: 0 }, party_data: state.party };
+        if (isOwnProfile) {
+          const initialRow = { id: userId, box_data: { boxes: state.boxes, boxNames: state.boxNames, currentBoxIndex: 0 }, party_data: state.party };
           await supabase.from("user_game_data").insert(initialRow);
         }
         loadedFromSupabase = true;
@@ -150,14 +164,48 @@ async function loadState() {
   }
 
   if (!Array.isArray(state.party) || state.party.length !== 6) state.party = new Array(6).fill(null);
-  if (!Array.isArray(state.boxes) || state.boxes.length === 0) state.boxes = [new Array(30).fill(null)];
+  if (!Array.isArray(state.boxes) || state.boxes.length === 0) state.boxes = [new Array(BOX_SIZE).fill(null)];
   else {
     state.boxes = state.boxes.map((box) => {
-      const arr = Array.isArray(box) ? box.slice(0, 30) : [];
-      while (arr.length < 30) arr.push(null);
+      const arr = Array.isArray(box) ? box.slice(0, BOX_SIZE) : [];
+      while (arr.length < BOX_SIZE) arr.push(null);
       return arr;
     });
   }
+
+  if (!Array.isArray(state.boxNames)) state.boxNames = [];
+  state.boxNames = state.boxNames.slice(0, state.boxes.length);
+  while (state.boxNames.length < state.boxes.length) state.boxNames.push(null);
+}
+
+// Mueve cualquier Pokémon que haya quedado en "party" (equipo actual, ya sin
+// UI propia) al primer espacio libre de la caja, creando cajas nuevas si
+// hace falta. Devuelve true si migró algo (para saber si hay que guardar).
+function migratePartyIntoBox() {
+  if (!Array.isArray(state.party)) return false;
+
+  let migrated = false;
+
+  for (let i = 0; i < state.party.length; i++) {
+    const poke = state.party[i];
+    if (!poke) continue;
+
+    let box = state.boxes[state.boxes.length - 1];
+    let emptyIndex = box.findIndex((slot) => slot === null);
+
+    if (emptyIndex === -1) {
+      box = new Array(BOX_SIZE).fill(null);
+      state.boxes.push(box);
+      state.boxNames.push(null);
+      emptyIndex = 0;
+    }
+
+    box[emptyIndex] = poke;
+    state.party[i] = null;
+    migrated = true;
+  }
+
+  return migrated;
 }
 
 // =============================
@@ -196,13 +244,7 @@ function getSafeSpriteUrl(poke) {
   }
   
   // Si tiene URL de GitHub, la redirigimos al CDN espejo
-  if (url.includes("raw.githubusercontent.com/PokeAPI/sprites/master")) {
-    return url.replace(
-      "raw.githubusercontent.com/PokeAPI/sprites/master",
-      "cdn.jsdelivr.net/gh/PokeAPI/sprites@master"
-    );
-  }
-  return url;
+  return window.toCdnSpriteUrl ? window.toCdnSpriteUrl(url) : url;
 }
 async function fetchPokemonList() {
   if (allPokemonList) return allPokemonList;
@@ -263,13 +305,44 @@ function findEvolutionNode(chainNode, targetName) {
   return null;
 }
 
+// Formas de "vitrina" (Totem, etc.) que no son evoluciones elegibles por el
+// entrenador: aparecen como variedad de la especie en PokeAPI pero no deben
+// ofrecerse como destino de evolución.
+function isShowcaseVariety(vName) {
+  return vName.includes("totem");
+}
+
+// Mega Evolución / Gigamax NO están disponibles como evolución en la caja
+// (son formas de batalla temporales, no evoluciones permanentes). Sin este
+// filtro, PokeAPI las lista como "variedad" de la especie evolucionada y se
+// colaban como si fueran el destino normal de la evolución (p. ej. Kirlia
+// terminaba pudiendo "evolucionar" directo a Mega Gallade).
+function isMegaOrGmaxVariety(vName) {
+  return /-(mega(-x|-y)?|gmax)$/.test(vName);
+}
+
+// Casos donde la cadena de evolución de PokeAPI tiene más de una rama (p.
+// ej. Meowth evoluciona en Persian o, si es Galar, en Perrserker) y NINGUNA
+// de esas ramas tiene una forma con sufijo de región propia. En ese caso no
+// hay forma de distinguir "cuál rama es la regional" solo con los nombres,
+// así que se resuelve a mano para las formas regionales disponibles en
+// Sorelle.
+const REGION_EXCLUSIVE_BRANCH = {
+  "meowth-galar": ["perrserker"],
+  "yamask-galar": ["runerigus"],
+  "corsola-galar": ["cursola"],
+  "farfetchd-galar": ["sirfetchd"],
+  "zigzagoon-galar": ["linoone-galar"],
+  "linoone-galar": ["obstagoon"],
+};
+
 async function getEvolutionOptions(pokemonId, pokemonName) {
   try {
     const resPokemon = await fetch(`${POKEAPI_BASE}/pokemon/${pokemonId}`);
     if (!resPokemon.ok) return [];
     const pokemonData = await resPokemon.json();
-    
-    const currentRegionSuffix = getRegionSuffix(pokemonData.name); 
+
+    const currentRegionSuffix = getRegionSuffix(pokemonData.name);
     const resSpecies = await fetch(pokemonData.species.url);
     if (!resSpecies.ok) return [];
     const speciesData = await resSpecies.json();
@@ -280,41 +353,86 @@ async function getEvolutionOptions(pokemonId, pokemonName) {
     const chainData = await resChain.json();
 
     const isBaseForm = (chainData.chain.species.name === speciesData.name);
-    const evolutionStage = isBaseForm ? 1 : 2; 
+    const evolutionStage = isBaseForm ? 1 : 2;
 
     const root = chainData.chain;
     const node = findEvolutionNode(root, speciesData.name);
-    
-    if (!node || !node.evolves_to.length) return [];
+    if (!node) return [];
 
     const options = [];
-    for (const evNode of node.evolves_to) {
+
+    for (const evNode of (node.evolves_to || [])) {
       const evoSpeciesName = evNode.species.name;
       const resEvoSpecies = await fetch(`${POKEAPI_BASE}/pokemon-species/${evoSpeciesName}`);
       const evoSpeciesData = await resEvoSpecies.json();
 
+      let requiresStone = false;
+      let requiresFriendship = false;
+      let timeCondition = "";
+      if (Array.isArray(evNode.evolution_details)) {
+        for (const detail of evNode.evolution_details) {
+          if (detail.trigger?.name === "use-item" && detail.item?.name?.endsWith("stone")) requiresStone = true;
+          if (detail.min_happiness > 0 || detail.min_affection > 0) requiresFriendship = true;
+          if (detail.time_of_day) timeCondition = detail.time_of_day;
+        }
+      }
+
+      // ¿Esta línea evolutiva tiene una forma específica para la región
+      // actual? (p. ej. Darumaka-Galar -> Darmanitan-Galar). Si no la
+      // tiene (p. ej. Meowth-Galar -> Perrserker, que no tiene forma
+      // "normal"), no exigimos el sufijo de región: se ofrece la única
+      // forma disponible tal cual.
+      const hasMatchingRegionVariant = !!currentRegionSuffix && evoSpeciesData.varieties.some(
+        (v) => v.pokemon.name.includes(currentRegionSuffix)
+      );
+
+      // Lista curada de "a quién le corresponde" cuando el pokémon actual
+      // (o el destino) es una de las evoluciones exclusivas de región de
+      // arriba, para casos con más de una rama posible.
+      const currentExclusiveList = REGION_EXCLUSIVE_BRANCH[pokemonData.name];
+
       for (const varEntry of evoSpeciesData.varieties) {
         const vName = varEntry.pokemon.name;
-        const regionSuffix = getRegionSuffix(vName);
-        
-        if (currentRegionSuffix && !vName.includes(currentRegionSuffix)) continue;
-        if (!currentRegionSuffix && regionSuffix) continue; 
+        if (isShowcaseVariety(vName)) continue;
+        // Mega Evolución / Gigamax no están disponibles como evolución.
+        if (isMegaOrGmaxVariety(vName)) continue;
 
-        const evoPokemonId = parseSpeciesIdFromUrl(varEntry.pokemon.url);
-        
-        let requiresStone = false;
-        let requiresFriendship = false;
-        let requiresPassport = (regionSuffix && !currentRegionSuffix);
-        let timeCondition = ""; 
-
-        if (Array.isArray(evNode.evolution_details)) {
-          for (const detail of evNode.evolution_details) {
-            if (detail.trigger?.name === "use-item" && detail.item?.name?.endsWith("stone")) requiresStone = true;
-            if (detail.min_happiness > 0 || detail.min_affection > 0) requiresFriendship = true;
-            if (detail.time_of_day) timeCondition = detail.time_of_day;
-          }
+        if (currentExclusiveList) {
+          // El pokémon actual tiene su propia rama exclusiva (p. ej.
+          // Meowth-Galar -> Perrserker): solo esa, ninguna otra rama.
+          if (!currentExclusiveList.includes(vName)) continue;
+        } else {
+          // Esta forma es la evolución exclusiva de OTRA variedad regional
+          // (p. ej. Perrserker es solo de Meowth-Galar): un Meowth normal
+          // no debe poder llegar a ella.
+          const belongsToOtherVariety = Object.keys(REGION_EXCLUSIVE_BRANCH).some(
+            (key) => key !== pokemonData.name && REGION_EXCLUSIVE_BRANCH[key].includes(vName)
+          );
+          if (belongsToOtherVariety) continue;
         }
 
+        const regionSuffix = getRegionSuffix(vName);
+
+        if (currentRegionSuffix) {
+          if (hasMatchingRegionVariant) {
+            // Existe una forma propia de esta región: solo mostramos esa.
+            if (!vName.includes(currentRegionSuffix)) continue;
+          } else if (regionSuffix) {
+            // Tiene sufijo de OTRA región distinta a la actual: no aplica.
+            continue;
+          }
+          // Si no aplica ninguno de los dos casos anteriores, es una forma
+          // sin sufijo de región (evolución exclusiva ya validada arriba,
+          // o la rama común): se acepta.
+        }
+
+        // Si el pokémon actual es la forma base, mostramos tanto la
+        // evolución normal como la variante regional (esta última exige
+        // Pasaporte Regional; antes se ocultaba directamente y por eso
+        // nunca se podía elegir aunque se tuviera el ítem).
+        const requiresPassport = !!(regionSuffix && !currentRegionSuffix);
+
+        const evoPokemonId = parseSpeciesIdFromUrl(varEntry.pokemon.url);
         const displayName = capitalize(vName.replace(/-/g, " "));
 
         options.push({
@@ -324,10 +442,11 @@ async function getEvolutionOptions(pokemonId, pokemonName) {
           requiresFriendship,
           requiresPassport,
           timeCondition: timeCondition,
-          evolutionStage: evolutionStage 
+          evolutionStage: evolutionStage
         });
       }
     }
+
     return options;
   } catch (err) {
     console.error("Error evoluciones:", err);
@@ -374,73 +493,18 @@ function renderTrainerName() {
   }
 }
 
-function renderParty() {
-  const container = document.getElementById("party-list");
-  container.innerHTML = "";
-
-  state.party.forEach((poke, index) => {
-    const slot = document.createElement("div");
-    slot.className = "party-slot";
-
-    if (!poke) {
-      slot.classList.add("empty");
-      slot.textContent = `Slot ${index + 1} vacío`;
-    } else {
-      const img = document.createElement("img");
-      img.className = "party-sprite";
-      img.alt = poke.apodo || poke.nombre;
-      img.loading = "lazy";
-      img.src = getSafeSpriteUrl(poke); // <-- Corregido con CDN Bypass
-
-      const main = document.createElement("div");
-      main.className = "party-main";
-
-      const nameEl = document.createElement("span");
-      nameEl.className = "party-name";
-      nameEl.textContent = poke.apodo || poke.nombre;
-      if (poke.isShiny) nameEl.textContent += " ✨";
-
-      const lvlEl = document.createElement("span");
-      lvlEl.className = "party-level";
-      lvlEl.textContent = `Lv. ${poke.nivel || 1}`;
-
-      main.appendChild(nameEl);
-      main.appendChild(lvlEl);
-
-      const tag = document.createElement("span");
-      tag.className = "party-level";
-      tag.textContent = poke.numero;
-
-      slot.appendChild(img);
-      slot.appendChild(main);
-      slot.appendChild(tag);
-    }
-
-    if (state.selectedPartyIndex === index) {
-      slot.classList.add("selected");
-    }
-
-    slot.addEventListener("click", () => {
-      if (!state.party[index]) {
-        state.selectedPartyIndex = null;
-        state.detailSource = null;
-      } else {
-        state.selectedPartyIndex = index;
-        state.selectedBoxSlotIndex = null;
-        state.detailSource = "party";
-      }
-      renderParty();
-      renderDetail();
-      saveState();
-    });
-
-    container.appendChild(slot);
-  });
-}
-
 function renderBox() {
-  const title = document.getElementById("box-title");
-  title.textContent = `Caja ${state.currentBoxIndex + 1}`;
+  const select = document.getElementById("box-select");
+  if (select) {
+    select.innerHTML = "";
+    state.boxes.forEach((_, i) => {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = getBoxName(i);
+      select.appendChild(opt);
+    });
+    select.value = state.currentBoxIndex;
+  }
 
   const grid = document.getElementById("box-grid");
   grid.innerHTML = "";
@@ -480,10 +544,8 @@ function renderBox() {
 
     slot.addEventListener("click", () => {
       state.selectedBoxSlotIndex = index;
-      state.selectedPartyIndex = null;
       state.detailSource = "box";
       renderBox();
-      renderParty();
       renderDetail();
       saveState();
     });
@@ -529,7 +591,6 @@ function renderBox() {
       dragSourceIndex = null;
       saveState();
       renderBox();
-      renderParty();
       renderDetail();
     });
 
@@ -548,60 +609,43 @@ function renderDetail() {
   const content = document.getElementById("detail-content");
   const box = state.boxes[state.currentBoxIndex];
 
-  let source = null;
-  let poke = null;
-
-  if (state.selectedPartyIndex != null && state.party[state.selectedPartyIndex]) {
-    source = "party";
-    poke = state.party[state.selectedPartyIndex];
-  } else if (state.selectedBoxSlotIndex != null && box[state.selectedBoxSlotIndex]) {
-    source = "box";
-    poke = box[state.selectedBoxSlotIndex];
-  }
+  const poke = state.selectedBoxSlotIndex != null ? box[state.selectedBoxSlotIndex] : null;
 
   const btnUpdate = document.getElementById("btn-update-pokemon");
-  const btnMove = document.getElementById("btn-move-to-party");
-  const btnRelease = document.getElementById("btn-release-pokemon");
   const btnTrain = document.getElementById("btn-train-pokemon");
+  const kebabBtn = document.getElementById("btn-detail-kebab");
+  const btnMove = document.getElementById("btn-move-pokemon");
 
   if (!poke) {
     empty.classList.remove("hidden");
     content.classList.add("hidden");
     if (btnUpdate) btnUpdate.disabled = true;
-    if (btnMove) btnMove.disabled = true;
-    if (btnRelease) btnRelease.disabled = true;
     if (btnTrain) btnTrain.classList.add("hidden");
+    if (kebabBtn) kebabBtn.classList.add("hidden");
+    closeDetailKebabMenu();
     state.detailSource = null;
     return;
   }
 
-  state.detailSource = source;
+  state.detailSource = "box";
   empty.classList.add("hidden");
   content.classList.remove("hidden");
 
   if (!isOwnProfile) {
     if (btnUpdate) btnUpdate.classList.add("hidden");
-    if (btnMove) btnMove.classList.add("hidden");
-    if (btnRelease) btnRelease.classList.add("hidden");
     if (btnTrain) btnTrain.classList.add("hidden");
+    if (kebabBtn) kebabBtn.classList.add("hidden");
+    closeDetailKebabMenu();
   } else {
     if (btnUpdate) { btnUpdate.disabled = false; btnUpdate.classList.remove("hidden"); }
-    if (btnRelease) { btnRelease.disabled = false; btnRelease.classList.remove("hidden"); }
-    
-    if (btnMove) {
-      btnMove.disabled = false;
-      btnMove.classList.remove("hidden");
-      btnMove.textContent = source === "party" ? "Retirar de equipo actual" : "Mover a equipo actual";
-    }
 
     if (btnTrain) {
-      if (source === "party") {
-        btnTrain.classList.remove("hidden");
-        btnTrain.onclick = () => openTrainingModal(state.selectedPartyIndex);
-      } else {
-        btnTrain.classList.add("hidden");
-      }
+      btnTrain.classList.remove("hidden");
+      btnTrain.onclick = () => openTrainingModal();
     }
+
+    if (kebabBtn) kebabBtn.classList.remove("hidden");
+    if (btnMove) btnMove.disabled = state.boxes.length <= 1;
   }
 
   document.getElementById("detail-sprite").src = getSafeSpriteUrl(poke); // <-- Corregido con CDN Bypass
@@ -693,10 +737,12 @@ function closeModal(id) { document.getElementById(id).classList.add("hidden"); }
 // =============================
 // LÓGICA MODAL ENTRENAMIENTO
 // =============================
-async function openTrainingModal(pokeIndex) {
+async function openTrainingModal() {
     if (!isOwnProfile) return;
-    currentTrainingPoke = state.party[pokeIndex];
-    if (!currentTrainingPoke) return;
+    const box = state.boxes[state.currentBoxIndex];
+    if (state.selectedBoxSlotIndex == null || !box[state.selectedBoxSlotIndex]) return;
+
+    currentTrainingPoke = box[state.selectedBoxSlotIndex];
 
     if (typeof currentTrainingPoke.storedXP !== 'number') {
         currentTrainingPoke.storedXP = getTotalXpForLevel(currentTrainingPoke.nivel || 1);
@@ -876,8 +922,8 @@ async function handleSaveXPAction() {
         msg += `\n¡${currentTrainingPoke.apodo || currentTrainingPoke.nombre} subió al Nivel ${newLevel}!`;
     }
 
-    if (state.detailSource === 'party' && state.selectedPartyIndex !== null) {
-        state.party[state.selectedPartyIndex] = currentTrainingPoke;
+    if (state.selectedBoxSlotIndex !== null) {
+        state.boxes[state.currentBoxIndex][state.selectedBoxSlotIndex] = currentTrainingPoke;
     }
 
     await saveGameData();
@@ -892,7 +938,7 @@ async function handleSaveXPAction() {
 
     alert(msg);
     closeModal("modal-train");
-    renderParty(); 
+    renderBox();
     renderDetail();
 }
 
@@ -943,9 +989,7 @@ async function handleEvolveAction() {
              currentTrainingPoke.clase = getPokemonClass(basic.nombre);
         }
 
-        if (state.detailSource === 'party' && state.selectedPartyIndex !== null) {
-            state.party[state.selectedPartyIndex] = currentTrainingPoke;
-        } else if (state.detailSource === 'box' && state.selectedBoxSlotIndex !== null) {
+        if (state.selectedBoxSlotIndex !== null) {
             state.boxes[state.currentBoxIndex][state.selectedBoxSlotIndex] = currentTrainingPoke;
         }
 
@@ -960,9 +1004,8 @@ async function handleEvolveAction() {
         });
 
         alert(`¡Evolución exitosa a ${basic.nombre}!`);
-        
+
         closeModal("modal-train");
-        renderParty();
         renderBox();
         renderDetail();
     } catch (e) {
@@ -1056,7 +1099,6 @@ async function handleAddPokemon() {
     xp_reward: 0
   });
 
-  renderParty();
   renderBox();
   renderDetail();
 
@@ -1078,20 +1120,11 @@ async function handleAddPokemon() {
 async function handleUpdatePokemon() {
   if (!isOwnProfile) return;
   const box = state.boxes[state.currentBoxIndex];
-  let container = null;
-  let index = null;
 
-  if (state.detailSource === "party" && state.selectedPartyIndex != null && state.party[state.selectedPartyIndex]) {
-    container = state.party;
-    index = state.selectedPartyIndex;
-  } else if (state.selectedBoxSlotIndex != null && box[state.selectedBoxSlotIndex]) {
-    container = box;
-    index = state.selectedBoxSlotIndex;
-  } else { 
-    return; 
-  }
+  if (state.selectedBoxSlotIndex == null || !box[state.selectedBoxSlotIndex]) return;
+  const index = state.selectedBoxSlotIndex;
 
-  const poke = container[index];
+  const poke = box[index];
   if (!poke) return;
 
   const nicknameInput = document.getElementById("edit-nickname-input");
@@ -1118,11 +1151,10 @@ async function handleUpdatePokemon() {
   if (activitySelect) poke.activity = activitySelect.value || null;
   if (pokeballSelect) poke.pokeball = pokeballSelect.value || null;
 
-  container[index] = poke;
+  box[index] = poke;
 
   try {
-    await saveState(); 
-    renderParty();
+    await saveState();
     renderBox();
     renderDetail();
     closeModal("modal-edit");
@@ -1134,65 +1166,18 @@ async function handleUpdatePokemon() {
 function handleReleasePokemon() {
   if (!isOwnProfile) return;
   const box = state.boxes[state.currentBoxIndex];
-  let poke = null;
-  let releasingFrom = null;
 
-  if (state.detailSource === "party" && state.selectedPartyIndex != null && state.party[state.selectedPartyIndex]) {
-    releasingFrom = "party";
-    poke = state.party[state.selectedPartyIndex];
-  } else if (state.selectedBoxSlotIndex != null && box[state.selectedBoxSlotIndex]) {
-    releasingFrom = "box";
-    poke = box[state.selectedBoxSlotIndex];
-  }
+  if (state.selectedBoxSlotIndex == null || !box[state.selectedBoxSlotIndex]) return;
+  const poke = box[state.selectedBoxSlotIndex];
 
-  if (!poke) return;
   const nombreMostrar = poke.apodo || poke.nombre;
   const ok = confirm(`¿Seguro que quieres liberar a ${nombreMostrar}?`);
   if (!ok) return;
 
-  if (releasingFrom === "party") {
-    state.party[state.selectedPartyIndex] = null;
-    state.selectedPartyIndex = null;
-  } else if (releasingFrom === "box") {
-    box[state.selectedBoxSlotIndex] = null;
-    state.selectedBoxSlotIndex = null;
-  }
-
+  box[state.selectedBoxSlotIndex] = null;
+  state.selectedBoxSlotIndex = null;
   state.detailSource = null;
   saveState();
-  renderParty();
-  renderBox();
-  renderDetail();
-}
-
-function handleMoveToParty() {
-  if (!isOwnProfile) return;
-  const box = state.boxes[state.currentBoxIndex];
-
-  if (state.detailSource === "party") {
-    const pIdx = state.selectedPartyIndex;
-    if (pIdx == null || !state.party[pIdx]) return;
-    const poke = state.party[pIdx];
-    const emptyBoxIndex = box.findIndex((x) => x === null);
-    if (emptyBoxIndex === -1) { alert("Caja llena."); return; }
-    box[emptyBoxIndex] = poke;
-    state.party[pIdx] = null;
-    state.selectedPartyIndex = null;
-    state.detailSource = null;
-  } else {
-    const idx = state.selectedBoxSlotIndex;
-    if (idx == null || !box[idx]) return;
-    const poke = box[idx];
-    const emptyIndex = state.party.findIndex((x) => x === null);
-    if (emptyIndex === -1) { alert("Equipo lleno."); return; }
-    state.party[emptyIndex] = poke;
-    box[idx] = null;
-    state.selectedBoxSlotIndex = null;
-    state.detailSource = null;
-  }
-
-  saveState();
-  renderParty();
   renderBox();
   renderDetail();
 }
@@ -1216,25 +1201,187 @@ async function setupSuggest(inputEl, listEl) {
   });
 }
 
-function goToPrevBox() {
-    if (state.currentBoxIndex > 0) state.currentBoxIndex--;
-    else state.currentBoxIndex = state.boxes.length - 1;
+function goToBox(index) {
+    if (Number.isNaN(index) || index < 0 || index >= state.boxes.length) return;
+    if (index === state.currentBoxIndex) return;
+    state.currentBoxIndex = index;
     state.selectedBoxSlotIndex = null;
     saveState();
     renderBox();
     renderDetail();
 }
 
-function goToNextBox() {
-    if (state.currentBoxIndex < state.boxes.length - 1) state.currentBoxIndex++;
-    else {
-        if (isOwnProfile) state.boxes.push(new Array(30).fill(null));
-        state.currentBoxIndex = state.boxes.length - 1;
+function addNewBox() {
+    if (!isOwnProfile) return false;
+
+    if (state.boxes.length >= DEFAULT_MAX_BOXES) {
+        const ok = confirm(
+            `Ya tienes ${state.boxes.length} cajas (el máximo recomendado es ${DEFAULT_MAX_BOXES}). ¿Quieres añadir una caja adicional de todas formas?`
+        );
+        if (!ok) return false;
     }
+
+    state.boxes.push(new Array(BOX_SIZE).fill(null));
+    state.boxNames.push(null);
+    state.currentBoxIndex = state.boxes.length - 1;
     state.selectedBoxSlotIndex = null;
     saveState();
     renderBox();
     renderDetail();
+    return true;
+}
+
+// =============================
+// MENÚ KEBAB DEL PANEL DE DETALLE
+// =============================
+function openDetailKebabMenu() {
+    document.getElementById("detail-kebab-menu")?.classList.remove("hidden");
+}
+
+function closeDetailKebabMenu() {
+    document.getElementById("detail-kebab-menu")?.classList.add("hidden");
+}
+
+function toggleDetailKebabMenu() {
+    const menu = document.getElementById("detail-kebab-menu");
+    if (!menu) return;
+    menu.classList.contains("hidden") ? openDetailKebabMenu() : closeDetailKebabMenu();
+}
+
+// =============================
+// MOVER POKÉMON A OTRA CAJA (MODAL)
+// =============================
+function openMoveModal() {
+    if (!isOwnProfile || state.boxes.length <= 1) return;
+    const box = state.boxes[state.currentBoxIndex];
+    if (state.selectedBoxSlotIndex == null || !box[state.selectedBoxSlotIndex]) return;
+
+    closeDetailKebabMenu();
+
+    const select = document.getElementById("move-box-select");
+    if (select) {
+        select.innerHTML = "";
+        state.boxes.forEach((_, i) => {
+            if (i === state.currentBoxIndex) return;
+            const opt = document.createElement("option");
+            opt.value = i;
+            opt.textContent = getBoxName(i);
+            select.appendChild(opt);
+        });
+    }
+
+    openModal("modal-move");
+}
+
+function handleConfirmMove() {
+    if (!isOwnProfile) return;
+    const box = state.boxes[state.currentBoxIndex];
+    if (state.selectedBoxSlotIndex == null || !box[state.selectedBoxSlotIndex]) return;
+
+    const select = document.getElementById("move-box-select");
+    if (!select || select.value === "") return;
+    const targetIndex = parseInt(select.value, 10);
+    if (Number.isNaN(targetIndex) || targetIndex === state.currentBoxIndex) return;
+
+    const targetBox = state.boxes[targetIndex];
+    const emptyIndex = targetBox.findIndex((slot) => slot === null);
+    if (emptyIndex === -1) {
+        alert("La caja destino está llena.");
+        return;
+    }
+
+    const poke = box[state.selectedBoxSlotIndex];
+    targetBox[emptyIndex] = poke;
+    box[state.selectedBoxSlotIndex] = null;
+    state.selectedBoxSlotIndex = null;
+    state.detailSource = null;
+
+    saveState();
+    closeModal("modal-move");
+    renderBox();
+    renderDetail();
+}
+
+// =============================
+// GESTIÓN DE CAJAS (MODAL: RENOMBRAR / REORDENAR / AÑADIR)
+// =============================
+function renderBoxManagerList() {
+    const list = document.getElementById("box-manager-list");
+    if (!list) return;
+    list.innerHTML = "";
+
+    state.boxes.forEach((box, i) => {
+        const li = document.createElement("li");
+        li.className = "box-manager-row";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "input box-manager-name-input";
+        input.value = state.boxNames[i] || "";
+        input.placeholder = `Caja ${i + 1}`;
+        input.maxLength = 24;
+        input.addEventListener("change", () => handleRenameBox(i, input.value));
+
+        const countLabel = document.createElement("span");
+        countLabel.className = "box-manager-count";
+        countLabel.textContent = `${box.filter(Boolean).length}/${BOX_SIZE}`;
+
+        const btnUp = document.createElement("button");
+        btnUp.type = "button";
+        btnUp.className = "box-manager-arrow";
+        btnUp.textContent = "▲";
+        btnUp.disabled = i === 0;
+        btnUp.addEventListener("click", () => moveBoxOrder(i, -1));
+
+        const btnDown = document.createElement("button");
+        btnDown.type = "button";
+        btnDown.className = "box-manager-arrow";
+        btnDown.textContent = "▼";
+        btnDown.disabled = i === state.boxes.length - 1;
+        btnDown.addEventListener("click", () => moveBoxOrder(i, 1));
+
+        li.appendChild(input);
+        li.appendChild(countLabel);
+        li.appendChild(btnUp);
+        li.appendChild(btnDown);
+        list.appendChild(li);
+    });
+}
+
+function handleRenameBox(index, value) {
+    if (!isOwnProfile) return;
+    const trimmed = value.trim();
+    state.boxNames[index] = trimmed || null;
+    saveState();
+    renderBox();
+}
+
+function moveBoxOrder(index, direction) {
+    if (!isOwnProfile) return;
+    const target = index + direction;
+    if (target < 0 || target >= state.boxes.length) return;
+
+    const boxesTemp = state.boxes[index];
+    state.boxes[index] = state.boxes[target];
+    state.boxes[target] = boxesTemp;
+
+    const namesTemp = state.boxNames[index];
+    state.boxNames[index] = state.boxNames[target];
+    state.boxNames[target] = namesTemp;
+
+    if (state.currentBoxIndex === index) state.currentBoxIndex = target;
+    else if (state.currentBoxIndex === target) state.currentBoxIndex = index;
+
+    saveState();
+    renderBox();
+    renderDetail();
+    renderBoxManagerList();
+}
+
+function openBoxManagerModal() {
+    if (!isOwnProfile) return;
+    renderBoxManagerList();
+    openModal("modal-box-manager");
 }
 
 function normalizeTypeKey(t) {
@@ -1274,19 +1421,49 @@ document.addEventListener("DOMContentLoaded", async () => {
     boxUserId = urlId || window.currentUserId;
     isOwnProfile = (boxUserId === window.currentUserId);
 
-    if (typeof setupLogoutButton === "function") setupLogoutButton();
+    if (typeof setupLogoutButton === "function") setupLogoutButton("btn-logout-side");
     if (typeof renderTrainerLabelFromGame === "function") await renderTrainerLabelFromGame();
 
-    await loadState(); 
+    await loadState();
+
+    // Migración única: si el entrenador tenía Pokémon en el antiguo "equipo
+    // actual", pasan a la caja (esa columna ya no existe en la UI).
+    const migratedFromParty = migratePartyIntoBox();
+    if (migratedFromParty) await saveState();
+
     renderTrainerName();
-    renderParty();
     renderBox();
     renderDetail();
 
-    const prevBtn = document.getElementById("btn-prev-box");
-    const nextBtn = document.getElementById("btn-next-box");
-    if (prevBtn) prevBtn.addEventListener("click", goToPrevBox);
-    if (nextBtn) nextBtn.addEventListener("click", goToNextBox);
+    const boxSelect = document.getElementById("box-select");
+    if (boxSelect) boxSelect.addEventListener("change", () => goToBox(parseInt(boxSelect.value, 10)));
+
+    const btnBoxManager = document.getElementById("btn-box-manager");
+    if (btnBoxManager) {
+      if (!isOwnProfile) btnBoxManager.classList.add("hidden");
+      else btnBoxManager.addEventListener("click", openBoxManagerModal);
+    }
+    document.getElementById("btn-box-manager-close")?.addEventListener("click", () => closeModal("modal-box-manager"));
+    document.getElementById("btn-box-manager-add")?.addEventListener("click", addNewBox);
+
+    const btnDetailKebab = document.getElementById("btn-detail-kebab");
+    if (btnDetailKebab) {
+      btnDetailKebab.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleDetailKebabMenu();
+      });
+    }
+    document.addEventListener("click", (e) => {
+      const menu = document.getElementById("detail-kebab-menu");
+      const kebabBtn = document.getElementById("btn-detail-kebab");
+      if (!menu || menu.classList.contains("hidden")) return;
+      if (menu.contains(e.target) || kebabBtn?.contains(e.target)) return;
+      closeDetailKebabMenu();
+    });
+
+    document.getElementById("btn-move-pokemon")?.addEventListener("click", openMoveModal);
+    document.getElementById("btn-move-cancel")?.addEventListener("click", () => closeModal("modal-move"));
+    document.getElementById("btn-move-confirm")?.addEventListener("click", handleConfirmMove);
 
     const btnAdd = document.getElementById("btn-add-pokemon");
     if (btnAdd) {
@@ -1301,13 +1478,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // PRECARGA AUTOMÁTICA DE DATOS ACTUALES AL ABRIR EL MODAL EDITAR
     document.getElementById("btn-update-pokemon")?.addEventListener("click", () => {
         const box = state.boxes[state.currentBoxIndex];
-        let poke = null;
-
-        if (state.detailSource === "party" && state.selectedPartyIndex != null && state.party[state.selectedPartyIndex]) {
-            poke = state.party[state.selectedPartyIndex];
-        } else if (state.selectedBoxSlotIndex != null && box[state.selectedBoxSlotIndex]) {
-            poke = box[state.selectedBoxSlotIndex];
-        }
+        const poke = state.selectedBoxSlotIndex != null ? box[state.selectedBoxSlotIndex] : null;
 
         if (poke) {
             document.getElementById("edit-nickname-input").value = poke.apodo || "";
@@ -1326,8 +1497,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         openModal("modal-edit");
     });
 
-    document.getElementById("btn-move-to-party")?.addEventListener("click", handleMoveToParty);
-    document.getElementById("btn-release-pokemon")?.addEventListener("click", handleReleasePokemon);   
+    document.getElementById("btn-release-pokemon")?.addEventListener("click", handleReleasePokemon);
     document.getElementById("btn-edit-cancel")?.addEventListener("click", () => closeModal("modal-edit"));
     document.getElementById("btn-edit-confirm")?.addEventListener("click", handleUpdatePokemon);
 

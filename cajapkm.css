@@ -1,113 +1,18 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* cajapkm.css - Caja Pokémon (cajapkm.html)
+   Depende de base.css para reset, marco, barras, menú, modales,
+   formularios y botones. Aquí solo el layout propio de la página. */
 
-html,
-body {
-  height: 100%;
-  font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-}
-
-/* Fondo general estilo Scarlet */
-.bg-main {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  /* color base por si tarda en cargar la imagen */
-  background-color: #12122a;
-
-  /* patrón */
-  background-image: url("https://i.ibb.co/GfZTxGcp/CRUZZZZZ.png");
-  background-repeat: repeat;
-  background-size: 20px 20px; /* ajusta el tamaño del patrón a tu gusto */
-}
-/* Marco 16:9 */
-.screen-frame {
-  width: min(100%, 1150px);
-  aspect-ratio: 16 / 9;
-  background: linear-gradient(135deg, #ffeef5 0%, #ffe4f2 35%, #fde2dc 100%);
-  border-radius: 20px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-}
-
-/* Barra superior */
-.top-bar {
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 14px;
-  background: rgba(201, 87, 176, 0.8);
-  border-radius: 12px;
-  color: #ffffff;
-  font-size: 0.9rem;
-  gap: 8px; /* 👈 espacio entre título y zona derecha */
-  flex-wrap: wrap; /* 👈 permite que baje a 2 filas si no cabe */
-}
-
-.top-bar-title {
-  font-weight: 700;
-}
-
-.top-bar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
-  opacity: 0.9;
-}
-
-.top-bar-trainer {
-  color: #ffffff;
-  font-weight: 600;
-}
-
-/* Botones de pestaña arriba a la derecha */
-.top-nav-btn {
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: none;
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: background 0.1s ease, transform 0.1s ease, box-shadow 0.1s ease;
-}
-
-.top-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
-}
-
-.top-nav-btn-active {
-  background: #f3ca3b;
-  color: #2a2511;
-}
-
-/* Layout principal */
+/* Layout principal (Caja | Detalle - sin columna de Equipo actual) */
 .main-layout {
   flex: 1;
   display: grid;
-  grid-template-columns: 1.2fr 1.8fr 1.4fr;
+  grid-template-columns: 3.4fr 1.3fr;
   gap: 10px;
   padding: 10px 4px;
+  min-height: 0; /* evita que el contenido de las columnas estire el marco */
 }
 
-/* Columnas */
+/* Columnas (también usado por guarderia.html) */
 .column {
   background: rgb(250, 250, 250);
   border-radius: 14px;
@@ -124,64 +29,10 @@ body {
   margin-bottom: 8px;
 }
 
-/* Party (columna izquierda) */
-.party-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-
-.party-slot {
-  display: grid;
-  grid-template-columns: 60px 1fr auto; /* más espacio para el sprite */
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 2px solid #dac6f0;
-  background: rgba(255, 255, 255, 0.55);
-  font-size: 0.8rem;
-}
-
-.party-slot.empty {
-  background: rgba(255, 255, 255, 0.55);
-  color: #9ba0c5;
-  justify-content: center;
-  grid-template-columns: 1fr;
-  text-align: center;
-}
-
-.party-sprite {
-  width: 55px;
-  height: 55px;
-  object-fit: contain;
-}
-
-.party-main {
-  display: flex;
-  flex-direction: column;
-  margin-left: 2px; /* un pequeño respiro entre sprite y texto */
-}
-
-.party-name {
-  font-weight: 700;
-  color: #242746;
-}
-
-.party-level {
-  font-size: 0.75rem;
-  color: #555a83;
-}
-
-.party-slot.selected {
-  outline: 2px solid #f3ca3b;
-  box-shadow: 0 0 0 2px rgba(243, 202, 59, 0.7);
-}
-
-/* Caja (columna central) */
+/* Caja (columna principal) */
 .box-column {
   justify-content: space-between;
+  min-height: 0; /* permite que box-grid tome su alto real disponible */
 }
 
 .box-header {
@@ -212,25 +63,38 @@ body {
   font-size: 0.95rem;
   font-weight: 700;
   color: #252849;
-  padding: 4px 10px;
+  padding: 4px 28px 4px 14px;
   border-radius: 999px;
+  text-align: center;
+  cursor: pointer;
+  width: auto;
+  max-width: 220px;
+  margin-bottom: 0;
 }
 
-/* Grid de caja más grande (5x5) */
-/* Sin altura fija para que no invada la barra inferior */
+/* Grid de la caja: casillas de tamaño fijo (80px, igual que el sprite).
+   "auto-fill" solo calcula cuántas columnas de ese tamaño exacto caben en
+   el ancho disponible — no las agranda ni las achica. Con casillas de
+   tamaño fijo, en ventanas angostas caben menos columnas y hacen falta más
+   filas; si esas filas no caben en el alto disponible, la caja hace scroll
+   interno (nunca corta contenido ni estira el marco). */
 .box-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 1fr);
-  gap: 12px;
-  padding: 18px;
+  grid-template-columns: repeat(auto-fill, 80px);
+  justify-content: center;
+  align-content: start;
+  gap: 14px;
+  padding: 20px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
-/* Slots más grandes */
+/* Slots */
 .box-slot {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1; /* cuadrado perfecto */
+  aspect-ratio: 1 / 1; /* cuadrado perfecto, con o sin pokémon */
   background: rgba(255, 255, 255, 0.55);
   border-radius: 12px;
   border: 2px dashed #dac6f0;
@@ -238,7 +102,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding-top: 6px;
+  overflow: hidden; /* evita que el sprite estire el slot y lo vuelva rectangular */
   transition: 0.15s;
 }
 
@@ -258,8 +122,8 @@ body {
 }
 
 .box-slot-sprite {
-  width: 70px;
-  height: 70px;
+  width: 76px;
+  height: 76px;
   object-fit: contain;
 }
 
@@ -281,27 +145,8 @@ body {
 .box-footer {
   display: flex;
   justify-content: center;
-}
-
-/* Botones principales */
-.btn-primary {
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: none;
-  background: #f3ca3b;
-  color: #2a2511;
-  font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
-}
-
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-  filter: brightness(1.05);
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* Detalle (columna derecha) */
@@ -310,15 +155,83 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   padding-bottom: 20px;
+  min-height: 0; /* evita que al mostrar el detalle se estire el marco */
+}
+
+.detail-panel-header {
+  position: relative;
+  height: 0;
+}
+
+.kebab-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(218, 198, 240, 0.6);
+  color: #252849;
+  font-size: 0.95rem;
+  cursor: pointer;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.kebab-btn:hover {
+  background: #dac6f0;
+  transform: translateY(-1px);
+}
+
+.kebab-menu {
+  position: absolute;
+  top: 38px;
+  right: 4px;
+  z-index: 10;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #d4d6f3;
+  box-shadow: 0 6px 18px rgba(44, 44, 44, 0.22);
+  overflow: hidden;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+.kebab-menu-item {
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #252849;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.kebab-menu-item:hover {
+  background: #eceeff;
+}
+
+.kebab-menu-item-danger {
+  color: #e53e3e;
 }
 
 .detail-card {
   flex: 1;
   height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   padding: 8px;
   border-radius: 12px;
+  overflow-y: auto; /* si el contenido no cabe, scroll interno en vez de empujar */
 }
 
 .detail-empty {
@@ -329,10 +242,6 @@ body {
   text-align: center;
   font-size: 0.85rem;
   color: #7f83a9;
-}
-
-.hidden {
-  display: none !important;
 }
 
 .detail-content {
@@ -422,19 +331,6 @@ body {
   margin-top: 6px;
 }
 
-/* Permitir que select se vea como los inputs */
-select.input {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, #7c3aed 50%),
-    linear-gradient(135deg, #7c3aed 50%, transparent 50%);
-  background-position: calc(100% - 14px) 50%, calc(100% - 8px) 50%;
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
-  padding-right: 26px;
-}
-
 /* Acciones detalle en columna */
 .detail-actions {
   display: flex;
@@ -448,254 +344,6 @@ select.input {
   padding: 12px 18px;
   font-size: 15px;
 }
-
-/* Botones secundarios UNIFICADOS (Actualizar / Mover / Retirar / Liberar) */
-.btn-secondary,
-.btn-accent,
-.btn-danger {
-  padding: 12px 18px;
-  border-radius: 999px;
-  border: none;
-  font-size: 0.9rem;
-  cursor: pointer;
-  font-weight: 700;
-  background: #dac6f0; /* gris-violeta claro, como "Actualizar" */
-  color: #252849; /* texto gris oscuro */
-  font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  transition: filter 0.1s ease, transform 0.1s ease;
-}
-
-.btn-secondary:hover,
-.btn-accent:hover,
-.btn-danger:hover {
-  filter: brightness(1.05);
-  transform: translateY(-1px);
-}
-
-/* Barra inferior */
-.bottom-bar {
-  height: 40px;
-  margin-top: 6px;
-  background: rgba(201, 87, 176, 0.8);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-}
-
-.bottom-hint {
-  color: #ffffff;
-  font-size: 0.8rem;
-}
-
-/* Inputs y labels (para modales) */
-.label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #3b3f63;
-  margin-bottom: 2px;
-  display: block;
-}
-
-.input {
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 2px solid #dac6f0;
-  background: #ffffff;
-  font-size: 0.85rem;
-  outline: none;
-  margin-bottom: 6px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.input:focus {
-  border-color: #4f6ee8;
-  box-shadow: 0 0 0 2px rgba(79, 110, 232, 0.25);
-}
-
-/* Modales */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(5, 8, 23, 0.65);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-}
-
-.modal {
-  width: min(100% - 32px, 420px);
-  background: rgb(250, 250, 250);
-  border-radius: 18px;
-  padding: 20px; 
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-  display: flex !important;
-  flex-direction: column !important; 
-  gap: 12px;
-  position: relative;
-  height: auto !important; 
-  max-height: 90vh; 
-  overflow-y: auto; 
-}
-
-.notes-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.modal-title {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #232542;
-  margin-bottom: 4px;
-}
-
-.modal-body {
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-footer {
-  margin-top: auto; /* Empuja los botones al final si el modal tiene altura fija */
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  width: 100%;
-  padding-top: 10px;
-}
-
-.modal-helper {
-  font-size: 0.75rem;
-  color: #6a6f9a;
-  margin-top: 2px;
-}
-
-/* Lista de sugerencias */
-.suggest-list {
-  list-style: none;
-  margin-top: -2px;
-  margin-bottom: 6px;
-  border-radius: 10px;
-  border: 1px solid #d4d6f3;
-  background: #ffffff;
-  max-height: 130px;
-  overflow-y: auto;
-  font-size: 0.75rem;
-}
-
-.suggest-item {
-  padding: 4px 8px;
-  cursor: pointer;
-}
-
-.suggest-item:hover {
-  background: #eceeff;
-}
-
-/* Responsivo */
-@media (max-width: 960px) {
-  .bg-main {
-    align-items: flex-start; /* 👈 ya no centramos verticalmente la pantalla */
-    padding: 12px 0;
-  }
-
-  .screen-frame {
-    width: 100%;
-    border-radius: 0;
-    box-shadow: none;
-    aspect-ratio: auto; /* deja de forzar 16:9 */
-    min-height: 100vh; /* puede crecer lo que necesite */
-    height: auto;
-  }
-
-  .main-layout {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px 6px 12px;
-  }
-
-  .column {
-    min-height: auto;
-  }
-}
-
-/* Ajustes extra para móvil (nav + barra inferior) */
-@media (max-width: 640px) {
-  .top-bar {
-    height: auto; /* ya no altura fija */
-    padding: 6px 10px;
-    flex-direction: column; /* título arriba, tabs abajo */
-    align-items: flex-start;
-  }
-
-  .top-bar-title {
-    font-size: 0.85rem;
-  }
-
-  .top-bar-right {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 6px;
-    font-size: 0.75rem;
-  }
-
-  .top-nav-btn {
-    font-size: 0.7rem;
-    padding: 3px 8px; /* pills un poquito más compactas */
-  }
-
-  .bottom-bar {
-    height: auto;
-    min-height: 40px;
-    padding: 6px 10px;
-  }
-
-  .bottom-hint {
-    font-size: 0.75rem;
-  }
-}
-
-/* Grid de la caja en pantallas pequeñas */
-@media (max-width: 640px) {
-  .box-grid {
-    grid-template-columns: repeat(4, 1fr); /* de 5 → 4 columnas */
-    gap: 8px; /* menos espacio entre cubos */
-    padding: 10px 8px 14px; /* menos padding lateral */
-  }
-
-  .box-slot {
-    border-width: 1.5px; /* un poco más finito para que se vea más aire */
-  }
-}
-
-/* ================================
-   BOTONES UNIFICADOS EN LA COLUMNA DERECHA
-   ================================ */
-
-.pkmn-action-btn:hover {
-  background: #cfd5ff;
-}
-
-.pkmn-action-btn:active {
-  background: #bcc3ff;
-}
-
-.pkmn-action-btn.danger {
-  background: #ffdfe0; /* para diferenciar liberar sin usar rojo fuerte */
-  color: #8a0010;
-}
-
-.pkmn-action-btn.danger:hover {
-  background: #ffcccc;
-}
-
-/* === Botones del panel derecho (Actualizar / Mover / Liberar) === */
 
 .detail-actions .btn-action {
   width: 100%;
@@ -723,62 +371,84 @@ select.input {
   transform: translateY(0);
 }
 
-/* ================================
-   BOTONES DE TABLAS (info-tab-btn)
-   Estilo unificado como "Actualizar"
-================================ */
+.box-manager-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
 
-.info-tab-btn {
-  padding: 8px 18px;
-  border-radius: 999px; /* redondo tipo pastilla */
-  border: none;
-  background: #dde1ff; /* gris-violeta suave */
-  color: #252849; /* texto gris oscuro */
-  font-family: "Nunito", sans-serif;
-  font-size: 0.9rem;
-  font-weight: 700;
+.box-manager-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.box-manager-name-input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.box-manager-count {
+  font-size: 0.75rem;
+  color: #718096;
+  white-space: nowrap;
+  min-width: 44px;
+  text-align: center;
+}
+
+.box-manager-arrow {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid #dac6f0;
+  background: #ffffff;
   cursor: pointer;
-  margin-right: 8px;
-  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
+  font-size: 0.7rem;
+  color: #6b46c1;
+  flex-shrink: 0;
 }
 
-.info-tab-btn:hover {
-  background: #cfd5ff;
-  transform: translateY(-2px);
+.box-manager-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
-.info-tab-btn:active {
-  transform: translateY(0);
+.notes-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
-/* Botón activo (igual que los tabs principales) */
-.info-tab-btn-active {
-  background: #f3ca3b; /* amarillo estilo "activo" */
-  color: #2a2511;
+/* Lista de sugerencias (autocompletado especie/apodo) */
+.suggest-list {
+  list-style: none;
+  margin-top: -2px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  border: 1px solid #d4d6f3;
+  background: #ffffff;
+  max-height: 130px;
+  overflow-y: auto;
+  font-size: 0.75rem;
 }
 
-.info-tab-buttons {
-  margin-bottom: 16px; /* Ajusta este valor a lo que prefieras */
-}
-
-.nav-btn-icon {
-  background: transparent;
-  border: none;
-  padding: 6px 10px;
-  font-size: 1.2rem; /* tamaño del icono */
+.suggest-item {
+  padding: 4px 8px;
   cursor: pointer;
-  color: #fff; /* ajusta al color de tu navbar */
 }
 
-.nav-btn-icon:hover {
-  opacity: 0.7;
+.suggest-item:hover {
+  background: #eceeff;
 }
 
 #edit-notes-input {
   width: 100%;
   min-height: 110px;
   max-height: 150px; /* Evitamos que crezca infinitamente */
-  resize: none; 
+  resize: none;
   font-family: inherit;
   line-height: 1.5;
   margin-bottom: 4px;
@@ -793,77 +463,30 @@ select.input {
   color: #718096;
   margin-bottom: 15px; /* Espacio extra para separar de los botones */
 }
-/* Contenedor principal del menú */
-.side-nav {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: rgba(0, 0, 0, 0.4); /* Fondo oscurecido */
-    display: flex;
-    justify-content: flex-start; /* CAMBIO: Ahora alinea el contenido a la IZQUIERDA */
-    transition: opacity 0.3s ease;
-}
 
-/* El panel blanco del menú */
-.side-nav-content {
-    width: 280px;
-    height: 100%;
-    background: linear-gradient(180deg, #fdf5f8 0%, #ffe4f2 100%);
-    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2); /* CAMBIO: Sombra hacia la derecha */
-    padding: 20px;
+/* Responsivo (el ajuste de .screen-frame para que crezca con el contenido
+   ahora vive centralizado en base.css) */
+@media (max-width: 960px) {
+  .main-layout {
     display: flex;
     flex-direction: column;
-    animation: slideInLeft 0.3s ease-out; /* Nueva animación */
+    gap: 10px;
+    padding: 10px 6px 12px;
+  }
+
+  .column {
+    min-height: auto;
+  }
 }
 
-/* Animación para que salga desde la izquierda */
-@keyframes slideInLeft {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
-}
+/* Grid de la caja en pantallas pequeñas */
+@media (max-width: 640px) {
+  .box-grid {
+    gap: 8px; /* menos espacio entre cubos */
+    padding: 10px 8px 14px; /* menos padding lateral */
+  }
 
-.menu-title {
-    font-family: 'Nunito', cursive;
-    font-size: 0.75rem;
-    color: #c957b0;
-    margin-bottom: 30px;
-    text-align: center;
+  .box-slot {
+    border-width: 1.5px; /* un poco más finito para que se vea más aire */
+  }
 }
-
-.menu-links {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.menu-link {
-    text-decoration: none;
-    color: #373b5c;
-    font-weight: 800;
-    font-size: 0.95rem;
-    padding: 10px 15px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.4);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: all 0.2s;
-}
-
-.menu-link:hover {
-    background: #f3ca3b;
-    color: #2a2511;
-    transform: translateX(-5px);
-}
-
-.close-btn {
-    align-self: flex-end;
-    background: none;
-    border: none;
-    font-size: 2rem;
-    color: #c957b0;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.text-red { color: #e53e3e !important; }

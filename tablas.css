@@ -1,4 +1,5 @@
-/* tablas.css */
+/* tablas.css - Información general (tablas.html)
+   Depende de base.css para reset, marco, barras y menú lateral. */
 
 .main-layout {
   display: flex;
@@ -154,81 +155,6 @@
 .info-table strong {
   color: #0f172a;
 }
-
-/* Contenedor principal del menú */
-.side-nav {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: rgba(0, 0, 0, 0.4); /* Fondo oscurecido */
-    display: flex;
-    justify-content: flex-start; /* CAMBIO: Ahora alinea el contenido a la IZQUIERDA */
-    transition: opacity 0.3s ease;
-}
-
-/* El panel blanco del menú */
-.side-nav-content {
-    width: 280px;
-    height: 100%;
-    background: linear-gradient(180deg, #fdf5f8 0%, #ffe4f2 100%);
-    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2); /* CAMBIO: Sombra hacia la derecha */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    animation: slideInLeft 0.3s ease-out; /* Nueva animación */
-}
-
-/* Animación para que salga desde la izquierda */
-@keyframes slideInLeft {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
-}
-
-.menu-title {
-    font-family: 'Nunito', cursive;
-    font-size: 0.75rem;
-    color: #c957b0;
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-.menu-links {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.menu-link {
-    text-decoration: none;
-    color: #373b5c;
-    font-weight: 800;
-    font-size: 0.95rem;
-    padding: 10px 15px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.4);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: all 0.2s;
-}
-
-.menu-link:hover {
-    background: #f3ca3b;
-    color: #2a2511;
-    transform: translateX(-5px);
-}
-
-.close-btn {
-    align-self: flex-end;
-    background: none;
-    border: none;
-    font-size: 2rem;
-    color: #c957b0;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.text-red { color: #e53e3e !important; }
 
 /* --- ACORDEÓN DE PREGUNTAS FRECUENTES (FAQ) --- */
 .faq-container {

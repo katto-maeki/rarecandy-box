@@ -89,6 +89,22 @@ window.renderTrainerLabelFromGame =
   };
 
 // =======================
+// Helper: sprites vía CDN (evita el rate-limit de raw.githubusercontent.com)
+// =======================
+window.MYSTERY_EGG_SPRITE = "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/mystery-egg.png";
+
+window.toCdnSpriteUrl = function toCdnSpriteUrl(url, fallback = "") {
+  if (!url || typeof url !== "string") return fallback;
+  if (url.includes("raw.githubusercontent.com/PokeAPI/sprites/master")) {
+    return url.replace(
+      "raw.githubusercontent.com/PokeAPI/sprites/master",
+      "cdn.jsdelivr.net/gh/PokeAPI/sprites@master"
+    );
+  }
+  return url;
+};
+
+// =======================
 // Helper: botón de logout
 // =======================
 window.setupLogoutButton = function setupLogoutButton(buttonId = "btn-logout") {

@@ -1,57 +1,47 @@
 /* =========================================
-   ADMIN.CSS - Layout de Dashboard Fijo
+   ADMIN.CSS - Layout de Dashboard Fijo (admin.html)
+   Depende de base.css para el reset, menú lateral, modales,
+   formularios y botones. El fondo/marco son propios porque
+   este panel usa un layout fijo sin scroll de página, a
+   diferencia del resto del sitio.
    ========================================= */
 
-/* 1. Bloqueamos el scroll de la página completa */
+/* Bloqueamos el scroll de la página completa */
 html, body {
-  height: 100%;
-  margin: 0;
   overflow: hidden; /* Adiós al scroll de la ventana principal */
 }
 
-/* 2. El fondo ocupa toda la pantalla y centra el frame */
+/* El fondo ocupa toda la pantalla y centra el frame (fijo, sin scroll) */
 .bg-main {
   height: 100vh;
   width: 100vw;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #ffeef5; /* Color de fondo base */
-  background-image: url("https://i.ibb.co/GfZTxGcp/CRUZZZZZ.png"); /* Tu patrón */
-  background-repeat: repeat;
-  background-size: 20px 20px;
+  background-color: #ffeef5; /* Color de fondo base propio del panel admin */
 }
 
-/* 3. El marco principal tiene tamaño fijo relativo a la pantalla */
+/* El marco principal tiene tamaño fijo relativo a la pantalla */
 .screen-frame {
   width: 95%;
   max-width: 1250px;
+  aspect-ratio: unset;
   height: 92vh; /* Fijo al 92% de la altura de la pantalla */
-  display: flex;
-  flex-direction: column; /* Apila Header - Main - Footer */
-  background: linear-gradient(135deg, #ffeef5 0%, #ffe4f2 35%, #fde2dc 100%);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   overflow: hidden; /* Importante: nada se sale del marco */
-  padding: 10px;
-  box-sizing: border-box;
 }
 
 /* Header y Footer fijos (no se encogen) */
 .top-bar, .bottom-bar {
-  flex-shrink: 0; 
+  flex-shrink: 0;
 }
 
-/* 4. Área principal (ocupa el espacio sobrante) */
+/* Área principal (ocupa el espacio sobrante) */
 .admin-main {
-  flex: 1; /* Ocupa todo el espacio vertical disponible entre header y footer */
+  flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Evita que este contenedor crezca */
-  padding: 10px 0; /* Espacio arriba y abajo */
+  overflow: hidden;
+  padding: 10px 0;
 }
 
-/* 5. Tarjeta blanca contenedora */
+/* Tarjeta blanca contenedora */
 .admin-panel {
   background: #fff;
   border-radius: 16px;
@@ -59,8 +49,8 @@ html, body {
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
-  height: 100%; /* Llena el admin-main */
-  overflow: hidden; /* Evita desbordes */
+  height: 100%;
+  overflow: hidden;
 }
 
 .admin-header-row {
@@ -81,13 +71,13 @@ html, body {
   font-size: 0.85rem;
 }
 
-/* 6. Grid de columnas */
+/* Grid de columnas */
 .admin-columns {
   display: grid;
   grid-template-columns: 320px 1fr; /* Izquierda fija, derecha flexible */
   gap: 15px;
-  flex: 1; /* Ocupa el resto de la altura */
-  min-height: 0; /* TRUCO CSS: Permite que el grid haga scroll interno */
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -118,12 +108,12 @@ html, body {
 
 /* LISTA CON SCROLL */
 .admin-player-list {
-  flex: 1; /* Ocupa espacio restante */
-  overflow-y: auto; /* SCROLL AQUÍ */
+  flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  padding-right: 5px; /* Espacio para la barra de scroll */
+  padding-right: 5px;
 }
 
 /* Estilo de fila de jugador */
@@ -158,7 +148,7 @@ html, body {
   border: 1px solid #eee;
   padding: 20px;
   height: 100%;
-  overflow-y: auto; /* SCROLL AQUÍ si el detalle es muy largo */
+  overflow-y: auto;
   position: relative;
 }
 
@@ -213,7 +203,6 @@ html, body {
 .money { color: #0fb86b; }
 .text-blue { color: #3182ce; }
 .text-green { color: #38a169; }
-.text-red { color: #e53e3e; }
 
 /* Dropdowns de Pokémon */
 .admin-poke-dropdown {
@@ -264,11 +253,7 @@ html, body {
 
 /* MODAL TWEAKS */
 #adm-item-manager-container .item-manager-row {
-    padding: 8px 0;
     border-bottom: 1px solid #f0f0f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 /* RESPONSIVE */
@@ -338,78 +323,3 @@ html, body {
   color: #0369a1;
   font-weight: 600;
 }
-
-/* Contenedor principal del menú */
-.side-nav {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: rgba(0, 0, 0, 0.4); /* Fondo oscurecido */
-    display: flex;
-    justify-content: flex-start; /* CAMBIO: Ahora alinea el contenido a la IZQUIERDA */
-    transition: opacity 0.3s ease;
-}
-
-/* El panel blanco del menú */
-.side-nav-content {
-    width: 280px;
-    height: 100%;
-    background: linear-gradient(180deg, #fdf5f8 0%, #ffe4f2 100%);
-    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2); /* CAMBIO: Sombra hacia la derecha */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    animation: slideInLeft 0.3s ease-out; /* Nueva animación */
-}
-
-/* Animación para que salga desde la izquierda */
-@keyframes slideInLeft {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
-}
-
-.menu-title {
-    font-family: 'Nunito', cursive;
-    font-size: 0.75rem;
-    color: #c957b0;
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-.menu-links {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.menu-link {
-    text-decoration: none;
-    color: #373b5c;
-    font-weight: 800;
-    font-size: 0.95rem;
-    padding: 10px 15px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.4);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: all 0.2s;
-}
-
-.menu-link:hover {
-    background: #f3ca3b;
-    color: #2a2511;
-    transform: translateX(-5px);
-}
-
-.close-btn {
-    align-self: flex-end;
-    background: none;
-    border: none;
-    font-size: 2rem;
-    color: #c957b0;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.text-red { color: #e53e3e !important; }

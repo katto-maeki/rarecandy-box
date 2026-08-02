@@ -26,7 +26,6 @@ function initHamburgerMenu() {
     const btnMenu = document.getElementById("btn-menu");
     const sideMenu = document.getElementById("side-menu");
     const btnClose = document.getElementById("btn-close-menu");
-    const btnLogoutSide = document.getElementById("btn-logout-side");
 
     if (btnMenu && sideMenu) {
         btnMenu.onclick = () => sideMenu.classList.remove("hidden");
@@ -36,14 +35,7 @@ function initHamburgerMenu() {
         };
     }
 
-    if (btnLogoutSide) {
-        btnLogoutSide.onclick = (e) => {
-            e.preventDefault();
-            window.supabaseClient.auth.signOut().then(() => {
-                window.location.href = "index.html";
-            });
-        };
-    }
+    if (typeof setupLogoutButton === "function") setupLogoutButton("btn-logout-side");
 }
 
 // ==========================================
@@ -216,6 +208,7 @@ async function loadActivityLog() {
             "checkpoint", 
             "evolution_narrative",
             "otros_manual",
+            "otros", // <-- "Otros" generado fuera del formulario manual (ej. regalos de ítems en Mochila)
             "trade_narrative" // <-- Cambiado de "trade" a "trade_narrative"
         ];
 
@@ -230,7 +223,7 @@ async function loadActivityLog() {
             encounter: "Encounter", quest: "Quest", pokedex_comu: "Pokedex Comu.",
             pokedex_legen: "Pokedex Leg.", pokewords: "Pokéwords", freemode: "Freemode",
             passport: "Passport", evolution_narrative: "Evolución", trade_narrative: "Intercambio", // <-- Mapeado aquí
-            checkpoint: "Checkpoint", otros_manual: "Otros", 
+            checkpoint: "Checkpoint", otros_manual: "Otros", otros: "Otros",
             exploration: "Exploración", coloring: "Coloreo",
             egg_challenge: "Reto Huevo"
         };

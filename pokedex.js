@@ -2,10 +2,12 @@
 
 const POKE_TABLE = "sorelle_pokedex";
 const DISCOVERY_TABLE = "sorelle_discoveries";
+const GAME_TABLE = "user_game_data";
 
 // Variables globales para el filtro
 let allSpecies = [];
 let allDiscoveries = [];
+let trainerNameById = {}; // Nombre ACTUAL de cada usuario, indexado por su UUID
 
 // Configuración de Tipos (Español + Colores)
 const TYPE_META = {
@@ -36,7 +38,6 @@ function initHamburgerMenu() {
     const btnMenu = document.getElementById("btn-menu");
     const sideMenu = document.getElementById("side-menu");
     const btnClose = document.getElementById("btn-close-menu");
-    const btnLogoutSide = document.getElementById("btn-logout-side");
 
     if (btnMenu && sideMenu) {
         btnMenu.onclick = () => {
@@ -52,19 +53,7 @@ function initHamburgerMenu() {
         };
     }
 
-    if (btnLogoutSide) {
-        btnLogoutSide.onclick = (e) => {
-            e.preventDefault();
-            // Si existe la función de logout en core.js o el botón original
-            const originalLogout = document.getElementById("btn-logout");
-            if (originalLogout) originalLogout.click();
-            else {
-                window.supabaseClient.auth.signOut().then(() => {
-                    window.location.href = "index.html";
-                });
-            }
-        };
-    }
+    if (typeof setupLogoutButton === "function") setupLogoutButton("btn-logout-side");
 }
 
 // ==========================================
@@ -79,7 +68,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         if(typeof renderTrainerLabelFromGame === 'function') await renderTrainerLabelFromGame();
-        if(typeof setupLogoutButton === 'function') setupLogoutButton();
     } catch (e) {}
 
     // 2. Inicializar Menú Hamburguesa
@@ -101,13 +89,23 @@ async function loadPokedex() {
     const supabase = window.supabaseClient;
 
     try {
-        const { data: species, error: err1 } = await supabase.from(POKE_TABLE).select("*").order("created_at", { ascending: false });
-        const { data: discoveries, error: err2 } = await supabase.from(DISCOVERY_TABLE).select("pokedex_id, trainer_name");
+        const [
+            { data: species, error: err1 },
+            { data: discoveries, error: err2 },
+            { data: users, error: err3 },
+        ] = await Promise.all([
+            supabase.from(POKE_TABLE).select("*").order("created_at", { ascending: false }),
+            supabase.from(DISCOVERY_TABLE).select("pokedex_id, trainer_name, user_id"),
+            supabase.from(GAME_TABLE).select("id, trainer_name"),
+        ]);
 
-        if (err1 || err2) throw err1 || err2;
+        if (err1 || err2 || err3) throw err1 || err2 || err3;
 
         allSpecies = species || [];
         allDiscoveries = discoveries || [];
+
+        trainerNameById = {};
+        (users || []).forEach((u) => { trainerNameById[u.id] = u.trainer_name; });
 
         populateRegionFilter();
         renderGrid(allSpecies);
@@ -154,14 +152,14 @@ function renderGrid(speciesList) {
     speciesList.forEach((poke) => {
       const finders = allDiscoveries
         .filter((d) => d.pokedex_id === poke.id)
-        .map((d) => d.trainer_name || "Anónimo");
+        .map((d) => (d.user_id && trainerNameById[d.user_id]) || d.trainer_name || "Anónimo");
       
       const uniqueFinders = [...new Set(finders)];
 
       const slot = document.createElement("div");
       slot.className = "poke-slot";
       
-      const imgUrl = poke.image_url || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
+      const imgUrl = window.toCdnSpriteUrl(poke.image_url, "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png");
       slot.innerHTML = `<img src="${imgUrl}" alt="${poke.name}" class="slot-img">`;
 
       slot.addEventListener("click", () => {
@@ -179,7 +177,7 @@ function renderDetail(poke, finders) {
     document.getElementById("detail-content")?.classList.remove("hidden");
 
     const imgEl = document.getElementById("detail-img");
-    if(imgEl) imgEl.src = poke.image_url || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png";
+    if(imgEl) imgEl.src = window.toCdnSpriteUrl(poke.image_url, "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png");
     
     setTextById("detail-name", poke.name);
     setTextById("detail-region", poke.season || "SORELLE");

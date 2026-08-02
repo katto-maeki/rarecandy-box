@@ -33,19 +33,20 @@ async function loadSocialHubData() {
   const supabase = window.supabaseClient;
 
   try {
-    // 1. Descargar entrenadores registrados
-    const { data: allGames } = await supabase.from(GAME_TABLE).select("id, trainer_name, user_tag");
-    
-    // 2. Descargar los inventarios para extraer las fotos de perfil Y las etiquetas
-    const { data: allInventories } = await supabase.from(TRAINER_TABLE).select("user_id, inventory");
+    // 1. Descargar entrenadores registrados y 2. sus inventarios (fotos de
+    // perfil y etiquetas), en paralelo: son consultas independientes.
+    const [{ data: allGames }, { data: allInventories }] = await Promise.all([
+      supabase.from(GAME_TABLE).select("id, trainer_name, user_tag"),
+      supabase.from(TRAINER_TABLE).select("user_id, inventory"),
+    ]);
 
     // Crear un mapa de metadatos rápido
     let metaMap = {};
     if (allInventories) {
       allInventories.forEach(row => {
         metaMap[row.user_id] = {
-          avatar: row.inventory?.avatarUrl || "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/mystery-egg.png",
-          tags: row.inventory?.tags || [] 
+          avatar: window.toCdnSpriteUrl(row.inventory?.avatarUrl, window.MYSTERY_EGG_SPRITE),
+          tags: row.inventory?.tags || []
         };
       });
     }
@@ -57,7 +58,7 @@ async function loadSocialHubData() {
         // CORREGIDO: Si el entrenador está en la lista negra, no lo agregamos al mapa ni al directorio
         if (HIDDEN_USERS.includes(trainer.id)) return;
 
-        const meta = metaMap[trainer.id] || { avatar: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/mystery-egg.png", tags: [] };
+        const meta = metaMap[trainer.id] || { avatar: window.MYSTERY_EGG_SPRITE, tags: [] };
         userMap[trainer.id] = {
           name: trainer.name || trainer.trainer_name || "Entrenador",
           tag: trainer.user_tag || "0000",
@@ -240,18 +241,11 @@ function initHamburgerMenu() {
   const btnMenu = $("btn-menu");
   const sideMenu = $("side-menu");
   const btnClose = $("btn-close-menu");
-  const btnLogoutSide = $("btn-logout-side");
 
   if (btnMenu && sideMenu) {
     btnMenu.onclick = () => { sideMenu.classList.remove("hidden"); };
     if (btnClose) { btnClose.onclick = () => sideMenu.classList.add("hidden"); }
     sideMenu.onclick = (e) => { if (e.target === sideMenu) sideMenu.classList.add("hidden"); };
   }
-  if (btnLogoutSide) {
-    btnLogoutSide.onclick = (e) => {
-      e.preventDefault();
-      const originalLogoutBtn = $("btn-logout");
-      if (originalLogoutBtn) originalLogoutBtn.click();
-    };
-  }
+  if (typeof setupLogoutButton === "function") setupLogoutButton("btn-logout-side");
 }

@@ -1,4 +1,6 @@
-/* perfil.css - Maquetación Avanzada de Perfil Basada en Boceto */
+/* perfil.css - Perfil de entrenador (perfil.html, también reutilizado
+   por social.html y eventos.html). Depende de base.css para reset,
+   marco, barras, menú, modales, formularios y botones. */
 
 .new-profile-layout {
   flex: 1;
@@ -133,10 +135,22 @@ main.new-profile-layout .profile-bottom-grid .horizontal-row-card h3.row-card-ti
 
 /* Scroll horizontal */
 .horizontal-scroller {
+  flex: 1;
   display: flex;
+  align-items: flex-start;
   gap: 10px;
   overflow-x: auto;
   padding: 4px 2px 8px 2px;
+  min-height: 96px; /* mantiene la misma altura aunque el panel esté vacío */
+}
+
+/* Centra el mensaje de "panel vacío" dentro de la altura reservada */
+.horizontal-scroller > p {
+  width: 100%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .horizontal-scroller::-webkit-scrollbar,
@@ -205,21 +219,59 @@ main.new-profile-layout .profile-bottom-grid .horizontal-row-card h3.row-card-ti
 .color-input { border: none; width: 40px; height: 26px; border-radius: 4px; cursor: pointer; background: none; }
 .text-gold { color: #facc15; }
 .text-green { color: #0fb86b; }
+.text-blue { color: #3182ce; }
 
-/* ==== REJILLA INFERIOR PARA HISTORIALES PARALELOS ==== */
-.profile-bottom-grid {
+/* ==== Panel Comunidad Sorelle ==== */
+.community-stats {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 32px;
+  align-items: center;
+  padding: 8px 0;
+  flex-wrap: wrap;
+}
+
+.community-stat-group {
+  text-align: center;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.community-stat-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #40435f;
+}
+
+.community-stat-value {
+  font-family: "Press Start 2P", system-ui, sans-serif;
+  font-size: 1.2rem;
+  color: #3b4cca;
+}
+
+/* ==== REJILLAS DE DOS COLUMNAS (historiales e intercambio/wishlist) ==== */
+.profile-bottom-grid,
+.profile-two-col-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
 }
 
 /* ==== OPTIMIZACIÓN RESPONSIVA ==== */
 @media (max-width: 768px) {
-  .profile-bottom-grid {
+  .profile-bottom-grid,
+  .profile-two-col-grid {
     grid-template-columns: 1fr;
   }
-  .banner-cover { 
-    height: 85px; 
+  .banner-cover {
+    height: 85px;
   }
 }

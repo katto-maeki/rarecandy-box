@@ -60,7 +60,6 @@ function initHamburgerMenu() {
     const btnMenu = document.getElementById("btn-menu");
     const sideMenu = document.getElementById("side-menu");
     const btnClose = document.getElementById("btn-close-menu");
-    const btnLogoutSide = document.getElementById("btn-logout-side");
 
     if (btnMenu && sideMenu) {
         btnMenu.onclick = () => sideMenu.classList.remove("hidden");
@@ -70,15 +69,7 @@ function initHamburgerMenu() {
         };
     }
 
-    if (btnLogoutSide) {
-        btnLogoutSide.onclick = async (e) => {
-            e.preventDefault();
-            if (window.supabaseClient) {
-                await window.supabaseClient.auth.signOut();
-                window.location.href = "index.html";
-            }
-        };
-    }
+    if (typeof setupLogoutButton === "function") setupLogoutButton("btn-logout-side");
 }
 
 // ==========================================
@@ -451,8 +442,19 @@ async function syncPokedexCount(targetId) {
     try {
         const { data: user } = await window.supabaseClient.from(GAME_TABLE).select("trainer_name").eq("id", targetId).single();
         if (!user) return 0;
-        const { count } = await window.supabaseClient.from(DISC_TABLE).select("*", { count: "exact", head: true }).eq("trainer_name", user.trainer_name);
-        return count || 0;
+
+        // Cuenta por user_id (vínculo estable, sobrevive a cambios de username).
+        const { count: byId } = await window.supabaseClient.from(DISC_TABLE)
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", targetId);
+
+        // Respaldo para registros muy antiguos sin user_id, vinculados solo por nombre.
+        const { count: legacyByName } = await window.supabaseClient.from(DISC_TABLE)
+            .select("*", { count: "exact", head: true })
+            .is("user_id", null)
+            .eq("trainer_name", user.trainer_name);
+
+        return (byId || 0) + (legacyByName || 0);
     } catch (e) { return 0; }
 }
 

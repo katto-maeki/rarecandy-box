@@ -1,62 +1,15 @@
-/* ===== Reset simple ===== */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* styles.css - Página de login (index.html)
+   Depende de base.css para reset, bg-main, screen-frame, top-bar,
+   bottom-bar, botones e inputs. Aquí solo overrides y layout propio. */
 
-html,
-body {
-  height: 100%;
-  font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-}
-
-/* ===== Fondo general tipo Pokémon Escarlata ===== */
-/* Fondo general con patrón repetido */
-.bg-main {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  /* color base por si tarda en cargar la imagen */
-  background-color: #12122a;
-
-  /* patrón */
-  background-image: url("https://i.ibb.co/GfZTxGcp/CRUZZZZZ.png");
-  background-repeat: repeat;
-  background-size: 20px 20px; /* ajusta el tamaño del patrón a tu gusto */
-}
-
-/* ===== Marco tipo pantalla 16:9 ===== */
-.screen-frame {
-  width: min(100%, 1100px);
-  aspect-ratio: 16 / 9;
-  background: linear-gradient(135deg, #ffeef5 0%, #ffe4f2 35%, #fde2dc 100%);
-  border-radius: 20px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-}
-
-/* ===== Barra superior ===== */
-.top-bar {
-  height: 40px;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  background: rgba(201, 87, 176, 0.8);
-  border-radius: 12px;
-}
-
-.top-bar-title {
-  color: #ffffff;
-  font-size: 0.95rem;
-  font-weight: 600;
+/* El botón de login es más grande, ancho completo y en mayúsculas
+   a diferencia del btn-primary "pill" que usa el resto del sitio. */
+.btn-primary {
+  margin-top: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  text-transform: uppercase;
+  font-size: 1rem;
 }
 
 /* ===== Panel central ===== */
@@ -113,73 +66,13 @@ body {
   gap: 12px;
 }
 
-.label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #3b3f63;
-}
-
-.input {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 2px solid #c5c8ee;
-  background: #ffffff;
-  font-size: 0.95rem;
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.input:focus {
-  border-color: #4f6ee8;
-  box-shadow: 0 0 0 2px rgba(79, 110, 232, 0.25);
-}
-
-/* Botón principal con estética de barra inferior */
-.btn-primary {
-  margin-top: 8px;
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: none;
-  background: #f3ca3b;
-  color: #2a2511;
-  font-size: 1rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  cursor: pointer;
-  outline: none;
-  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
-}
-
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-  filter: brightness(1.05);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
 /* Texto de ayuda */
 .helper-text {
   font-size: 0.8rem;
   color: #5b6081;
 }
 
-/* ===== Barra inferior tipo controles ===== */
-.bottom-bar {
-  height: 50px;
-  margin-top: 8px;
-  background: rgba(201, 87, 176, 0.8);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-}
-
+/* ===== Barra inferior ===== */
 .bottom-buttons {
   display: flex;
   justify-content: space-between;
@@ -187,19 +80,8 @@ body {
   align-items: center;
 }
 
-.bottom-hint {
-  color: #ffffff;
-  font-size: 0.8rem;
-}
-
 /* ===== Responsivo ===== */
 @media (max-width: 768px) {
-  .screen-frame {
-    width: 100%;
-    border-radius: 0;
-    box-shadow: none;
-  }
-
   .login-card {
     padding: 20px 18px;
   }
