@@ -3,7 +3,7 @@
 const POKEAPI_BASE = "https://pokeapi.co/api/v2";
 const TRAINER_META_KEY = "pokeTrainerMeta_v1";
 const BOX_SIZE = 32;
-const DEFAULT_MAX_BOXES = 8;
+const DEFAULT_MAX_BOXES = 10;
 
 // Variables globales dinámicas calculadas en el momento correcto
 let boxUserId = null;
@@ -176,6 +176,32 @@ async function loadState() {
   if (!Array.isArray(state.boxNames)) state.boxNames = [];
   state.boxNames = state.boxNames.slice(0, state.boxes.length);
   while (state.boxNames.length < state.boxes.length) state.boxNames.push(null);
+}
+
+// Limpieza única: un bug antiguo permitía crear decenas de cajas vacías por
+// error. Recorta las cajas vacías y sin nombre sobrantes al final del
+// arreglo, dejando como mínimo DEFAULT_MAX_BOXES cajas. Nunca toca cajas con
+// Pokémon o con nombre personalizado, y nunca reordena cajas existentes.
+// Devuelve true si recortó algo (para saber si hay que guardar).
+function trimExcessEmptyBoxes() {
+  if (!isOwnProfile) return false;
+  if (!Array.isArray(state.boxes) || state.boxes.length <= DEFAULT_MAX_BOXES) return false;
+
+  let lastKeptIndex = -1;
+  for (let i = state.boxes.length - 1; i >= 0; i--) {
+    const hasPokemon = state.boxes[i].some((slot) => slot !== null);
+    const hasName = !!state.boxNames[i];
+    if (hasPokemon || hasName) { lastKeptIndex = i; break; }
+  }
+
+  const targetLength = Math.max(DEFAULT_MAX_BOXES, lastKeptIndex + 1);
+  if (targetLength >= state.boxes.length) return false;
+
+  state.boxes = state.boxes.slice(0, targetLength);
+  state.boxNames = state.boxNames.slice(0, targetLength);
+  if (state.currentBoxIndex >= targetLength) state.currentBoxIndex = targetLength - 1;
+
+  return true;
 }
 
 // Mueve cualquier Pokémon que haya quedado en "party" (equipo actual, ya sin
@@ -759,7 +785,7 @@ async function openTrainingModal() {
     if (typeof currentInventory.xp !== 'number') currentInventory.xp = 0;
     if (!currentInventory.items) currentInventory.items = {};
 
-    document.getElementById("train-sprite").src = getSafeSpriteUrl(currentTrainingPoke.sprite);
+    document.getElementById("train-sprite").src = getSafeSpriteUrl(currentTrainingPoke);
     document.getElementById("train-name").textContent = currentTrainingPoke.apodo || currentTrainingPoke.nombre;
     document.getElementById("train-level-info").textContent = `Nivel: ${currentTrainingPoke.nivel} | Clase: ${currentTrainingPoke.clase}`;
     document.getElementById("global-xp-display").textContent = `${currentInventory.xp} XP`;
@@ -1429,7 +1455,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Migración única: si el entrenador tenía Pokémon en el antiguo "equipo
     // actual", pasan a la caja (esa columna ya no existe en la UI).
     const migratedFromParty = migratePartyIntoBox();
-    if (migratedFromParty) await saveState();
+    const trimmedBoxes = trimExcessEmptyBoxes();
+    if (migratedFromParty || trimmedBoxes) await saveState();
 
     renderTrainerName();
     renderBox();

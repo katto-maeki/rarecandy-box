@@ -628,7 +628,7 @@ function renderHistoryPanels(logs) {
     encounter: "Encounter", quest: "Quest", pokedex_comu: "Pokédex Comu.",
     pokedex_legen: "Pokédex Leg.", pokewords: "Pokéwords", freemode: "Freemode",
     passport: "Passport", checkpoint: "Checkpoint Mensual", trade: "Intercambio",
-    consume: "Consumo", bimonthly_close: "Cierre Bimestral", gacha_close: "Cierre de Evento", otros: "Otros"
+    consume: "Consumo", bimonthly_close: "Cierre Bimestral", otros: "Otros"
   };
 
   if (!logs || logs.length === 0) {
@@ -692,6 +692,15 @@ function renderHistoryPanels(logs) {
         break;
       case "trade":
         logContent = `🤝 <strong>Intercambio:</strong> ${log.activity_name}`;
+        break;
+      case "gacha_roll":
+        logContent = `🎰 <strong>Gachapón:</strong> Abrió un paquete de sobres: "${log.activity_name}"`;
+        break;
+      case "gacha_reward":
+        logContent = `⭐ <strong>Recompensa de Álbum:</strong> Reclamó "${log.activity_name}"`;
+        break;
+      case "gacha_close":
+        logContent = `🎟️ <strong>Cierre de Evento:</strong> ${log.activity_name} <span style="color:#0fb86b; font-weight:700;">+₽${log.money_reward}</span>`;
         break;
       default:
         const label = typeNames[log.activity_type] || log.activity_type;

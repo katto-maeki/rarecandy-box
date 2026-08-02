@@ -395,6 +395,7 @@ function renderView() {
     const mainNotesArea = $("inventory-notes-area");
     if (mainNotesArea) {
         mainNotesArea.value = meta.notes || "";
+        mainNotesArea.readOnly = true;
     }
 }
 

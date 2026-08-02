@@ -114,6 +114,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 
 .row-card-header {
@@ -142,6 +143,7 @@ main.new-profile-layout .profile-bottom-grid .horizontal-row-card h3.row-card-ti
   overflow-x: auto;
   padding: 4px 2px 8px 2px;
   min-height: 96px; /* mantiene la misma altura aunque el panel esté vacío */
+  min-width: 0; /* evita que el contenido fuerce el ancho del panel/grid */
 }
 
 /* Centra el mensaje de "panel vacío" dentro de la altura reservada */
@@ -260,7 +262,7 @@ main.new-profile-layout .profile-bottom-grid .horizontal-row-card h3.row-card-ti
 .profile-bottom-grid,
 .profile-two-col-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
   align-items: stretch;
 }

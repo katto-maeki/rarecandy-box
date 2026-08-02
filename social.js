@@ -169,6 +169,11 @@ let logContent = "";
         logContent = `⭐ ¡Recompensa de Progreso de Álbum! ${authorPrefix} reclamó el <strong>${log.activity_name}</strong>`;
         break;
 
+      // 🎟️ NUEVO: Registro del cierre de evento (conversión de tickets a pokecoins)
+      case "gacha_close":
+        logContent = `🎟️ ¡Cierre de Evento! ${authorPrefix} transformó sus tickets del Gachapón en <strong style="color:#0fb86b;">₽${log.money_reward} pokecoins</strong>`;
+        break;
+
       case "purchase":
         logContent = `🛒 ${authorPrefix} realizó una compra: "${log.activity_name}"`;
         break;
