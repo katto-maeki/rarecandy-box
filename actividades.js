@@ -16,7 +16,14 @@ const REWARDS_CONFIG = {
     passport:      { individual: [80, 80], pareja: [130, 100], grupal: [180, 120] },
     evolution_narrative: { individual: [100, 0] },
     trade_narrative:     { pareja: [100, 0] }, // <-- Cambiado aquí para diferenciar de la web
-    checkpoint:    { individual: [100, 0] }
+    checkpoint:    { individual: [100, 0] },
+    logros:        { individual: [50, 0] }
+};
+
+const QTY_LABELS = {
+    encounter: "¿Cuántos Pokémon mencionaste?",
+    coloring:  "¿Cuántos Pokémon coloreaste?",
+    logros:    "¿Cuántos logros registras?"
 };
 
 // ==========================================
@@ -66,13 +73,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             qtyRow.classList.add("hidden");
             selectPart.disabled = false;
 
-            if (val === "encounter" || val === "coloring") {
+            if (val === "encounter" || val === "coloring" || val === "logros") {
                 qtyRow.classList.remove("hidden");
-            } 
-            
+                const qtyLabel = document.getElementById("encounter-qty-label");
+                if (qtyLabel) qtyLabel.textContent = QTY_LABELS[val];
+            }
+
             if (val === "otros_manual") {
                 customRow.classList.remove("hidden");
-            } else if (["pokedex_comu", "pokedex_legen", "evolution_narrative", "checkpoint", "coloring", "egg_challenge"].includes(val)) {
+            } else if (["pokedex_comu", "pokedex_legen", "evolution_narrative", "checkpoint", "coloring", "egg_challenge", "logros"].includes(val)) {
                 selectPart.value = "individual";
                 selectPart.disabled = true;
             } else if (val === "trade_narrative") { // <-- Corregido para que bloquee el select con la nueva clave
@@ -111,7 +120,7 @@ async function handleRegisterActivity() {
         baseXP = reward[1];
     }
 
-    const isMultiplied = (type === "encounter" || type === "coloring");
+    const isMultiplied = (type === "encounter" || type === "coloring" || type === "logros");
     const finalMoney = isMultiplied ? (baseMoney * quantity) : baseMoney;
     const finalXP = isMultiplied ? (baseXP * quantity) : baseXP;
 
@@ -205,11 +214,12 @@ async function loadActivityLog() {
             "pokewords", 
             "freemode", 
             "passport", 
-            "checkpoint", 
+            "checkpoint",
             "evolution_narrative",
             "otros_manual",
             "otros", // <-- "Otros" generado fuera del formulario manual (ej. regalos de ítems en Mochila)
-            "trade_narrative" // <-- Cambiado de "trade" a "trade_narrative"
+            "trade_narrative", // <-- Cambiado de "trade" a "trade_narrative"
+            "logros"
         ];
 
         const data = rawData ? rawData.filter(act => allowedTypes.includes(act.activity_type)) : [];
@@ -225,7 +235,7 @@ async function loadActivityLog() {
             passport: "Passport", evolution_narrative: "Evolución", trade_narrative: "Intercambio", // <-- Mapeado aquí
             checkpoint: "Checkpoint", otros_manual: "Otros", otros: "Otros",
             exploration: "Exploración", coloring: "Coloreo",
-            egg_challenge: "Reto Huevo"
+            egg_challenge: "Reto Huevo", logros: "Logros"
         };
 
         let tableHTML = `

@@ -70,25 +70,40 @@
             <div class="admin-col admin-col-detail">
               <div id="player-detail-empty" class="admin-detail-empty">Selecciona un jugador...</div>
               <div id="player-detail-content" class="hidden">
-                
+
                 <div style="display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
                     <div><h2 id="det-name" style="margin:0; color:#312e81; font-family: 'Press Start 2P'; font-size: 1rem;">NOMBRE</h2><span id="det-id" style="font-size: 0.7rem; color: #999;">ID: ...</span></div>
                     <button id="btn-admin-edit" class="btn-edit" style="background-color: #e53e3e; color: white;">Modificar</button>
                 </div>
 
-                <div class="detail-grid">
-                    <div class="admin-mini-card"><h4>Economía</h4><div class="eco-row"><span>Disp:</span> <span class="money" id="det-money">0</span></div><div class="eco-row"><span>Ahorro:</span> <span class="text-blue" id="det-savings">0</span></div><div class="eco-row"><span>Ingreso:</span> <span class="text-green" id="det-income">0</span></div></div>
-                    <div class="admin-mini-card"><h4>Progreso</h4><div class="eco-row"><span>XP:</span> <strong id="det-xp" style="color:#7a47ff;">0</strong></div><div class="eco-row"><span>Logros:</span> <strong id="det-achievements">0</strong></div><div class="eco-row"><span>Pokédex:</span> <strong id="det-pokedex">0</strong></div></div>
+                <div class="admin-tabs">
+                    <button class="admin-tab-btn active" data-tab="tab-resumen">Resumen</button>
+                    <button class="admin-tab-btn" data-tab="tab-diario">Diario de Actividades</button>
                 </div>
 
-                <div class="admin-mini-card"><h4>Pokémon</h4><details class="admin-poke-dropdown"><summary>Equipo (<span id="det-party-count">0</span>)</summary><ul id="det-party-list" class="poke-text-list"></ul></details><details class="admin-poke-dropdown"><summary>Caja (<span id="det-box-count">0</span>)</summary><ul id="det-box-list" class="poke-text-list"></ul></details></div>
-                
-                <div class="admin-mini-card" style="margin-top:10px;"><h4>Inventario</h4><div id="det-inventory-list" class="admin-simple-list"></div></div>
-                
-                <div class="admin-mini-card" style="margin-top:10px;"><h4>Actividades del Bimestre</h4><div id="det-activities-list" class="admin-simple-list" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem;"></div></div>
-                
-                <div class="admin-mini-card" style="margin-top:10px;"><h4>Historial de Interacciones</h4><div id="det-interactions-list" class="admin-simple-list" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem;"></div></div>
-                
+                <div id="tab-resumen" class="admin-tab-panel">
+                    <div class="detail-grid">
+                        <div class="admin-mini-card"><h4>Economía</h4><div class="eco-row"><span>Disp:</span> <span class="money" id="det-money">0</span></div><div class="eco-row"><span>Ahorro:</span> <span class="text-blue" id="det-savings">0</span></div><div class="eco-row"><span>Ingreso:</span> <span class="text-green" id="det-income">0</span></div></div>
+                        <div class="admin-mini-card"><h4>Progreso</h4><div class="eco-row"><span>XP:</span> <strong id="det-xp" style="color:#7a47ff;">0</strong></div><div class="eco-row"><span>Logros:</span> <strong id="det-achievements">0</strong></div><div class="eco-row"><span>Pokédex:</span> <strong id="det-pokedex">0</strong></div></div>
+                    </div>
+
+                    <div class="admin-mini-card"><h4>Pokémon</h4><details class="admin-poke-dropdown"><summary>Equipo (<span id="det-party-count">0</span>)</summary><ul id="det-party-list" class="poke-text-list"></ul></details><details class="admin-poke-dropdown"><summary>Caja (<span id="det-box-count">0</span>)</summary><ul id="det-box-list" class="poke-text-list"></ul></details></div>
+
+                    <div class="admin-mini-card" style="margin-top:10px;"><h4>Inventario</h4><div id="det-inventory-list" class="admin-simple-list"></div></div>
+                </div>
+
+                <div id="tab-diario" class="admin-tab-panel hidden">
+                    <div class="admin-mini-card">
+                        <div class="diario-toolbar">
+                            <h4 style="margin:0; border:none; padding:0;">Registro Completo</h4>
+                            <select id="diario-filter-type" class="input diario-filter-select">
+                                <option value="all">Todos los tipos</option>
+                            </select>
+                        </div>
+                        <div id="det-diario-list" class="admin-simple-list diario-list"></div>
+                    </div>
+                </div>
+
               </div>
             </div>
           </section>

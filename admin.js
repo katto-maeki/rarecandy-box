@@ -18,9 +18,43 @@ const REGION_MAP = {
     "generation-vii": "Alola", "generation-viii": "Galar", "generation-ix": "Paldea"
 };
 
-let allPlayers = []; 
+// Catálogo de todos los tipos de actividad que puede generar el sistema (manuales y automáticos),
+// usado para etiquetar y colorear el Diario de Actividades del admin.
+const ACTIVITY_TYPE_INFO = {
+    encounter:            { label: "Encounter",              color: "#7a47ff", icon: "🐾" },
+    exploration:          { label: "Exploración",            color: "#7a47ff", icon: "🧭" },
+    quest:                { label: "Quest",                  color: "#7a47ff", icon: "🎯" },
+    egg_challenge:        { label: "Reto Huevo",             color: "#d97706", icon: "🥚" },
+    pokedex_comu:         { label: "Pokédex Comunitaria",    color: "#7a47ff", icon: "📘" },
+    pokedex_legen:        { label: "Pokédex Legendaria",     color: "#7a47ff", icon: "📕" },
+    coloring:             { label: "Coloreo",                color: "#7a47ff", icon: "🎨" },
+    pokewords:            { label: "Pokéwords",              color: "#7a47ff", icon: "🔤" },
+    freemode:             { label: "Freemode",                color: "#7a47ff", icon: "🕹️" },
+    passport:             { label: "Passport",                color: "#7a47ff", icon: "🛂" },
+    evolution_narrative:  { label: "Evolución (Narrativa)",  color: "#d97706", icon: "✨" },
+    trade_narrative:      { label: "Intercambio (Narrativa)",color: "#2563eb", icon: "🔄" },
+    checkpoint:           { label: "Checkpoint",             color: "#059669", icon: "📌" },
+    logros:               { label: "Logros",                 color: "#7a47ff", icon: "🏆" },
+    otros_manual:         { label: "Otros (Manual)",         color: "#4b5563", icon: "📝" },
+    otros:                { label: "Otros (Sistema)",        color: "#4b5563", icon: "📝" },
+    incubation:           { label: "Incubación",             color: "#d97706", icon: "🥚" },
+    box_add:              { label: "Ingreso a Caja",         color: "#0369a1", icon: "📥" },
+    purchase:             { label: "Compra",                  color: "#e53e3e", icon: "🛍️" },
+    consume:              { label: "Consumo de Ítem",        color: "#4b5563", icon: "🎒" },
+    bimonthly_close:      { label: "Cierre Bimestral",       color: "#059669", icon: "🏁" },
+    exp_assign:           { label: "Asignación EXP",         color: "#7a47ff", icon: "💪" },
+    evolution:            { label: "Evolución (Sistema)",    color: "#d97706", icon: "💥" },
+    trade:                { label: "Intercambio (Sistema)",  color: "#2563eb", icon: "🤝" },
+    gacha_close:          { label: "Cierre de Evento",       color: "#059669", icon: "🎟️" },
+    gacha_roll:           { label: "Gachapón",                color: "#c957b0", icon: "🎰" },
+    gacha_reward:         { label: "Recompensa de Álbum",    color: "#c957b0", icon: "⭐" }
+};
+
+let allPlayers = [];
 let selectedPlayerFullData = null;
-let globalPokemonList = []; 
+let globalPokemonList = [];
+let currentPlayerLogs = [];
+const closureSummaryLookup = {};
 
 // ==========================================
 // UTILIDADES DE MODALES Y UI
@@ -106,6 +140,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("btn-adm-cancel")?.addEventListener("click", () => closeModal("modal-admin-edit"));
     document.getElementById("btn-adm-save")?.addEventListener("click", saveTargetData);
 
+    document.querySelectorAll(".admin-tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".admin-tab-btn").forEach(b => b.classList.remove("active"));
+            document.querySelectorAll(".admin-tab-panel").forEach(p => p.classList.add("hidden"));
+            btn.classList.add("active");
+            document.getElementById(btn.dataset.tab)?.classList.remove("hidden");
+        });
+    });
+
     document.getElementById("btn-new-pokedex")?.addEventListener("click", openPokeModal);
     document.getElementById("btn-poke-cancel")?.addEventListener("click", () => closeModal("modal-new-poke"));
     document.getElementById("btn-poke-save")?.addEventListener("click", saveNewDiscovery);
@@ -189,9 +232,15 @@ async function selectPlayer(targetId, cardElement) {
 
     selectedPlayerFullData = { id: targetId, gameData: resGame.data || {}, inventoryData: resInv.data?.inventory || {} };
     renderDetailPanel(selectedPlayerFullData);
-    
-    // LLAMADA AUTOMÁTICA PARA CARGAR ACTIVIDADES E INTERACCIONES EN MODO ADMIN
-    await fetchAndRenderAdminLogs(targetId, resInv.data?.inventory || {});
+
+    // Al cambiar de jugador, volvemos siempre a la pestaña "Resumen"
+    document.querySelectorAll(".admin-tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelector('.admin-tab-btn[data-tab="tab-resumen"]')?.classList.add("active");
+    document.querySelectorAll(".admin-tab-panel").forEach(p => p.classList.add("hidden"));
+    document.getElementById("tab-resumen")?.classList.remove("hidden");
+
+    // Cargar el Diario de Actividades completo del jugador (filtrable por tipo)
+    await fetchAndRenderAdminLogs(targetId);
 }
 
 function renderDetailPanel(data) {
@@ -261,116 +310,153 @@ function renderDetailPanel(data) {
     });
 }
 
-// --- NUEVA FUNCIÓN: LOGS DE ACTIVIDADES DEL BIMESTRE E INTERACCIONES ---
-async function fetchAndRenderAdminLogs(targetId, inv) {
-    const actList = document.getElementById("det-activities-list");
-    const intList = document.getElementById("det-interactions-list");
-    
-    if (actList) actList.innerHTML = "Cargando actividades del ciclo...";
-    if (intList) intList.innerHTML = "Cargando historial...";
-    
-    const lastClosedAt = inv.economy?.lastClosedAt;
-    
-    // 1) Actividades ordinarias en curso
-    let actQuery = window.supabaseClient
-        .from("trainer_log")
-        .select("*")
-        .eq("user_id", targetId)
-        .order("created_at", { ascending: false });
-        
-    if (lastClosedAt) {
-        const startingDate = new Date(lastClosedAt);
-        if (!Number.isNaN(startingDate.getTime())) {
-            actQuery = actQuery.gte("created_at", startingDate.toISOString());
-        }
-    }
-    
-    const { data: logs, error: logErr } = await actQuery;
-    
-    if (logErr) {
-        if (actList) actList.innerHTML = "Error al cargar la bitácora.";
-    } else if (!logs || logs.length === 0) {
-        if (actList) actList.innerHTML = "<div style='color:#94a3b8; font-style:italic;'>Sin actividades en este ciclo.</div>";
-    } else {
-        actList.innerHTML = "";
-        logs.forEach(log => {
-            const dateStr = new Date(log.created_at).toLocaleDateString();
-            const rewardStr = log.money_reward !== 0 ? ` (${log.money_reward > 0 ? '+' : ''}${log.money_reward}₽)` : '';
-            const xpStr = log.xp_reward !== 0 ? ` (+${log.xp_reward} XP)` : '';
-            
-            let labelIcon = "📝";
-            if(log.activity_type === "purchase") labelIcon = "🛍️";
-            if(log.activity_type === "consume") labelIcon = "🎒";
-            if(log.activity_type === "box_add") labelIcon = "📥";
-            if(log.activity_type === "exp_assign") labelIcon = "🎯";
-            if(log.activity_type === "checkpoint") labelIcon = "📌";
+// --- DIARIO DE ACTIVIDADES: historial completo del jugador, filtrable por tipo ---
+async function fetchAndRenderAdminLogs(targetId) {
+    const diarioList = document.getElementById("det-diario-list");
+    const filterSelect = document.getElementById("diario-filter-type");
 
-            actList.innerHTML += `<div style="margin-bottom:6px; border-bottom:1px dashed #f1f5f9; padding-bottom:4px; line-height:1.4;">
-                <span style="color:#94a3b8; font-size:0.8em;">[${dateStr}]</span> 
-                <strong>${labelIcon}</strong> ${log.activity_name}${rewardStr}${xpStr}
-            </div>`;
-        });
-    }
-    
-    // 2) Historial Crítico Modificado con Nodos DOM Activos
-    const { data: interLogs, error: intErr } = await window.supabaseClient
+    if (diarioList) diarioList.innerHTML = "Cargando diario de actividades...";
+
+    const { data: logs, error } = await window.supabaseClient
         .from("trainer_log")
         .select("*")
         .eq("user_id", targetId)
-        .in("activity_type", ["trade", "evolution", "bimonthly_close"])
         .order("created_at", { ascending: false })
-        .limit(25);
-        
-    if (intErr) {
-        if (intList) intList.innerHTML = "Error al cargar interacciones.";
-    } else if (!interLogs || interLogs.length === 0) {
-        if (intList) intList.innerHTML = "<div style='color:#94a3b8; font-style:italic;'>Sin interacciones registradas.</div>";
-    } else {
-        intList.innerHTML = "";
-        interLogs.forEach(log => {
-            const dateStr = new Date(log.created_at).toLocaleDateString();
-            let typeBadge = "📋 Detalle";
-            let badgeColor = "#4b5563";
-            
-            let isClose = (log.activity_type === "bimonthly_close");
-            let displayTitle = log.activity_name;
-            let summaryPayload = null;
+        .limit(500);
 
-            if (isClose) {
-                typeBadge = "🏁 Cierre Bimestral"; 
-                badgeColor = "#059669";
-                try {
-                    summaryPayload = JSON.parse(log.activity_name);
-                    displayTitle = summaryPayload.displayTitle;
-                } catch(e) { }
-            } else if(log.activity_type === "trade") { 
-                typeBadge = "🔄 Intercambio"; badgeColor = "#2563eb"; 
-            } else if(log.activity_type === "evolution") { 
-                typeBadge = "✨ Evolución"; badgeColor = "#d97706"; 
-            }
-
-            const row = document.createElement("div");
-            row.style.cssText = "margin-bottom:6px; border-bottom:1px dashed #f1f5f9; padding-bottom:4px; line-height:1.4;";
-            row.innerHTML = `
-                <span style="color:#94a3b8; font-size:0.8em;">[${dateStr}]</span> 
-                <span style="color:${badgeColor}; font-weight:bold;">${typeBadge}:</span> ${displayTitle}
-            `;
-
-            // Si es un cierre con empaquetado JSON, lo volvemos clickable para auditoría
-            if (isClose && summaryPayload) {
-                row.style.cursor = "pointer";
-                row.title = "Haz clic para auditar estadísticas completas de este cierre";
-                row.onclick = () => {
-                    if (typeof window.showClosureSummaryModal === "function") {
-                        window.showClosureSummaryModal(summaryPayload, dateStr);
-                    }
-                };
-            }
-
-            intList.appendChild(row);
-        });
+    if (error) {
+        currentPlayerLogs = [];
+        if (diarioList) diarioList.innerHTML = "Error al cargar el diario de actividades.";
+        return;
     }
+
+    currentPlayerLogs = logs || [];
+
+    if (filterSelect) {
+        const presentTypes = [...new Set(currentPlayerLogs.map(l => l.activity_type))].sort((a, b) => {
+            const la = ACTIVITY_TYPE_INFO[a]?.label || a || "";
+            const lb = ACTIVITY_TYPE_INFO[b]?.label || b || "";
+            return la.localeCompare(lb);
+        });
+        filterSelect.innerHTML = `<option value="all">Todos los tipos</option>` +
+            presentTypes.map(t => `<option value="${t}">${ACTIVITY_TYPE_INFO[t]?.label || t}</option>`).join("");
+        filterSelect.value = "all";
+        filterSelect.onchange = () => renderDiarioList(filterSelect.value);
+    }
+
+    renderDiarioList("all");
 }
+
+function renderDiarioList(typeFilter) {
+    const diarioList = document.getElementById("det-diario-list");
+    if (!diarioList) return;
+
+    const rows = (typeFilter === "all")
+        ? currentPlayerLogs
+        : currentPlayerLogs.filter(l => l.activity_type === typeFilter);
+
+    if (rows.length === 0) {
+        diarioList.innerHTML = `<div style="color:#94a3b8; font-style:italic; padding:10px;">Sin registros para este filtro.</div>`;
+        return;
+    }
+
+    Object.keys(closureSummaryLookup).forEach(key => delete closureSummaryLookup[key]);
+
+    diarioList.innerHTML = rows.map(log => {
+        const dateStr = new Date(log.created_at).toLocaleDateString('es-ES', {
+            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        const info = ACTIVITY_TYPE_INFO[log.activity_type] || { label: log.activity_type || "Otros", color: "#4b5563", icon: "📝" };
+
+        let displayTitle = log.activity_name || "Sin descripción";
+        let clickable = false;
+
+        if (log.activity_type === "bimonthly_close") {
+            try {
+                const summary = JSON.parse(log.activity_name);
+                displayTitle = summary.displayTitle;
+                closureSummaryLookup[log.id] = { summary, dateStr };
+                clickable = true;
+            } catch (e) { /* registro plano antiguo sin JSON, se muestra tal cual */ }
+        }
+
+        const rewardBits = [];
+        if (log.money_reward) rewardBits.push(`<span style="color:${log.money_reward > 0 ? '#0fb86b' : '#e53e3e'};">${log.money_reward > 0 ? '+' : ''}${log.money_reward}₽</span>`);
+        if (log.xp_reward) rewardBits.push(`<span style="color:#7a47ff;">+${log.xp_reward} XP</span>`);
+
+        return `<div class="diario-row"${clickable ? ` data-log-id="${log.id}" title="Haz clic para auditar estadísticas completas de este cierre"` : ""}>
+            <div class="diario-row-top">
+                <span class="badge-diario" style="background:${info.color}1a; color:${info.color};">${info.icon} ${info.label}</span>
+                <span class="diario-row-date">${dateStr}</span>
+            </div>
+            <div class="diario-row-name">${displayTitle}</div>
+            ${rewardBits.length ? `<div class="diario-row-rewards">${rewardBits.join(" ")}</div>` : ""}
+        </div>`;
+    }).join("");
+
+    diarioList.querySelectorAll(".diario-row[data-log-id]").forEach(row => {
+        row.addEventListener("click", () => {
+            const entry = closureSummaryLookup[row.dataset.logId];
+            if (entry) window.showClosureSummaryModal(entry.summary, entry.dateStr);
+        });
+    });
+}
+
+// Modal de auditoría de cierre bimestral (mismo comportamiento que en perfil.js, autocontenido aquí
+// porque admin.html no carga perfil.js).
+window.showClosureSummaryModal = function(summary, dateStr) {
+    const existing = document.getElementById("dynamic-closure-modal");
+    if (existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.id = "dynamic-closure-modal";
+    overlay.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px; font-family:'Nunito', sans-serif;";
+
+    const box = document.createElement("div");
+    box.style.cssText = "background:white; width:480px; max-width:100%; border-radius:16px; padding:20px; box-shadow:0 10px 25px rgba(0,0,0,0.15); position:relative; color:#2d3748; text-align:left;";
+
+    box.innerHTML = `
+        <button style="position:absolute; top:12px; right:15px; background:none; border:none; font-size:1.4rem; cursor:pointer; color:#718096;" onclick="document.getElementById('dynamic-closure-modal').remove()">&times;</button>
+        <h3 style="margin:0 0 4px 0; color:#312e81; font-family:'Press Start 2P', monospace; font-size:0.7rem; letter-spacing:-0.5px;">Resumen Histórico</h3>
+        <p style="margin:0 0 15px 0; color:#94a3b8; font-size:0.8rem;">Corte oficial guardado el ${dateStr}</p>
+
+        <div style="background:#e6fffa; border:1px solid #b2f5ea; padding:12px; border-radius:12px; margin-bottom:15px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:#234e52; font-weight:700;">
+                <span>INGRESO TOTAL EN CICLO:</span>
+                <span style="font-family:'Press Start 2P', monospace; font-size:0.7rem;">₽${summary.income.toLocaleString()}</span>
+            </div>
+            <div style="border-top:1px dashed #b2f5ea; margin:2px 0;"></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:#234e52; font-weight:700;">
+                <span>AHORROS TRASLADADOS:</span>
+                <span style="color:#0fb86b; font-family:'Press Start 2P', monospace; font-size:0.7rem;">₽${summary.savings.toLocaleString()}</span>
+            </div>
+        </div>
+
+        <div style="max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; font-size:0.85rem; padding-right:4px;">
+            <div>
+                <strong style="color:#373b5c; display:block; border-bottom:1px solid #edf2f7; padding-bottom:2px; margin-bottom:4px;">📦 Pokémon por tipo principal</strong>
+                <span style="color:#4a5568; line-height:1.4;">${summary.types}</span>
+            </div>
+            <div>
+                <strong style="color:#373b5c; display:block; border-bottom:1px solid #edf2f7; padding-bottom:2px; margin-bottom:4px;">📝 Actividades registradas</strong>
+                <span style="color:#4a5568; line-height:1.4;">${summary.activities}</span>
+            </div>
+            <div>
+                <strong style="color:#373b5c; display:block; border-bottom:1px solid #edf2f7; padding-bottom:2px; margin-bottom:4px;">🎒 Ítems en mochila</strong>
+                <span style="color:#4a5568; line-height:1.4;">${summary.items}</span>
+            </div>
+            <div>
+                <strong style="color:#373b5c; display:block; border-bottom:1px solid #edf2f7; padding-bottom:2px; margin-bottom:4px;">🥚 Incubación</strong>
+                <span style="color:#4a5568;">Huevos eclosionados en el ciclo: <strong>${summary.hatched}</strong></span>
+            </div>
+        </div>
+
+        <button style="margin-top:15px; width:100%; background:#312e81; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="document.getElementById('dynamic-closure-modal').remove()">Entendido</button>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+};
 
 // --- MODAL EDICIÓN ---
 function openAdminEditModal() {

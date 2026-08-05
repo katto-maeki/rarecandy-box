@@ -427,12 +427,20 @@ async function handleClosePeriod() {
           if (Array.isArray(box)) allPkm.push(...box.filter(p => p));
         });
       }
-      
+
+      // Igual que logQuery/hatchQuery: solo contamos lo agregado desde el
+      // último cierre. Sin lastClosedAt (primer cierre) se cuenta todo.
+      const cutoffDate = meta.economy.lastClosedAt ? new Date(meta.economy.lastClosedAt) : null;
+      const hasValidCutoff = cutoffDate && !Number.isNaN(cutoffDate.getTime());
+
       allPkm.forEach(p => {
-        if (p && Array.isArray(p.tipos) && p.tipos[0]) {
-          const primaryType = p.tipos[0].toLowerCase().trim();
-          typeCounts[primaryType] = (typeCounts[primaryType] || 0) + 1;
+        if (!p || !Array.isArray(p.tipos) || !p.tipos[0]) return;
+        if (hasValidCutoff) {
+          const registered = p.registrationDate ? new Date(p.registrationDate) : null;
+          if (!registered || Number.isNaN(registered.getTime()) || registered < cutoffDate) return;
         }
+        const primaryType = p.tipos[0].toLowerCase().trim();
+        typeCounts[primaryType] = (typeCounts[primaryType] || 0) + 1;
       });
     }
 

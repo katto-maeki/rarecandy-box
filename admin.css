@@ -256,6 +256,116 @@ html, body {
     border-bottom: 1px solid #f0f0f0;
 }
 
+/* =========================================
+   PESTAÑAS DEL DETALLE (Resumen / Diario de Actividades)
+   ========================================= */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.admin-tab-btn {
+  background: none;
+  border: none;
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #999;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-tab-btn:hover { color: #a93b79; }
+
+.admin-tab-btn.active {
+  color: #a93b79;
+  border-bottom-color: #a93b79;
+}
+
+/* =========================================
+   DIARIO DE ACTIVIDADES (dentro del detalle de jugador)
+   ========================================= */
+.diario-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.diario-filter-select {
+  width: auto;
+  font-size: 0.78rem;
+  padding: 6px 10px;
+}
+
+.diario-list {
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+.diario-row {
+  background: white;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+}
+
+.diario-row[data-log-id] {
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.diario-row[data-log-id]:hover {
+  background: #f0fff4;
+  border-color: #b2f5ea;
+}
+
+.diario-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.diario-row-date {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.diario-row-name {
+  color: #373b5c;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.diario-row-rewards {
+  margin-top: 3px;
+  display: flex;
+  gap: 10px;
+  font-size: 0.78rem;
+}
+
+.badge-diario {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 /* RESPONSIVE */
 @media (max-width: 850px) {
   .screen-frame {

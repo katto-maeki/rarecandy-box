@@ -94,6 +94,11 @@
 .box-slot {
   position: relative;
   width: 100%;
+  min-width: 0;
+  min-height: 0; /* en un grid, el mínimo por defecto es "auto" (según contenido) y
+                    le gana a aspect-ratio, permitiendo que el sprite estire la
+                    celda pese al overflow:hidden. Forzarlo a 0 deja que
+                    aspect-ratio mande siempre. */
   aspect-ratio: 1 / 1; /* cuadrado perfecto, con o sin pokémon */
   background: rgba(255, 255, 255, 0.55);
   border-radius: 12px;
