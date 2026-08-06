@@ -12,6 +12,7 @@ let profileUserId = null;
 let isOwnProfile = true;  
 let currentMeta = null;
 let ownedPokemonPool = [];
+let ownedPokemonLocations = []; // Ubicación exacta (party/caja+slot) de cada entrada de ownedPokemonPool, en el mismo orden
 let visitorOwnTradePool = []; // Pool de intercambio exclusivo del Usuario A (visitante)
 
 // Variables de control del sistema de comercio y alertas
@@ -273,11 +274,20 @@ async function loadProfileData() {
     $("user-tag-display").textContent = `#${trainerTag}`;
 
     ownedPokemonPool = [];
+    ownedPokemonLocations = [];
     if (gameData) {
-      if (Array.isArray(gameData.party_data)) ownedPokemonPool.push(...gameData.party_data.filter(p => p));
+      if (Array.isArray(gameData.party_data)) {
+        gameData.party_data.forEach((p, index) => {
+          if (p) { ownedPokemonPool.push(p); ownedPokemonLocations.push({ type: "party", index }); }
+        });
+      }
       if (gameData.box_data?.boxes) {
-        gameData.box_data.boxes.forEach(box => {
-          if (Array.isArray(box)) ownedPokemonPool.push(...box.filter(p => p));
+        gameData.box_data.boxes.forEach((box, boxIndex) => {
+          if (Array.isArray(box)) {
+            box.forEach((p, slotIndex) => {
+              if (p) { ownedPokemonPool.push(p); ownedPokemonLocations.push({ type: "box", boxIndex, slotIndex }); }
+            });
+          }
         });
       }
     }
@@ -445,13 +455,13 @@ function renderModalTradePool() {
     container.innerHTML = `<p style="font-size:0.7rem; color:#718096; text-align:center; grid-column:1/-1;">No tienes Pokémon registrados.</p>`;
     return;
   }
-  ownedPokemonPool.forEach(poke => {
+  ownedPokemonPool.forEach((poke, idx) => {
     const wrapper = document.createElement("div");
     wrapper.style.cssText = "position:relative; border:1px solid #cbd5e0; padding:4px; text-align:center; background:white; border-radius:6px;";
     wrapper.innerHTML = `
-      <input type="checkbox" style="position:absolute; top:2px; left:2px; scale:0.9;" class="modal-trade-check" data-id="${poke.id}" data-name="${poke.nombre}" ${poke.forTrade ? 'checked' : ''} />
+      <input type="checkbox" style="position:absolute; top:2px; left:2px; scale:0.9;" class="modal-trade-check" data-index="${idx}" ${poke.forTrade ? 'checked' : ''} />
       <img src="${poke.sprite}" style="height:35px; object-fit:contain; margin-top:8px;" />
-      <div style="font-size:0.6rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${poke.nombre}</div>
+      <div style="font-size:0.6rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${poke.apodo ? `"${poke.apodo}"` : poke.nombre}</div>
     `;
     container.appendChild(wrapper);
   });
@@ -464,13 +474,13 @@ function renderModalTeamPool() {
     container.innerHTML = `<p style="font-size:0.7rem; color:#718096; text-align:center; grid-column:1/-1;">No tienes Pokémon registrados.</p>`;
     return;
   }
-  ownedPokemonPool.forEach(poke => {
+  ownedPokemonPool.forEach((poke, idx) => {
     const wrapper = document.createElement("div");
     wrapper.style.cssText = "position:relative; border:1px solid #cbd5e0; padding:4px; text-align:center; background:white; border-radius:6px;";
     wrapper.innerHTML = `
-      <input type="checkbox" style="position:absolute; top:2px; left:2px; scale:0.9;" class="modal-team-check" data-id="${poke.id}" data-name="${poke.nombre}" ${poke.enEquipo ? 'checked' : ''} />
+      <input type="checkbox" style="position:absolute; top:2px; left:2px; scale:0.9;" class="modal-team-check" data-index="${idx}" ${poke.enEquipo ? 'checked' : ''} />
       <img src="${poke.sprite}" style="height:35px; object-fit:contain; margin-top:8px;" />
-      <div style="font-size:0.6rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${poke.nombre}</div>
+      <div style="font-size:0.6rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${poke.apodo ? `"${poke.apodo}"` : poke.nombre}</div>
     `;
     container.appendChild(wrapper);
   });
@@ -567,36 +577,30 @@ async function saveAllModalChanges() {
         window.currentTrainerName = newName;
       }
 
+      // Nota: se ubica cada pokémon por su posición exacta (party index / caja+slot), no por id+nombre,
+      // ya que dos pokémon de la misma especie comparten id y nombre y antes se pisaban entre sí.
+      const applyLocatedFlag = (loc, flagName, value) => {
+        if (!loc) return;
+        if (loc.type === "party") {
+          if (Array.isArray(gameData.party_data) && gameData.party_data[loc.index]) {
+            gameData.party_data[loc.index][flagName] = value;
+          }
+        } else if (loc.type === "box") {
+          const box = gameData.box_data?.boxes?.[loc.boxIndex];
+          if (Array.isArray(box) && box[loc.slotIndex]) {
+            box[loc.slotIndex][flagName] = value;
+          }
+        }
+      };
+
       checkboxes.forEach(chk => {
-        const pId = parseInt(chk.dataset.id);
-        const pName = chk.dataset.name;
-        const isChecked = chk.checked;
-        if (Array.isArray(gameData.party_data)) {
-          gameData.party_data.forEach(p => { if (p && p.id === pId && p.nombre === pName) p.forTrade = isChecked; });
-        }
-        if (gameData.box_data?.boxes) {
-          gameData.box_data.boxes.forEach(box => {
-            if (Array.isArray(box)) {
-              box.forEach(p => { if (p && p.id === pId && p.nombre === pName) p.forTrade = isChecked; });
-            }
-          });
-        }
+        const idx = parseInt(chk.dataset.index);
+        applyLocatedFlag(ownedPokemonLocations[idx], "forTrade", chk.checked);
       });
 
       teamCheckboxes.forEach(chk => {
-        const pId = parseInt(chk.dataset.id);
-        const pName = chk.dataset.name;
-        const isChecked = chk.checked;
-        if (Array.isArray(gameData.party_data)) {
-          gameData.party_data.forEach(p => { if (p && p.id === pId && p.nombre === pName) p.enEquipo = isChecked; });
-        }
-        if (gameData.box_data?.boxes) {
-          gameData.box_data.boxes.forEach(box => {
-            if (Array.isArray(box)) {
-              box.forEach(p => { if (p && p.id === pId && p.nombre === pName) p.enEquipo = isChecked; });
-            }
-          });
-        }
+        const idx = parseInt(chk.dataset.index);
+        applyLocatedFlag(ownedPokemonLocations[idx], "enEquipo", chk.checked);
       });
 
       await supabase.from(GAME_TABLE).upsert({
@@ -680,6 +684,9 @@ function renderHistoryPanels(logs) {
         break;
       case "box_add":
         logContent = `📦 <strong>Caja Pokémon:</strong> Añadió a ${log.activity_name} a su colección`;
+        break;
+      case "box_release":
+        logContent = `🕊️ <strong>Caja Pokémon:</strong> Liberó a: ${log.activity_name}`;
         break;
       case "evolution":
         logContent = `💥 <strong>Evolución:</strong> ¡Felicidades! Su ${log.activity_name}`;

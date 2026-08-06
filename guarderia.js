@@ -6,52 +6,45 @@ const bd = window.supabaseClient;
 
 let user = null;
 let selectedPokemon = []; 
-let tempUnovaSelection = []; 
 let selectedType = "comun";
 let activeIncubations = [];
 
 const EGG_DATA = {
-  comun: { 
-    label: "Huevo Común", 
-    pool: ["Skwovet","Rookidee","Blipbug","Nickit","Gossifleur","Wooloo","Chewtle","Yamper","Rolycoly","Silicobra","Arrokuda","Sizzlipede","Clobbopus","Cufant","Patrat","Lillipup","Purrloin","Munna","Pidove","Blitzle","Roggenrola","Woobat","Drilbur","Timburr","Tympole","Sewaddle","Venipede","Cottonee","Petilil","Sandile","Darumaka","Dwebble","Scraggy","Yamask","Trubbish","Minccino","Gothita","Solosis","Ducklett","Vanillite","Deerling","Karrablast","Foongus","Frillish","Joltik","Ferroseed","Klink","Tynamo","Elgyem","Litwick","Cubchoo","Shelmet","Golett","Pawniard"] 
+  comun: {
+    label: "Huevo Común",
+    pool: ["Caterpie","Weedle","Pidgey","Rattata","Spearow","Ekans","Sandshrew","Nidoran♀","Nidoran♂","Vulpix","Jigglypuff","Zubat","Oddish","Paras","Venonat","Diglett","Meowth","Psyduck","Mankey","Poliwag","Machop","Bellsprout","Tentacool","Geodude","Ponyta","Slowpoke","Magnemite","Doduo","Seel","Grimer","Shellder","Drowzee","Krabby","Voltorb","Exeggcute","Cubone","Koffing","Rhyhorn","Horsea","Goldeen","Staryu","Magikarp","Sentret","Hoothoot","Ledyba","Spinarak","Chinchou","Natu","Mareep","Hoppip","Sunkern","Wooper","Pineco","Snubbull","Teddiursa","Slugma","Swinub","Remoraid","Phanpy"]
   },
-  raro: { 
-    label: "Huevo Raro", 
-    pool: ["Darumaka-Galar", "Slowpoke-Galar", "Zigzagoon-Galar", "Meowth-Galar","Ponyta-Galar","Farfetchd-Galar","Corsola-Galar","Yamask-Galar","Stunfisk-Galar","Grookey","Scorbunny","Sobble","Applin","Cramorant","Sinistea","Hatenna","Impidimp","Milcery","Falinks","Pincurchin","Snom","Stonjourner","Eiscue","Indeedee","Morpeko","Duraludon","Dreepy","Snivy","Tepig","Oshawott","Pansage","Pansear","Panpour","Audino","Throh","Sawk","Basculin","Maractus","Sigilyph","Zorua","Emolga","Alomomola","Axew","Cryogonal","Stunfisk","Mienfoo","Druddigon","Bouffalant","Rufflet","Vullaby","Heatmor","Durant","Deino","Larvesta"] 
+  raro: {
+    label: "Huevo Raro",
+    pool: ["Bulbasaur","Charmander","Squirtle","Growlithe","Abra","Farfetch'd","Gastly","Tangela","Kangaskhan","Scyther","Pinsir","Tauros","Lapras","Eevee","Porygon","Dratini","Chikorita","Cyndaquil","Totodile","Aipom","Yanma","Murkrow","Misdreavus","Girafarig","Dunsparce","Gligar","Qwilfish","Shuckle","Heracross","Sneasel","Corsola","Delibird","Skarmory","Houndour","Stantler","Smeargle","Miltank","Larvitar"]
   },
-  baby: { 
-    label: "Huevo Baby", 
-    pool: ["Azurill","Wynaut","Pichu","Cleffa","Igglybuff","Togepi","Tyrogue","Smoochum","Elekid","Magby","Budew","Chingling","Bonsly","Mime Jr.","Happiny","Munchlax", "Riolu", "Mantyke", "Toxel"] 
+  baby: {
+    label: "Huevo Baby",
+    pool: ["Azurill","Wynaut","Pichu","Cleffa","Igglybuff","Togepi","Tyrogue","Smoochum","Elekid","Magby","Budew","Chingling","Bonsly","Mime Jr.","Happiny","Munchlax", "Riolu", "Mantyke", "Toxel"]
   }
 };
 
 const REGION_MAP = {
-  /* GALAR */
-   "Darumaka-Galar": "galar", "Slowpoke-Galar": "galar",  "Zigzagoon-Galar": "galar", Skwovet: "galar", Rookidee: "galar", Blipbug: "galar", Nickit: "galar", 
-  Gossifleur: "galar", Wooloo: "galar", Chewtle: "galar", Yamper: "galar", Rolycoly: "galar", 
-  Silicobra: "galar", Arrokuda: "galar", Sizzlipede: "galar", Clobbopus: "galar", Cufant: "galar",
-  "Meowth-Galar": "galar", "Ponyta-Galar": "galar", "Farfetchd-Galar": "galar", "Weezing-Galar": "galar", 
-  "Corsola-Galar": "galar", "Yamask-Galar": "galar", "Stunfisk-Galar": "galar", Grookey: "galar", 
-  Scorbunny: "galar", Sobble: "galar", Applin: "galar", Cramorant: "galar", Sinistea: "galar", 
-  Hatenna: "galar", Impidimp: "galar", Milcery: "galar", Falinks: "galar", Pincurchin: "galar", 
-  Snom: "galar", Stonjourner: "galar", Eiscue: "galar", Indeedee: "galar", Morpeko: "galar", 
-  Duraludon: "galar", Dreepy: "galar",
+  /* KANTO */
+  Caterpie: "kanto", Weedle: "kanto", Pidgey: "kanto", Rattata: "kanto", Spearow: "kanto", Ekans: "kanto",
+  Sandshrew: "kanto", "Nidoran♀": "kanto", "Nidoran♂": "kanto", Vulpix: "kanto", Jigglypuff: "kanto", Zubat: "kanto",
+  Oddish: "kanto", Paras: "kanto", Venonat: "kanto", Diglett: "kanto", Meowth: "kanto", Psyduck: "kanto",
+  Mankey: "kanto", Poliwag: "kanto", Machop: "kanto", Bellsprout: "kanto", Tentacool: "kanto", Geodude: "kanto",
+  Ponyta: "kanto", Slowpoke: "kanto", Magnemite: "kanto", Doduo: "kanto", Seel: "kanto", Grimer: "kanto",
+  Shellder: "kanto", Drowzee: "kanto", Krabby: "kanto", Voltorb: "kanto", Exeggcute: "kanto", Cubone: "kanto",
+  Koffing: "kanto", Rhyhorn: "kanto", Horsea: "kanto", Goldeen: "kanto", Staryu: "kanto", Magikarp: "kanto",
+  Bulbasaur: "kanto", Charmander: "kanto", Squirtle: "kanto", Growlithe: "kanto", Abra: "kanto", "Farfetch'd": "kanto",
+  Gastly: "kanto", Tangela: "kanto", Kangaskhan: "kanto", Scyther: "kanto", Pinsir: "kanto", Tauros: "kanto",
+  Lapras: "kanto", Eevee: "kanto", Porygon: "kanto", Dratini: "kanto",
 
-  /* UNOVA */
-  Patrat: "unova", Lillipup: "unova", Purrloin: "unova", Munna: "unova", Pidove: "unova", 
-  Blitzle: "unova", Roggenrola: "unova", Woobat: "unova", Drilbur: "unova", Timburr: "unova", 
-  Tympole: "unova", Sewaddle: "unova", Venipede: "unova", Cottonee: "unova", Petilil: "unova", 
-  Sandile: "unova", Darumaka: "unova", Dwebble: "unova", Scraggy: "unova", Yamask: "unova", 
-  Trubbish: "unova", Minccino: "unova", Gothita: "unova", Solosis: "unova", Ducklett: "unova", 
-  Vanillite: "unova", Deerling: "unova", Karrablast: "unova", Foongus: "unova", Frillish: "unova", 
-  Joltik: "unova", Ferroseed: "unova", Klink: "unova", Tynamo: "unova", Elgyem: "unova", 
-  Litwick: "unova", Cubchoo: "unova", Shelmet: "unova", Golett: "unova", Pawniard: "unova",
-  Snivy: "unova", Tepig: "unova", Oshawott: "unova", Pansage: "unova", Pansear: "unova", 
-  Panpour: "unova", Audino: "unova", Throh: "unova", Sawk: "unova", Basculin: "unova", 
-  Maractus: "unova", Sigilyph: "unova", Zorua: "unova", Emolga: "unova", Alomomola: "unova", 
-  Axew: "unova", Cryogonal: "unova", Stunfisk: "unova", Mienfoo: "unova", Druddigon: "unova", 
-  Bouffalant: "unova", Rufflet: "unova", Vullaby: "unova", Heatmor: "unova", Durant: "unova", 
-  Deino: "unova", Larvesta: "unova"
+  /* JOHTO */
+  Sentret: "johto", Hoothoot: "johto", Ledyba: "johto", Spinarak: "johto", Chinchou: "johto", Natu: "johto",
+  Mareep: "johto", Hoppip: "johto", Sunkern: "johto", Wooper: "johto", Pineco: "johto", Snubbull: "johto",
+  Teddiursa: "johto", Slugma: "johto", Swinub: "johto", Remoraid: "johto", Phanpy: "johto",
+  Chikorita: "johto", Cyndaquil: "johto", Totodile: "johto", Aipom: "johto", Yanma: "johto", Murkrow: "johto",
+  Misdreavus: "johto", Girafarig: "johto", Dunsparce: "johto", Gligar: "johto", Qwilfish: "johto", Shuckle: "johto",
+  Heracross: "johto", Sneasel: "johto", Corsola: "johto", Delibird: "johto", Skarmory: "johto", Houndour: "johto",
+  Stantler: "johto", Smeargle: "johto", Miltank: "johto", Larvitar: "johto"
 };
 
 const INCUBATION_TIME = { comun: 7, raro: 21, baby: 28 };
@@ -144,9 +137,9 @@ function renderPool(type) {
   const container = document.getElementById("pool-display");
   const pool = EGG_DATA[type].pool;
 
-  const poolToShow = (type === "baby") 
-    ? pool 
-    : pool.filter(p => REGION_MAP[p] === "galar");
+  const poolToShow = (type === "baby")
+    ? pool
+    : pool.filter(p => REGION_MAP[p] === "kanto");
 
   container.innerHTML = poolToShow.map(p => {
     const isBaby = (type === "baby");
@@ -189,12 +182,12 @@ function updateCounter() {
   
   const title = document.querySelector(".pool-info-section .column-title");
   if (title) {
-    title.textContent = isBaby 
-      ? "Pokémon Baby (Todos incluidos)" 
-      : "Selecciona 4 Pokémon de Galar";
+    title.textContent = isBaby
+      ? "Pokémon Baby (Todos incluidos)"
+      : "Selecciona 4 Pokémon de Kanto";
   }
 
-  const notice = document.getElementById("unova-notice");
+  const notice = document.getElementById("johto-notice");
   if (notice) {
     notice.style.display = isBaby ? "none" : "block";
   }
@@ -217,15 +210,9 @@ function updateIncubateButton() {
 document.getElementById("btn-incubar").onclick = openSummaryModal;
 
 function openSummaryModal() {
-  tempUnovaSelection = [];
-  let fullPreview = [];
-
-  if (selectedType === "baby") {
-    fullPreview = [...selectedPokemon];
-  } else {
-    tempUnovaSelection = getRandomUnova(selectedType, 2);
-    fullPreview = [...selectedPokemon, ...tempUnovaSelection];
-  }
+  // Nota: los 2 Pokémon de Johto se sortean recién al confirmar (no aquí), para que
+  // no se puedan "rerolear" abriendo y cerrando este modal hasta ver un resultado deseado.
+  const fullPreview = [...selectedPokemon];
 
   const specialContainer = document.getElementById("container-special-incubator");
   const specialCheckbox = document.getElementById("special-incubator");
@@ -247,18 +234,18 @@ function openSummaryModal() {
   document.getElementById("summary-date").textContent = `${hatchDate.toLocaleDateString("es-ES")} a las ${hatchDate.toLocaleTimeString("es-ES", {hour: '2-digit', minute:'2-digit'})}`;
 
   const list = document.getElementById("summary-pokemon");
-  list.innerHTML = fullPreview.map(p => {
-    const isAutoUnova = tempUnovaSelection.includes(p);
-    return `<li>${p} ${isAutoUnova ? '<small style="color: #6366f1;">(Unova)</small>' : ''}</li>`;
-  }).join("");
+  list.innerHTML = fullPreview.map(p => `<li>${p}</li>`).join("");
+  if (selectedType !== "baby") {
+    list.innerHTML += `<li><small style="color: #6366f1;">+2 Pokémon al azar de Johto</small></li>`;
+  }
 
   document.getElementById("modal-summary").classList.remove("hidden");
 }
 
-function getRandomUnova(type, count = 2) {
+function getRandomJohto(type, count = 2) {
   const pool = EGG_DATA[type].pool;
-  const unovaPool = pool.filter(p => REGION_MAP[p] === "unova");
-  return [...unovaPool].sort(() => 0.5 - Math.random()).slice(0, count);
+  const johtoPool = pool.filter(p => REGION_MAP[p] === "johto");
+  return [...johtoPool].sort(() => 0.5 - Math.random()).slice(0, count);
 }
 
 async function confirmIncubationFromModal() {
@@ -285,7 +272,8 @@ async function confirmIncubationFromModal() {
   await bd.from("trainer_inventory").update({ inventory }).eq("user_id", user.id);
 
   const hatchDate = calculateHatchDate(selectedType, special);
-  const finalPool = (selectedType === "baby") ? [...selectedPokemon] : [...selectedPokemon, ...tempUnovaSelection];
+  const johtoPicks = (selectedType === "baby") ? [] : getRandomJohto(selectedType, 2);
+  const finalPool = [...selectedPokemon, ...johtoPicks];
 
   const { data: newInc, error } = await bd.from("trainer_incubations").insert({
     user_id: user.id,
@@ -313,7 +301,6 @@ async function confirmIncubationFromModal() {
   renderIncubations();
   
   selectedPokemon = [];
-  tempUnovaSelection = [];
   updateCounter();
   updateIncubateButton();
   document.getElementById("modal-summary").classList.add("hidden");
@@ -509,9 +496,9 @@ async function hatchIncubation(id) {
   if (inc.egg_type === "baby") {
     winner = inc.selected_pokemon[Math.floor(Math.random() * inc.selected_pokemon.length)];
   } else {
-    const galar = inc.selected_pokemon.filter(p => REGION_MAP[p] === "galar");
-    const unova = inc.selected_pokemon.filter(p => REGION_MAP[p] === "unova");
-    winner = (Math.random() < 0.8 && galar.length > 0) ? galar[Math.floor(Math.random() * galar.length)] : unova[Math.floor(Math.random() * unova.length)];
+    const kanto = inc.selected_pokemon.filter(p => REGION_MAP[p] === "kanto");
+    const johto = inc.selected_pokemon.filter(p => REGION_MAP[p] === "johto");
+    winner = (Math.random() < 0.8 && kanto.length > 0) ? kanto[Math.floor(Math.random() * kanto.length)] : johto[Math.floor(Math.random() * johto.length)];
   }
 
   const shiny = Math.random() < 0.10;

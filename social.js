@@ -183,6 +183,9 @@ let logContent = "";
       case "box_add":
         logContent = `📦 ${authorPrefix} guardó a <strong>${log.activity_name}</strong> en su caja`;
         break;
+      case "box_release":
+        logContent = `🕊️ ${authorPrefix} liberó a: <strong>${log.activity_name}</strong>`;
+        break;
       case "evolution":
         logContent = `💥 ¡Gran noticia! El Pokémon de ${authorPrefix} evolucionó: <strong>${log.activity_name}</strong>`;
         break;

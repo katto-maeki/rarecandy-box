@@ -1189,7 +1189,7 @@ async function handleUpdatePokemon() {
   }
 }
 
-function handleReleasePokemon() {
+async function handleReleasePokemon() {
   if (!isOwnProfile) return;
   const box = state.boxes[state.currentBoxIndex];
 
@@ -1203,7 +1203,16 @@ function handleReleasePokemon() {
   box[state.selectedBoxSlotIndex] = null;
   state.selectedBoxSlotIndex = null;
   state.detailSource = null;
-  saveState();
+  await saveState();
+
+  await window.supabaseClient.from("trainer_log").insert({
+    user_id: window.currentUserId,
+    activity_type: "box_release",
+    activity_name: poke.apodo ? `${poke.apodo} (${poke.nombre})` : poke.nombre,
+    money_reward: 0,
+    xp_reward: 0
+  });
+
   renderBox();
   renderDetail();
 }
