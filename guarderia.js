@@ -12,11 +12,11 @@ let activeIncubations = [];
 const EGG_DATA = {
   comun: {
     label: "Huevo Común",
-    pool: ["Caterpie","Weedle","Pidgey","Rattata","Spearow","Ekans","Sandshrew","Nidoran♀","Nidoran♂","Vulpix","Jigglypuff","Zubat","Oddish","Paras","Venonat","Diglett","Meowth","Psyduck","Mankey","Poliwag","Machop","Bellsprout","Tentacool","Geodude","Ponyta","Slowpoke","Magnemite","Doduo","Seel","Grimer","Shellder","Drowzee","Krabby","Voltorb","Exeggcute","Cubone","Koffing","Rhyhorn","Horsea","Goldeen","Staryu","Magikarp","Sentret","Hoothoot","Ledyba","Spinarak","Chinchou","Natu","Mareep","Hoppip","Sunkern","Wooper","Pineco","Snubbull","Teddiursa","Slugma","Swinub","Remoraid","Phanpy"]
+    pool: ["Sentret","Hoothoot","Ledyba","Spinarak","Chinchou","Natu","Mareep","Hoppip","Sunkern","Wooper","Pineco","Snubbull","Teddiursa","Slugma","Swinub","Remoraid","Phanpy","Starly","Bidoof","Kricketot","Shinx","Burmy","Combee","Buizel","Cherubi","Shellos","Drifloon","Buneary","Glameow","Stunky","Bronzor","Hippopotas","Skorupi","Croagunk","Finneon","Snover"]
   },
   raro: {
     label: "Huevo Raro",
-    pool: ["Bulbasaur","Charmander","Squirtle","Growlithe","Abra","Farfetch'd","Gastly","Tangela","Kangaskhan","Scyther","Pinsir","Tauros","Lapras","Eevee","Porygon","Dratini","Chikorita","Cyndaquil","Totodile","Aipom","Yanma","Murkrow","Misdreavus","Girafarig","Dunsparce","Gligar","Qwilfish","Shuckle","Heracross","Sneasel","Corsola","Delibird","Skarmory","Houndour","Stantler","Smeargle","Miltank","Larvitar"]
+    pool: ["Chikorita","Cyndaquil","Totodile","Aipom","Yanma","Murkrow","Misdreavus","Girafarig","Dunsparce","Gligar","Qwilfish","Shuckle","Heracross","Sneasel","Corsola","Delibird","Skarmory","Houndour","Stantler","Smeargle","Miltank","Larvitar","Turtwig","Chimchar","Piplup","Pachirisu","Chatot","Spiritomb","Gible","Carnivine","Rotom"]
   },
   baby: {
     label: "Huevo Baby",
@@ -24,8 +24,13 @@ const EGG_DATA = {
   }
 };
 
+// Región principal (el entrenador elige 4) y secundaria (se suman 2 al azar).
+const PRIMARY_REGION = "johto";
+const SECONDARY_REGION = "sinnoh";
+
 const REGION_MAP = {
-  /* KANTO */
+  /* KANTO: ya no está en los huevos, pero se mantiene para poder eclosionar
+     los huevos que se incubaron antes del cambio (Kanto + Johto). */
   Caterpie: "kanto", Weedle: "kanto", Pidgey: "kanto", Rattata: "kanto", Spearow: "kanto", Ekans: "kanto",
   Sandshrew: "kanto", "Nidoran♀": "kanto", "Nidoran♂": "kanto", Vulpix: "kanto", Jigglypuff: "kanto", Zubat: "kanto",
   Oddish: "kanto", Paras: "kanto", Venonat: "kanto", Diglett: "kanto", Meowth: "kanto", Psyduck: "kanto",
@@ -44,7 +49,15 @@ const REGION_MAP = {
   Chikorita: "johto", Cyndaquil: "johto", Totodile: "johto", Aipom: "johto", Yanma: "johto", Murkrow: "johto",
   Misdreavus: "johto", Girafarig: "johto", Dunsparce: "johto", Gligar: "johto", Qwilfish: "johto", Shuckle: "johto",
   Heracross: "johto", Sneasel: "johto", Corsola: "johto", Delibird: "johto", Skarmory: "johto", Houndour: "johto",
-  Stantler: "johto", Smeargle: "johto", Miltank: "johto", Larvitar: "johto"
+  Stantler: "johto", Smeargle: "johto", Miltank: "johto", Larvitar: "johto",
+
+  /* SINNOH */
+  Starly: "sinnoh", Bidoof: "sinnoh", Kricketot: "sinnoh", Shinx: "sinnoh", Burmy: "sinnoh", Combee: "sinnoh",
+  Buizel: "sinnoh", Cherubi: "sinnoh", Shellos: "sinnoh", Drifloon: "sinnoh", Buneary: "sinnoh", Glameow: "sinnoh",
+  Stunky: "sinnoh", Bronzor: "sinnoh", Hippopotas: "sinnoh", Skorupi: "sinnoh", Croagunk: "sinnoh", Finneon: "sinnoh",
+  Snover: "sinnoh",
+  Turtwig: "sinnoh", Chimchar: "sinnoh", Piplup: "sinnoh", Pachirisu: "sinnoh", Chatot: "sinnoh", Spiritomb: "sinnoh",
+  Gible: "sinnoh", Carnivine: "sinnoh", Rotom: "sinnoh"
 };
 
 const INCUBATION_TIME = { comun: 7, raro: 21, baby: 28 };
@@ -139,14 +152,16 @@ function renderPool(type) {
 
   const poolToShow = (type === "baby")
     ? pool
-    : pool.filter(p => REGION_MAP[p] === "kanto");
+    : pool.filter(p => REGION_MAP[p] === PRIMARY_REGION);
 
   container.innerHTML = poolToShow.map(p => {
     const isBaby = (type === "baby");
     const isSelected = selectedPokemon.includes(p);
     
     // Si es tipo baby, removemos el evento click y forzamos estilos de bloqueo visual
-    const clickHandler = isBaby ? "" : `onclick="toggleSelection('${p}')"`;
+    // Escapamos comillas simples (ej: "Farfetch'd") para no romper el atributo onclick
+    const escapedName = p.replace(/'/g, "\\'");
+    const clickHandler = isBaby ? "" : `onclick="toggleSelection('${escapedName}')"`;
     const disableStyles = isBaby ? 'style="pointer-events: none; cursor: not-allowed; opacity: 0.9;"' : '';
 
     return `
@@ -184,7 +199,7 @@ function updateCounter() {
   if (title) {
     title.textContent = isBaby
       ? "Pokémon Baby (Todos incluidos)"
-      : "Selecciona 4 Pokémon de Kanto";
+      : "Selecciona 4 Pokémon de Johto";
   }
 
   const notice = document.getElementById("johto-notice");
@@ -210,7 +225,7 @@ function updateIncubateButton() {
 document.getElementById("btn-incubar").onclick = openSummaryModal;
 
 function openSummaryModal() {
-  // Nota: los 2 Pokémon de Johto se sortean recién al confirmar (no aquí), para que
+  // Nota: los 2 Pokémon de Sinnoh se sortean recién al confirmar (no aquí), para que
   // no se puedan "rerolear" abriendo y cerrando este modal hasta ver un resultado deseado.
   const fullPreview = [...selectedPokemon];
 
@@ -236,16 +251,16 @@ function openSummaryModal() {
   const list = document.getElementById("summary-pokemon");
   list.innerHTML = fullPreview.map(p => `<li>${p}</li>`).join("");
   if (selectedType !== "baby") {
-    list.innerHTML += `<li><small style="color: #6366f1;">+2 Pokémon al azar de Johto</small></li>`;
+    list.innerHTML += `<li><small style="color: #6366f1;">+2 Pokémon al azar de Sinnoh</small></li>`;
   }
 
   document.getElementById("modal-summary").classList.remove("hidden");
 }
 
-function getRandomJohto(type, count = 2) {
+function getRandomSecondary(type, count = 2) {
   const pool = EGG_DATA[type].pool;
-  const johtoPool = pool.filter(p => REGION_MAP[p] === "johto");
-  return [...johtoPool].sort(() => 0.5 - Math.random()).slice(0, count);
+  const secondaryPool = pool.filter(p => REGION_MAP[p] === SECONDARY_REGION);
+  return [...secondaryPool].sort(() => 0.5 - Math.random()).slice(0, count);
 }
 
 async function confirmIncubationFromModal() {
@@ -272,8 +287,8 @@ async function confirmIncubationFromModal() {
   await bd.from("trainer_inventory").update({ inventory }).eq("user_id", user.id);
 
   const hatchDate = calculateHatchDate(selectedType, special);
-  const johtoPicks = (selectedType === "baby") ? [] : getRandomJohto(selectedType, 2);
-  const finalPool = [...selectedPokemon, ...johtoPicks];
+  const secondaryPicks = (selectedType === "baby") ? [] : getRandomSecondary(selectedType, 2);
+  const finalPool = [...selectedPokemon, ...secondaryPicks];
 
   const { data: newInc, error } = await bd.from("trainer_incubations").insert({
     user_id: user.id,
@@ -496,9 +511,15 @@ async function hatchIncubation(id) {
   if (inc.egg_type === "baby") {
     winner = inc.selected_pokemon[Math.floor(Math.random() * inc.selected_pokemon.length)];
   } else {
-    const kanto = inc.selected_pokemon.filter(p => REGION_MAP[p] === "kanto");
-    const johto = inc.selected_pokemon.filter(p => REGION_MAP[p] === "johto");
-    winner = (Math.random() < 0.8 && kanto.length > 0) ? kanto[Math.floor(Math.random() * kanto.length)] : johto[Math.floor(Math.random() * johto.length)];
+    // 80% sale de los 4 elegidos (región principal) y 20% de los 2 al azar.
+    // Los huevos incubados antes del cambio traen Kanto + Johto: ahí la
+    // principal era Kanto y la secundaria Johto.
+    const isOldEgg = inc.selected_pokemon.some(p => REGION_MAP[p] === "kanto");
+    const primaryRegion = isOldEgg ? "kanto" : PRIMARY_REGION;
+    const secondaryRegion = isOldEgg ? "johto" : SECONDARY_REGION;
+    const primary = inc.selected_pokemon.filter(p => REGION_MAP[p] === primaryRegion);
+    const secondary = inc.selected_pokemon.filter(p => REGION_MAP[p] === secondaryRegion);
+    winner = (Math.random() < 0.8 && primary.length > 0) ? primary[Math.floor(Math.random() * primary.length)] : secondary[Math.floor(Math.random() * secondary.length)];
   }
 
   const shiny = Math.random() < 0.10;

@@ -81,6 +81,12 @@
 .box-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, 80px);
+  /* Explícito por la misma razón que aspect-ratio en .box-slot: con
+     overflow:hidden + min-height:0 en el ítem, el algoritmo de "auto" para
+     el alto de fila del grid no respeta el aspect-ratio y calcula filas más
+     bajas que 80px, haciendo que casillas de filas consecutivas se solapen
+     visualmente. Al fijar el alto de fila no depende de ese cálculo. */
+  grid-auto-rows: 80px;
   justify-content: center;
   align-content: start;
   gap: 14px;

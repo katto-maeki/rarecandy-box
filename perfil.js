@@ -629,7 +629,7 @@ function renderHistoryPanels(logs) {
   closuresFeed.innerHTML = "";
 
   const typeNames = {
-    encounter: "Encounter", quest: "Quest", pokedex_comu: "Pokédex Comu.",
+    encounter: "Encounter", safari: "Safari", quest: "Quest", pokedex_comu: "Pokédex Comu.",
     pokedex_legen: "Pokédex Leg.", pokewords: "Pokéwords", freemode: "Freemode",
     passport: "Passport", checkpoint: "Checkpoint Mensual", trade: "Intercambio",
     consume: "Consumo", bimonthly_close: "Cierre Bimestral", otros: "Otros"
@@ -676,9 +676,24 @@ function renderHistoryPanels(logs) {
       case "checkpoint":
         logContent = `📌 <strong>Checkpoint Mensual:</strong> "${log.activity_name}"`;
         break;
-      case "purchase":
-        logContent = `🛒 <strong>Compra:</strong> "${log.activity_name}" gastando <span style="color:#e53e3e; font-weight:700;">-₽${Math.abs(log.money_reward)}</span>`;
+      case "purchase": {
+        let purchaseDesc = log.activity_name;
+        try {
+          const order = JSON.parse(log.activity_name);
+          purchaseDesc = order.items.map(it => `${it.qty}x ${it.label}`).join(", ");
+        } catch (e) { /* registro antiguo de un solo ítem en texto plano, se muestra tal cual */ }
+        logContent = `🛒 <strong>Compra:</strong> "${purchaseDesc}" gastando <span style="color:#e53e3e; font-weight:700;">-₽${Math.abs(log.money_reward)}</span>`;
         break;
+      }
+      case "gift": {
+        let giftDesc = log.activity_name;
+        try {
+          const order = JSON.parse(log.activity_name);
+          giftDesc = order.items.map(it => `${it.qty}x ${it.label}`).join(", ");
+        } catch (e) { /* registro antiguo en texto plano, se muestra tal cual */ }
+        logContent = `🎁 <strong>Regalo (Tienda):</strong> Recibió "${giftDesc}"`;
+        break;
+      }
       case "incubation":
         logContent = `🥚 <strong>Incubadora:</strong> Puso a incubar un ${log.activity_name}`;
         break;

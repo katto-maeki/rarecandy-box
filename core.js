@@ -130,3 +130,19 @@ window.setupLogoutButton = function setupLogoutButton(buttonId = "btn-logout") {
     window.location.href = "index.html";
   });
 };
+
+// DESCRIPCIONES DE USO DE ÍTEMS (Inventario: panel de detalle; Tienda: botón ⓘ)
+const ITEM_DESCRIPTIONS = {
+  egg: "Dependiendo el tiempo que pase en la guardería pokémon, obtendrás pokémon: baby, comunes y raros.",
+  evoStone: "Permite evolucionar a Pokémon que requieren una piedra elemental.",
+  friendship: "Objeto necesario para Pokémon que evolucionan por amistad.",
+  starCrystal: "Cristal cargado de energía estelar. Funciona como llave de evolución para Pokémon con condiciones especiales: por intercambio, por un objeto específico u otros requisitos únicos.",
+  tradeToken: "Token que permite intercambiar pokémon entre integrantes. Ambos deben tener el token para hacerlo efectivo.",
+  passport: "Pasaporte que permite a ciertos pokémon evolucionar a su versión regional (Galar, Alola, etc).",
+  panquecito: "Un panquecito para que, a pesar de utilizar una Super, Ultra o Master Ball para asegurar tu captura, únicamente atrapes al pokémon base sin evolución.",
+  curry: "Un curry contundente que asegura que el pokémon que captures sea su segunda o tercera evolución.",
+  poke: "Probabilidad baja de captura. Ideal para Pokémon básicos/base.",
+  super: "Mejor que la Poké Ball. Aumenta la posibilidad de captura. Pequeña posibilidad de capturar una evolución del pokémon.",
+  ultra: "Excelente para capturar pokémon. Pequeña posibilidad de capturar una evolución del pokémon.",
+  master: "Captura 100% efectiva. Pequeña posibilidad de capturar una evolución del pokémon.",
+};

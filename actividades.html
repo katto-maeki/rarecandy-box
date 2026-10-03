@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     
     <link rel="stylesheet" href="base.css">
+    <script src="theme.js"></script>
     <link rel="stylesheet" href="trainer.css">
     <link rel="stylesheet" href="actividades.css">
 </head>
@@ -42,6 +43,7 @@
           <a href="trainer.html" class="menu-link"><i class="fa fa-money"></i> Inventario</a>
           <a href="actividades.html" class="menu-link"><i class="fa fa-list-alt"></i> Actividades</a>
           <a href="guarderia.html" class="menu-link"><i class="fa fa-asterisk"></i> Incubadora</a>
+          <a href="tienda.html" class="menu-link"><i class="fa fa-shopping-cart"></i> Tienda Pokémon</a>
           <a href="pokedex.html" class="menu-link"><i class="fa fa-search"></i> Pokédex Comunitaria</a>
           <a href="eventos.html" class="menu-link"><i class="fa fa-star"></i> Eventos</a>
           <a href="tablas.html" class="menu-link"><i class="fa fa-question-circle"></i> Info. General</a>
@@ -69,7 +71,7 @@
                                 <option value="encounter">Encounter</option>
                                 <option value="exploration">Exploración</option>
                                 <option value="quest">Quest</option>
-                                <option value="egg_challenge">Reto Huevo</option>
+                                <option value="safari">Safari</option>
                                 <option value="pokedex_comu">Pokédex Comunitaria</option>
                                 <option value="pokedex_legen">Pokédex Legendaria</option>
                                 <option value="coloring">Coloreo</option>
@@ -85,7 +87,7 @@
                         </div>
 
                         <div class="modal-row hidden" id="encounter-qty-row">
-                            <label class="label" id="encounter-qty-label">¿Cuántos Pokémon mencionaste / coloreaste?</label>
+                            <label class="label" id="encounter-qty-label">¿Cuántos Pokémon?</label>
                             <input type="number" id="input-qty-pkm" class="input" value="1" min="1">
                             <small style="font-size: 0.7rem; color: #7a47ff;">* Recompensa multiplicada por ejemplar.</small>
                         </div>

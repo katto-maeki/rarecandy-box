@@ -11,12 +11,18 @@
   display: grid;
   grid-template-columns: 1.35fr 1fr;
   gap: 10px;
-  padding: 10px 4px 60px 4px; /* ← agrega espacio abajo */
+  padding: 10px 4px 12px 4px;
   min-height: 0;
 }
 
 .pool-info-section {
   justify-content: flex-start;
+}
+
+/* Las columnas no deben crecer más que su fila del grid (que mide lo que
+   permite el marco); así el contenido se ajusta dentro en vez de salirse. */
+.daycare-layout > .column {
+  min-height: 0;
 }
 
 /* ================================
@@ -181,7 +187,11 @@
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.55);
   border: 2px solid #dac6f0;
-  min-height: 260px;
+  /* Ocupa el alto libre de la columna (hasta 360px) y hace scroll: con un
+     alto mínimo fijo, al achicar la ventana el marco 16:9 se volvía más bajo
+     que el contenido y el pie de selección se salía del contenedor. */
+  flex: 1 1 0;
+  min-height: 0;
   max-height: 360px;
   overflow-y: auto;
 }
@@ -330,6 +340,13 @@
 
   .incubator-grid {
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  }
+
+  /* En móvil el marco crece con el contenido: la lista vuelve a su alto
+     propio en vez de repartirse un alto que ya no es fijo. */
+  .pool-list {
+    flex: none;
+    min-height: 260px;
   }
 }
 

@@ -2,14 +2,13 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Guardería Pokémon - Rare Candy!</title>
+  <title>Tienda Pokémon - Rare Candy!</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
   <link rel="stylesheet" href="base.css" />
   <script src="theme.js"></script>
-  <link rel="stylesheet" href="cajapkm.css" />
-  <link rel="stylesheet" href="guarderia.css" />
+  <link rel="stylesheet" href="tienda.css" />
 </head>
 
 <body class="bg-main">
@@ -20,7 +19,7 @@
         <button id="btn-menu" class="nav-btn-icon" title="Abrir Menú" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">
           <i class="fa fa-bars"></i>
         </button>
-        <span class="top-bar-title">Incubadora de huevos pokémon</span>
+        <span class="top-bar-title">Tienda Pokémon</span>
       </div>
 
       <div class="top-bar-right">
@@ -51,85 +50,76 @@
         </div>
       </div>
     </nav>
-    <main class="daycare-layout">
-      <section class="column pool-info-section">
-        <h2 class="column-title">Selecciona 4 Pokémon de Johto</h2>
-        <div class="pool-tabs">
-          <button class="info-tab-btn active" data-type="comun">Común</button>
-          <button class="info-tab-btn" data-type="raro">Raro</button>
-          <button class="info-tab-btn" data-type="baby">Baby</button>
-        </div>
-        <div id="pool-display" class="pool-list"></div>
-        <div class="selection-footer">
-          <div class="selection-info-box">
-            <p id="selection-count">Seleccionados: 0 / 4</p>
-            <p id="johto-notice" class="hint-text">Al confirmar, se añadirán 2 Pokémon de Sinnoh al azar.</p>
-          </div>
-          <button id="btn-incubar" class="btn-primary" disabled>Incubar</button>
-        </div>
+
+    <main class="shop-layout">
+      <section class="column shop-items-section">
+        <h2 class="column-title">Ítems disponibles</h2>
+        <div id="shop-grid" class="shop-grid"></div>
       </section>
 
-      <section class="column">
-        <h2 class="column-title">Gestión de Incubación</h2>
-        <div class="incubation-tabs">
-          <button id="tab-incubadora" class="inc-tab active">Incubadora</button>
-          <button id="tab-historial" class="inc-tab">Historial</button>
+      <section class="column shop-summary-section">
+        <h2 class="column-title">Resumen de compra</h2>
+
+        <div class="cashier-panel">
+          <div class="cashier-bubble">
+            <p class="cashier-line cashier-line-balance" id="cashier-balance">Cargando tu saldo...</p>
+            <p class="cashier-line cashier-line-dynamic" id="cashier-message">Elige lo que necesites.</p>
+          </div>
+          <div class="cashier-sprite-wrap">
+            <img src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/official-artwork/39.png" alt="Jigglypuff" class="cashier-sprite" />
+          </div>
         </div>
-        <div id="incubadora-view">
-          <div id="incubator-container" class="incubator-grid"></div>
+
+        <div class="ticket-head">
+          <span>Ítem</span>
+          <span>Cant.</span>
+          <span>Precio</span>
         </div>
-        <div id="historial-view" class="hidden">
-          <table class="history-table">
-            <thead>
-              <tr><th>Fecha</th><th>Huevo</th><th>Pokémon</th><th>Shiny</th></tr>
-            </thead>
-            <tbody id="history-body"></tbody>
-          </table>
+
+        <div id="ticket-list" class="ticket-list">
+          <p class="ticket-empty">Tu carrito está vacío.</p>
+        </div>
+
+        <div class="ticket-total-row">
+          <span>Total</span>
+          <span>₽<span id="ticket-total">0</span></span>
+        </div>
+
+        <div class="summary-actions">
+          <button id="btn-confirm-purchase" class="btn-primary-lg" disabled><i class="fa fa-shopping-cart"></i> Comprar</button>
+          <button id="btn-gift-cart" class="btn-secondary btn-gift" disabled><i class="fa fa-gift"></i> Obtener como regalo</button>
         </div>
       </section>
     </main>
   </div>
 
-  <div id="modal-summary" class="modal-backdrop hidden">
-    <div class="modal">
-      <h3 class="modal-title">Resumen de Incubación</h3>
+  <div class="modal-backdrop hidden" id="modal-purchase-summary">
+    <div class="modal" style="width: 420px; max-width: 95%;">
+      <h3 class="modal-title">🧾 Resumen de compra</h3>
       <div class="modal-body">
-        <p><strong>Tipo de huevo:</strong> <span id="summary-type"></span></p>
-        <p><strong>Tiempo base:</strong> <span id="summary-time"></span></p>
-        
-        <p>
-          <strong>Fecha de eclosión:</strong> 
-          <span id="summary-date"></span>
-          <span id="special-icon-summary" style="color: #facc15; font-weight: bold; font-size: 1.2rem; margin-left: 4px;"></span>
-        </p>
-
-        <p><strong>Pokémon seleccionados:</strong></p>
-        <ul id="summary-pokemon" class="summary-list"></ul>
-
-        <div class="modal-row" id="container-special-incubator">
-          <label class="checkbox-option">
-            <input type="checkbox" id="special-incubator" />
-            Usar incubator especial (-7 días, costo: 100 Pokecoins)
-          </label>
+        <ul id="purchase-summary-list" class="purchase-summary-list"></ul>
+        <div class="purchase-summary-total-row">
+          <span>Total a pagar</span>
+          <span>₽<span id="purchase-summary-total">0</span></span>
         </div>
       </div>
-
       <div class="modal-footer">
-        <button class="btn-secondary" onclick="closeSummaryModal()">Cancelar</button>
-        <button class="btn-primary" onclick="confirmIncubationFromModal()">Confirmar</button>
+        <button class="btn-secondary" id="btn-purchase-cancel">Cancelar</button>
+        <button class="btn-primary" id="btn-purchase-confirm">Confirmar y pagar</button>
       </div>
     </div>
   </div>
 
-  <div id="modal-hatch" class="modal-backdrop hidden">
-    <div class="hatch-card">
-      <h3 class="modal-title" id="hatch-title">¡Algo está pasando!</h3>
-      <div id="hatch-animation-area" class="egg-visual-container">
-        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/mystery-egg.png" class="mystery-egg egg-shaking" />
+  <div class="modal-backdrop hidden" id="modal-gift-summary">
+    <div class="modal" style="width: 420px; max-width: 95%;">
+      <h3 class="modal-title">🎁 Resumen de regalo</h3>
+      <div class="modal-body">
+        <p style="font-size: 0.8rem; color: #718096; margin-bottom: 4px;">Estos ítems se agregarán a tu inventario sin costo:</p>
+        <ul id="gift-summary-list" class="purchase-summary-list"></ul>
       </div>
-      <p id="hatch-status" class="hatch-status-text">¡El huevo se está rompiendo!</p>
-      <div id="modal-hatch-footer" style="display: none; margin-top: 20px; justify-content: center;">
-        <button class="btn-primary" onclick="closeHatchModal()">Aceptar</button>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-gift-cancel">Cancelar</button>
+        <button class="btn-primary btn-gift" id="btn-gift-confirm">Confirmar regalo</button>
       </div>
     </div>
   </div>
@@ -182,7 +172,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="core.js"></script>
   <script src="notifications.js"></script>
-  <script src="clasificacion.js"></script>
-  <script src="guarderia.js"></script>
+  <script src="tienda.js"></script>
 </body>
 </html>

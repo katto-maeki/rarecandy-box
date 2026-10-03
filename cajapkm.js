@@ -272,29 +272,47 @@ function getSafeSpriteUrl(poke) {
   // Si tiene URL de GitHub, la redirigimos al CDN espejo
   return window.toCdnSpriteUrl ? window.toCdnSpriteUrl(url) : url;
 }
+// Formas puramente estéticas que PokeAPI no lista en /pokemon (solo existen
+// en /pokemon-form), p. ej. Shellos Mar Este. Se añaden a mano para poder
+// elegirlas en la caja; comparten número, tipos y stats con su forma base.
+// "evolvesTo" indica en qué forma evoluciona para conservar el color.
+const COSMETIC_FORMS = {
+  "shellos-east": { base: "shellos", evolvesTo: "gastrodon-east" },
+  "gastrodon-east": { base: "gastrodon" },
+};
+
 async function fetchPokemonList() {
   if (allPokemonList) return allPokemonList;
   const res = await fetch(`${POKEAPI_BASE}/pokemon?limit=100000&offset=0`);
   const data = await res.json();
-  allPokemonList = data.results;
+  allPokemonList = data.results.concat(
+    Object.keys(COSMETIC_FORMS).map((name) => ({ name }))
+  );
   return allPokemonList;
 }
 
 async function fetchPokemonByNameOrId(value) {
   const v = value.toString().trim().toLowerCase();
   if (!v) throw new Error("Nombre vacío");
-  
-  const res = await fetch(`${POKEAPI_BASE}/pokemon/${v}`);
+
+  const cosmetic = COSMETIC_FORMS[v];
+  const res = await fetch(`${POKEAPI_BASE}/pokemon/${cosmetic ? cosmetic.base : v}`);
   if (!res.ok) throw new Error("Pokémon no encontrado");
-  
+
   const data = await res.json();
+  let sprites = data.sprites;
+  if (cosmetic) {
+    const resForm = await fetch(`${POKEAPI_BASE}/pokemon-form/${v}`);
+    if (!resForm.ok) throw new Error("Pokémon no encontrado");
+    sprites = (await resForm.json()).sprites;
+  }
   return {
     id: data.id,
     numero: "#" + String(data.id).padStart(3, "0"),
-    nombre: capitalize(data.name),
+    nombre: capitalize(cosmetic ? v : data.name),
     tipos: data.types.map((t) => translateType(t.type.name)),
-    spriteNormal: data.sprites?.other?.home?.front_default || data.sprites?.front_default || "",
-    spriteShiny: data.sprites?.other?.home?.front_shiny || data.sprites?.front_shiny || ""
+    spriteNormal: sprites?.other?.home?.front_default || sprites?.front_default || "",
+    spriteShiny: sprites?.other?.home?.front_shiny || sprites?.front_shiny || ""
   };
 }
 
@@ -344,7 +362,7 @@ function isShowcaseVariety(vName) {
 // colaban como si fueran el destino normal de la evolución (p. ej. Kirlia
 // terminaba pudiendo "evolucionar" directo a Mega Gallade).
 function isMegaOrGmaxVariety(vName) {
-  return /-(mega(-x|-y)?|gmax)$/.test(vName);
+  return /-(mega(-[a-z])?|gmax)$/.test(vName); // mega, mega-x/y, mega-z (Legends Z-A)
 }
 
 // Casos donde la cadena de evolución de PokeAPI tiene más de una rama (p.
@@ -361,6 +379,66 @@ const REGION_EXCLUSIVE_BRANCH = {
   "zigzagoon-galar": ["linoone-galar"],
   "linoone-galar": ["obstagoon"],
 };
+
+// Triggers de PokeAPI que no son "subir de nivel" ni "usar objeto": intercambio,
+// Shedinja (shed), Alcremie (spin), Urshifu (tower-of-*), Sirfetch'd, Runerigus,
+// Wyrdeer/Overqwil, Basculegion, etc. Todos piden Cristal Estelar.
+const STAR_CRYSTAL_TRIGGER_LABELS = { trade: "intercambio" };
+
+// Devuelve por qué una evolución pide Cristal Estelar (texto corto), o null si
+// es una evolución normal por nivel / piedra / amistad. Se evalúa por cada
+// entrada de evolution_details (PokeAPI lista métodos alternativos por juego).
+function getStarCrystalReason(detail) {
+  const trigger = detail.trigger?.name;
+
+  if (trigger && trigger !== "level-up" && trigger !== "use-item") {
+    return STAR_CRYSTAL_TRIGGER_LABELS[trigger] || "condición especial";
+  }
+  // Objeto que no es piedra: manzanas de Applin, Black Augurite, Peat Block...
+  if (trigger === "use-item" && detail.item?.name && !detail.item.name.endsWith("stone")) return "objeto específico";
+  if (detail.held_item) return "objeto específico";
+  if (detail.known_move || detail.known_move_type) return "movimiento conocido";
+  if (detail.time_of_day) return "hora del día";
+  if (detail.location) return "lugar específico";
+  if (detail.needs_overworld_rain || detail.turn_upside_down || detail.party_species ||
+      detail.party_type || detail.trade_species || detail.min_beauty) return "condición especial";
+  return null;
+}
+
+// Ítems que pide UN método de evolución (una entrada de evolution_details).
+// Las condiciones se acumulan: amistad + hora del día = Pulsera + Cristal.
+function getMethodRequirements(detail) {
+  const starCrystalReason = getStarCrystalReason(detail);
+  return {
+    requiresStone: detail.trigger?.name === "use-item" && !!detail.item?.name?.endsWith("stone"),
+    requiresFriendship: detail.min_happiness > 0 || detail.min_affection > 0,
+    requiresStarCrystal: !!starCrystalReason,
+    starCrystalReason,
+  };
+}
+
+// PokeAPI lista en la misma especie métodos ALTERNATIVOS de distintos juegos
+// (Slowbro = nivel 37 O brazalete Galanuez; Leafeon = lugar O piedra hoja).
+// Basta cumplir uno, así que elegimos el que pide menos ítems y, a igualdad,
+// el que no usa Cristal (Magnezone: piedra trueno antes que "lugar").
+function pickEvolutionRequirements(details) {
+  const none = { requiresStone: false, requiresFriendship: false, requiresStarCrystal: false, starCrystalReason: null };
+  if (!Array.isArray(details) || details.length === 0) return none;
+
+  const cost = (r) => (r.requiresStone + r.requiresFriendship + r.requiresStarCrystal) * 2 + r.requiresStarCrystal;
+  return details.map(getMethodRequirements).reduce((best, r) => (cost(r) < cost(best) ? r : best));
+}
+
+// PokeAPI mezcla en la misma especie los métodos de todas sus formas y marca
+// con evolved_pokemon_form los de una forma concreta (Persian = nivel 28;
+// Persian-Alola = amistad). Cada variedad usa solo sus propios métodos.
+function getMethodsForVariety(details, varietyName) {
+  if (!Array.isArray(details)) return [];
+  const own = details.filter(d => d.evolved_pokemon_form?.name === varietyName);
+  if (own.length > 0) return own;
+  const generic = details.filter(d => !d.evolved_pokemon_form);
+  return generic.length > 0 ? generic : details;
+}
 
 async function getEvolutionOptions(pokemonId, pokemonName) {
   try {
@@ -392,15 +470,9 @@ async function getEvolutionOptions(pokemonId, pokemonName) {
       const resEvoSpecies = await fetch(`${POKEAPI_BASE}/pokemon-species/${evoSpeciesName}`);
       const evoSpeciesData = await resEvoSpecies.json();
 
-      let requiresStone = false;
-      let requiresFriendship = false;
       let timeCondition = "";
-      if (Array.isArray(evNode.evolution_details)) {
-        for (const detail of evNode.evolution_details) {
-          if (detail.trigger?.name === "use-item" && detail.item?.name?.endsWith("stone")) requiresStone = true;
-          if (detail.min_happiness > 0 || detail.min_affection > 0) requiresFriendship = true;
-          if (detail.time_of_day) timeCondition = detail.time_of_day;
-        }
+      for (const detail of (evNode.evolution_details || [])) {
+        if (detail.time_of_day) timeCondition = detail.time_of_day;
       }
 
       // ¿Esta línea evolutiva tiene una forma específica para la región
@@ -458,15 +530,28 @@ async function getEvolutionOptions(pokemonId, pokemonName) {
         // nunca se podía elegir aunque se tuviera el ítem).
         const requiresPassport = !!(regionSuffix && !currentRegionSuffix);
 
+        // Los requisitos se SUMAN dentro de un mismo método (Espeon = amistad +
+        // día → Pulsera + Cristal) y el Pasaporte se suma aparte (Raichu Alola
+        // = Piedra + Pasaporte). Entre métodos alternativos se elige el más
+        // simple (ver pickEvolutionRequirements).
+        const { requiresStone, requiresFriendship, requiresStarCrystal, starCrystalReason } =
+          pickEvolutionRequirements(getMethodsForVariety(evNode.evolution_details, vName));
+
         const evoPokemonId = parseSpeciesIdFromUrl(varEntry.pokemon.url);
         const displayName = capitalize(vName.replace(/-/g, " "));
 
+        // Forma estética (Shellos Mar Este): evoluciona a su misma forma.
+        const cosmeticTarget = COSMETIC_FORMS[String(pokemonName || "").toLowerCase()]?.evolvesTo;
+        const isCosmeticMatch = cosmeticTarget && COSMETIC_FORMS[cosmeticTarget]?.base === vName;
+
         options.push({
-          id: evoPokemonId,
-          name: displayName,
+          id: isCosmeticMatch ? cosmeticTarget : evoPokemonId,
+          name: isCosmeticMatch ? capitalize(cosmeticTarget.replace(/-/g, " ")) : displayName,
           requiresStone,
           requiresFriendship,
           requiresPassport,
+          requiresStarCrystal,
+          starCrystalReason,
           timeCondition: timeCondition,
           evolutionStage: evolutionStage
         });
@@ -812,6 +897,8 @@ async function openTrainingModal() {
         option.dataset.requiresStone = evo.requiresStone;
         option.dataset.requiresFriendship = evo.requiresFriendship;
         option.dataset.requiresPassport = evo.requiresPassport;
+        option.dataset.requiresStarCrystal = evo.requiresStarCrystal;
+        option.dataset.starCrystalReason = evo.starCrystalReason || "";
         
         const clase = currentTrainingPoke.clase;
         const targetLvl = getTargetLevelByClass(clase, evo.evolutionStage);
@@ -864,6 +951,7 @@ function updateTrainingUI() {
     const requiresStone = selectedOption.dataset.requiresStone === "true";
     const requiresFriendship = selectedOption.dataset.requiresFriendship === "true";
     const requiresPassport = selectedOption.dataset.requiresPassport === "true";
+    const requiresStarCrystal = selectedOption.dataset.requiresStarCrystal === "true";
 
     const totalNeededXP = getTotalXpForLevel(targetLvlRequired);
     const storedXP = currentTrainingPoke.storedXP || 0;
@@ -903,7 +991,12 @@ function updateTrainingUI() {
     }
     if (requiresPassport && (currentInventory.items.passport || 0) < 1) { 
         canEvolve = false; 
-        errors.push("Pasaporte Regional"); 
+        errors.push("Pasaporte Regional");
+    }
+    if (requiresStarCrystal && (currentInventory.items.starCrystal || 0) < 1) {
+        canEvolve = false;
+        const reason = selectedOption.dataset.starCrystalReason;
+        errors.push(reason ? `Cristal Estelar (evoluciona por ${reason})` : "Cristal Estelar");
     }
 
     if (errors.length > 0) {
@@ -983,6 +1076,7 @@ async function handleEvolveAction() {
     const requiresStone = selectedOption.dataset.requiresStone === "true";
     const requiresFriendship = selectedOption.dataset.requiresFriendship === "true";
     const requiresPassport = selectedOption.dataset.requiresPassport === "true";
+    const requiresStarCrystal = selectedOption.dataset.requiresStarCrystal === "true";
 
     const nameBeforeEvo = currentTrainingPoke.apodo || currentTrainingPoke.nombre;
 
@@ -993,6 +1087,7 @@ async function handleEvolveAction() {
     if (requiresStone) currentInventory.items.evoStone--;
     if (requiresFriendship) currentInventory.items.friendship--;
     if (requiresPassport) currentInventory.items.passport--;
+    if (requiresStarCrystal) currentInventory.items.starCrystal--;
 
     try {
         const basic = await fetchPokemonByNameOrId(targetId);

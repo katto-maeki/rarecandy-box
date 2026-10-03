@@ -251,6 +251,9 @@ html, body {
 
 .poke-text-list li span.lvl { color: #888; font-size: 0.75rem; }
 
+/* Historial de compras: ítem a la izquierda, subtotal alineado a la derecha */
+.compras-items-list li { justify-content: space-between; }
+
 /* MODAL TWEAKS */
 #adm-item-manager-container .item-manager-row {
     border-bottom: 1px solid #f0f0f0;
@@ -350,6 +353,27 @@ html, body {
   line-height: 1.3;
 }
 
+.diario-row-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.diario-row-link {
+  display: block;
+  margin-top: 2px;
+  color: #3182ce;
+  font-size: 0.74rem;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diario-row-link:hover {
+  text-decoration: underline;
+}
+
 .diario-row-rewards {
   margin-top: 3px;
   display: flex;
@@ -432,4 +456,15 @@ html, body {
   background-color: #e0f2fe; /* Azulito claro al pasar mouse */
   color: #0369a1;
   font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  /* Con 3 pestañas no caben en una línea: se desplazan de lado. */
+  .admin-tabs {
+    overflow-x: auto;
+  }
+  .admin-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
 }

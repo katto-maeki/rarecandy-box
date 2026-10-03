@@ -8,7 +8,7 @@ const DISC_TABLE = "sorelle_discoveries";
 // LABELS ACTUALIZADO: Sincronizado con Master Ball y Panquecito
 const LABELS = {
     egg: "Huevo", tradeToken: "Ticket Intercambio", evoStone: "Piedra Evo",
-    friendship: "Pulsera Amistad", passport: "Pasaporte Regional", panquecito: "Panquecito",
+    friendship: "Pulsera Amistad", starCrystal: "Cristal Estelar", passport: "Pasaporte Regional", panquecito: "Panquecito", curry: "Curry",
     poke: "Poké Ball", super: "Super Ball", ultra: "Ultra Ball", master: "Master Ball"
 };
 
@@ -18,6 +18,13 @@ const REGION_MAP = {
     "generation-vii": "Alola", "generation-viii": "Galar", "generation-ix": "Paldea"
 };
 
+// Modalidad de participación elegida al registrar una actividad (actividades.html).
+const PARTICIPATION_INFO = {
+    individual: { label: "Individual", color: "#2b6cb0", icon: "👤" },
+    pareja:     { label: "En pareja",  color: "#d53f8c", icon: "👥" },
+    grupal:     { label: "Grupal",     color: "#dd6b20", icon: "👪" }
+};
+
 // Catálogo de todos los tipos de actividad que puede generar el sistema (manuales y automáticos),
 // usado para etiquetar y colorear el Diario de Actividades del admin.
 const ACTIVITY_TYPE_INFO = {
@@ -25,6 +32,7 @@ const ACTIVITY_TYPE_INFO = {
     exploration:          { label: "Exploración",            color: "#7a47ff", icon: "🧭" },
     quest:                { label: "Quest",                  color: "#7a47ff", icon: "🎯" },
     egg_challenge:        { label: "Reto Huevo",             color: "#d97706", icon: "🥚" },
+    safari:               { label: "Safari",                 color: "#7a47ff", icon: "🌿" },
     pokedex_comu:         { label: "Pokédex Comunitaria",    color: "#7a47ff", icon: "📘" },
     pokedex_legen:        { label: "Pokédex Legendaria",     color: "#7a47ff", icon: "📕" },
     coloring:             { label: "Coloreo",                color: "#7a47ff", icon: "🎨" },
@@ -40,6 +48,7 @@ const ACTIVITY_TYPE_INFO = {
     incubation:           { label: "Incubación",             color: "#d97706", icon: "🥚" },
     box_add:              { label: "Ingreso a Caja",         color: "#0369a1", icon: "📥" },
     purchase:             { label: "Compra",                  color: "#e53e3e", icon: "🛍️" },
+    gift:                 { label: "Regalo (Tienda)",         color: "#0fb86b", icon: "🎁" },
     consume:              { label: "Consumo de Ítem",        color: "#4b5563", icon: "🎒" },
     bimonthly_close:      { label: "Cierre Bimestral",       color: "#059669", icon: "🏁" },
     exp_assign:           { label: "Asignación EXP",         color: "#7a47ff", icon: "💪" },
@@ -345,6 +354,72 @@ async function fetchAndRenderAdminLogs(targetId) {
     }
 
     renderDiarioList("all");
+    renderComprasList();
+}
+
+// --- HISTORIAL DE COMPRAS: una fila por orden (ticket), con dropdown de los ítems comprados ---
+function renderComprasList() {
+    const comprasList = document.getElementById("det-compras-list");
+    const comprasTotal = document.getElementById("det-compras-total");
+    if (!comprasList) return;
+
+    const rows = currentPlayerLogs.filter(l =>
+        l.activity_type === "purchase" || l.activity_type === "gift" || (l.activity_name || "").startsWith("Tienda:")
+    );
+
+    const totalSpent = rows
+        .filter(l => l.activity_type === "purchase")
+        .reduce((sum, l) => sum + Math.abs(l.money_reward || 0), 0);
+    if (comprasTotal) comprasTotal.textContent = `Total gastado: ₽${totalSpent.toLocaleString()}`;
+
+    if (rows.length === 0) {
+        comprasList.innerHTML = `<div style="color:#94a3b8; font-style:italic; padding:10px;">Este jugador aún no ha realizado compras en la tienda.</div>`;
+        return;
+    }
+
+    comprasList.innerHTML = rows.map(log => {
+        const dateStr = new Date(log.created_at).toLocaleDateString('es-ES', {
+            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        const isGift = log.activity_type === "gift" || log.activity_type === "otros";
+        const badgeColor = isGift ? "#0fb86b" : "#e53e3e";
+        const badgeLabel = isGift ? "🎁 Regalo" : "🛍️ Compra";
+
+        let order = null;
+        try { order = JSON.parse(log.activity_name); } catch (e) { /* registro antiguo en texto plano */ }
+
+        if (order && Array.isArray(order.items)) {
+            const itemCount = order.items.reduce((sum, it) => sum + (it.qty || 0), 0);
+            const totalText = isGift ? "Gratis" : `-₽${(order.total || 0).toLocaleString()}`;
+            const itemsHtml = order.items.map(it => `
+                <li><span>${it.qty}x ${it.label}</span>${isGift ? "" : `<span style="color:#888;">₽${(it.subtotal || it.qty * it.price).toLocaleString()}</span>`}</li>
+            `).join("");
+
+            return `<div class="diario-row">
+                <details class="admin-poke-dropdown">
+                    <summary>
+                        <span>
+                            <span class="badge-diario" style="background:${badgeColor}1a; color:${badgeColor};">${badgeLabel}</span>
+                            <span class="diario-row-date" style="margin-left:8px;">${dateStr}</span>
+                        </span>
+                        <span style="color:${badgeColor}; font-weight:700;">${itemCount} ítem${itemCount !== 1 ? "s" : ""} · ${totalText}</span>
+                    </summary>
+                    <ul class="poke-text-list compras-items-list">${itemsHtml}</ul>
+                </details>
+            </div>`;
+        }
+
+        // Registro antiguo (previo a agrupar por orden): un solo ítem en texto plano.
+        const costText = isGift ? "Gratis" : `-₽${Math.abs(log.money_reward || 0).toLocaleString()}`;
+        return `<div class="diario-row">
+            <div class="diario-row-top">
+                <span class="badge-diario" style="background:${badgeColor}1a; color:${badgeColor};">${badgeLabel}</span>
+                <span class="diario-row-date">${dateStr}</span>
+            </div>
+            <div class="diario-row-name">${log.activity_name || "Sin descripción"}</div>
+            <div class="diario-row-rewards"><span style="color:${badgeColor};">${costText}</span></div>
+        </div>`;
+    }).join("");
 }
 
 function renderDiarioList(typeFilter) {
@@ -378,18 +453,37 @@ function renderDiarioList(typeFilter) {
                 closureSummaryLookup[log.id] = { summary, dateStr };
                 clickable = true;
             } catch (e) { /* registro plano antiguo sin JSON, se muestra tal cual */ }
+        } else if (log.activity_type === "purchase" || log.activity_type === "gift") {
+            try {
+                const order = JSON.parse(log.activity_name);
+                displayTitle = "Tienda: " + order.items.map(it => `${it.qty}x ${it.label}`).join(", ");
+            } catch (e) { /* registro antiguo de un solo ítem en texto plano, se muestra tal cual */ }
         }
 
         const rewardBits = [];
         if (log.money_reward) rewardBits.push(`<span style="color:${log.money_reward > 0 ? '#0fb86b' : '#e53e3e'};">${log.money_reward > 0 ? '+' : ''}${log.money_reward}₽</span>`);
         if (log.xp_reward) rewardBits.push(`<span style="color:#7a47ff;">+${log.xp_reward} XP</span>`);
 
+        // Participación (individual / pareja / grupal) y enlace al post, solo presentes en actividades registradas a mano.
+        const partInfo = PARTICIPATION_INFO[log.participation];
+        const partBadge = partInfo
+            ? `<span class="badge-diario" style="background:${partInfo.color}1a; color:${partInfo.color};">${partInfo.icon} ${partInfo.label}</span>`
+            : "";
+        const safeLink = /^https?:\/\//i.test(log.link || "") ? log.link.replace(/"/g, "&quot;") : "";
+        const linkHtml = safeLink
+            ? `<a class="diario-row-link" href="${safeLink}" target="_blank" rel="noopener noreferrer" title="${safeLink}">🔗 ${safeLink}</a>`
+            : "";
+
         return `<div class="diario-row"${clickable ? ` data-log-id="${log.id}" title="Haz clic para auditar estadísticas completas de este cierre"` : ""}>
             <div class="diario-row-top">
-                <span class="badge-diario" style="background:${info.color}1a; color:${info.color};">${info.icon} ${info.label}</span>
+                <span class="diario-row-badges">
+                    <span class="badge-diario" style="background:${info.color}1a; color:${info.color};">${info.icon} ${info.label}</span>
+                    ${partBadge}
+                </span>
                 <span class="diario-row-date">${dateStr}</span>
             </div>
             <div class="diario-row-name">${displayTitle}</div>
+            ${linkHtml}
             ${rewardBits.length ? `<div class="diario-row-rewards">${rewardBits.join(" ")}</div>` : ""}
         </div>`;
     }).join("");

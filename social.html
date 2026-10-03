@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght=400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
   <link rel="stylesheet" href="base.css" />
+  <script src="theme.js"></script>
   <link rel="stylesheet" href="perfil.css" />
   <style>
     /* Estilos específicos para el Hub Social */
@@ -52,8 +53,150 @@
     .global-feed-box {
       height: 70vh;
     }
+    .social-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .social-tab {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #718096;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .social-tab:hover { border-color: #dac6f0; color: #232542; }
+    .social-tab.active {
+      background: #dac6f0;
+      border-color: #c957b0;
+      color: #232542;
+    }
+    .trade-market-row {
+      background: white;
+      border: 1px solid #edf2f7;
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .trade-market-owner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .trade-market-owner .avatar-social-mini { width: 32px; height: 32px; }
+    .trade-market-pokes {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .trade-market-pokes .pkm-profile-box {
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .trade-market-pokes .pkm-profile-box:hover {
+      transform: translateY(-2px);
+      border-color: #c957b0;
+    }
+    .btn-new-announcement {
+      align-self: flex-end;
+      flex-shrink: 0;
+      background: #c957b0;
+      color: #ffffff;
+      border: none;
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s ease, filter 0.1s ease;
+    }
+    .btn-new-announcement:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+    .announcement-card {
+      background: white;
+      border: 1px solid #edf2f7;
+      border-left: 4px solid #c957b0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .announcement-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .announcement-title {
+      flex: 1;
+      font-weight: 800;
+      color: #232542;
+      font-size: 0.92rem;
+      word-break: break-word;
+    }
+    .announcement-activity {
+      font-size: 0.62rem;
+      padding: 2px 8px;
+      font-weight: 700;
+      align-self: center;
+      white-space: nowrap;
+      max-width: 45%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .announcement-delete {
+      background: none;
+      border: none;
+      color: #cbd5e0;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0 2px;
+    }
+    .announcement-delete:hover { color: #e53e3e; }
+    .announcement-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      color: #718096;
+      margin: 4px 0 8px;
+    }
+    .announcement-meta .avatar-social-mini { width: 22px; height: 22px; border-width: 1px; }
+    .announcement-author { font-weight: 700; color: #4a5568; cursor: pointer; }
+    .announcement-author:hover { color: #c957b0; }
+    .announcement-content {
+      font-size: 0.82rem;
+      color: #2d3748;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+    }
+    .announcement-link {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #c957b0;
+      word-break: break-all;
+    }
     @media (max-width: 768px) {
       .social-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      /* El título ocupa su propia línea; la etiqueta de actividad y la
+         papelera bajan a la siguiente para no estrujar el título. */
+      .announcement-head { flex-wrap: wrap; }
+      .announcement-title { flex-basis: 100%; }
+      .announcement-activity { max-width: 80%; }
+      .announcement-delete { margin-left: auto; }
     }
   </style>
 </head>
@@ -87,6 +230,7 @@
           <a href="trainer.html" class="menu-link"><i class="fa fa-money"></i> Inventario</a>
           <a href="actividades.html" class="menu-link"><i class="fa fa-list-alt"></i> Actividades</a>
           <a href="guarderia.html" class="menu-link"><i class="fa fa-asterisk"></i> Incubadora</a>
+          <a href="tienda.html" class="menu-link"><i class="fa fa-shopping-cart"></i> Tienda Pokémon</a>
           <a href="pokedex.html" class="menu-link"><i class="fa fa-search"></i> Pokédex Comunitaria</a>
           <a href="eventos.html" class="menu-link"><i class="fa fa-star"></i> Eventos</a>
           <a href="tablas.html" class="menu-link"><i class="fa fa-question-circle"></i> Info. General</a>
@@ -109,10 +253,21 @@
         </div>
 
         <div class="horizontal-row-card">
-          <div class="row-card-header">
-            <h3 class="row-card-title"><i class="fa fa-globe text-gold"></i> Bitácora Global de Interacciones</h3>
+          <div class="row-card-header social-tabs">
+            <button type="button" class="social-tab active" data-tab="board-panel"><i class="fa fa-thumb-tack"></i> Anuncios</button>
+            <button type="button" class="social-tab" data-tab="trade-market-feed"><i class="fa fa-exchange"></i> Intercambios</button>
+            <button type="button" class="social-tab" data-tab="global-history-feed"><i class="fa fa-globe"></i> Bitácora</button>
           </div>
-          <div id="global-history-feed" class="profile-feed-box global-feed-box">
+          <div id="board-panel" class="profile-feed-box global-feed-box social-tab-panel">
+            <button type="button" id="btn-new-announcement" class="btn-new-announcement" title="Publicar un aviso"><i class="fa fa-plus"></i> Nuevo aviso</button>
+            <div id="board-feed" style="display: flex; flex-direction: column; gap: 10px;">
+              <p style="font-size:0.8rem; color:#718096; padding:10px;">Revisando el tablón...</p>
+            </div>
+          </div>
+          <div id="trade-market-feed" class="profile-feed-box global-feed-box social-tab-panel hidden">
+            <p style="font-size:0.8rem; color:#718096; padding:10px;">Buscando pokémon en exhibición...</p>
+          </div>
+          <div id="global-history-feed" class="profile-feed-box global-feed-box social-tab-panel hidden">
             <p style="font-size:0.8rem; color:#718096; padding:10px;">Sintonizando señales de radio del servidor...</p>
           </div>
         </div>
@@ -138,6 +293,32 @@
           <button class="btn-secondary" id="btn-proposal-close">Cerrar</button>
           <button class="btn-primary" id="btn-proposal-accept" style="background: #48bb78;">Aceptar Intercambio</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modal-new-announcement">
+    <div class="modal" style="width: 480px; max-width: 95%;">
+      <h3 class="modal-title"><i class="fa fa-thumb-tack"></i> Nuevo Aviso</h3>
+      <div class="modal-body" style="padding: 10px 0;">
+        <label class="label" for="announcement-title">Título</label>
+        <input type="text" id="announcement-title" class="input" maxlength="80" placeholder="Ej. Busco Eevee shiny" />
+
+        <label class="label" for="announcement-activity">Tipo de actividad (opcional)</label>
+        <input type="text" id="announcement-activity" class="input" maxlength="40" placeholder="Ej. Intercambio, Raid, Torneo..." />
+
+        <label class="label" for="announcement-content">Contenido <span id="announcement-count" style="float: right; color: #718096; font-weight: 400;">0/280</span></label>
+        <textarea id="announcement-content" class="input" maxlength="280" rows="4" style="resize: vertical; font-family: inherit;" placeholder="Cuéntale a la isla de qué se trata..."></textarea>
+
+        <label class="label" for="announcement-link">Enlace (opcional)</label>
+        <input type="url" id="announcement-link" class="input" maxlength="300" placeholder="https://..." />
+
+        <p style="font-size: 0.7rem; color: #718096; margin: 4px 0 0;">El aviso se publica con la fecha de hoy y se mantiene visible 7 días.</p>
+        <p id="announcement-error" class="hidden" style="font-size: 0.75rem; color: #e53e3e; font-weight: 700; margin: 6px 0 0;"></p>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn-secondary" id="btn-announcement-cancel">Cancelar</button>
+        <button class="btn-primary" id="btn-announcement-submit" style="background: #c957b0; color: #ffffff;">Publicar</button>
       </div>
     </div>
   </div>

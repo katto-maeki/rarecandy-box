@@ -7,7 +7,7 @@ const REWARDS_CONFIG = {
     encounter:     { individual: [100, 80], pareja: [150, 100], grupal: [200, 120] },
     exploration:   { individual: [150, 80], pareja: [200, 100], grupal: [250, 120] },
     coloring:      { individual: [80, 50] },
-    egg_challenge: { individual: [0, 150] },
+    safari:        { individual: [150, 80], pareja: [200, 100], grupal: [250, 120] },
     quest:         { individual: [120, 100], pareja: [170, 120], grupal: [220, 140] },
     pokedex_comu:  { individual: [100, 80] },
     pokedex_legen: { individual: [100, 80] },
@@ -23,6 +23,7 @@ const REWARDS_CONFIG = {
 const QTY_LABELS = {
     encounter: "¿Cuántos Pokémon mencionaste?",
     coloring:  "¿Cuántos Pokémon coloreaste?",
+    safari:    "¿Cuántos Pokémon escribiste?",
     logros:    "¿Cuántos logros registras?"
 };
 
@@ -73,7 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             qtyRow.classList.add("hidden");
             selectPart.disabled = false;
 
-            if (val === "encounter" || val === "coloring" || val === "logros") {
+            if (val === "encounter" || val === "safari" || val === "coloring" || val === "logros") {
                 qtyRow.classList.remove("hidden");
                 const qtyLabel = document.getElementById("encounter-qty-label");
                 if (qtyLabel) qtyLabel.textContent = QTY_LABELS[val];
@@ -81,7 +82,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (val === "otros_manual") {
                 customRow.classList.remove("hidden");
-            } else if (["pokedex_comu", "pokedex_legen", "evolution_narrative", "checkpoint", "coloring", "egg_challenge", "logros"].includes(val)) {
+            } else if (["pokedex_comu", "pokedex_legen", "evolution_narrative", "checkpoint", "coloring", "logros"].includes(val)) {
                 selectPart.value = "individual";
                 selectPart.disabled = true;
             } else if (val === "trade_narrative") { // <-- Corregido para que bloquee el select con la nueva clave
@@ -120,7 +121,7 @@ async function handleRegisterActivity() {
         baseXP = reward[1];
     }
 
-    const isMultiplied = (type === "encounter" || type === "coloring" || type === "logros");
+    const isMultiplied = (type === "encounter" || type === "safari" || type === "coloring" || type === "logros");
     const finalMoney = isMultiplied ? (baseMoney * quantity) : baseMoney;
     const finalXP = isMultiplied ? (baseXP * quantity) : baseXP;
 
@@ -207,7 +208,8 @@ async function loadActivityLog() {
             "encounter", 
             "exploration", 
             "quest", 
-            "egg_challenge", 
+            "egg_challenge", // histórico
+            "safari",
             "pokedex_comu", 
             "pokedex_legen", 
             "coloring", 
@@ -235,7 +237,7 @@ async function loadActivityLog() {
             passport: "Passport", evolution_narrative: "Evolución", trade_narrative: "Intercambio", // <-- Mapeado aquí
             checkpoint: "Checkpoint", otros_manual: "Otros", otros: "Otros",
             exploration: "Exploración", coloring: "Coloreo",
-            egg_challenge: "Reto Huevo", logros: "Logros"
+            egg_challenge: "Reto Huevo", safari: "Safari", logros: "Logros"
         };
 
         let tableHTML = `

@@ -13,8 +13,11 @@
 
 .log-scroll-area {
     overflow-y: auto;
-    flex: 1;
-    max-height: 420px;
+    /* Ocupa todo el alto libre de la columna; height: 0 evita que el
+       contenido estire la columna, y el scroll aparece dentro. */
+    flex: 1 1 0;
+    height: 0;
+    min-height: 300px;
     padding-right: 5px;
 }
 
@@ -229,4 +232,32 @@
 
 .btn-action-table:hover {
     transform: scale(1.2);
+}
+
+/* ==== Responsivo ==== */
+@media (max-width: 960px) {
+    /* La regla de escritorio usa !important, así que hay que repetirlo
+       para que en móvil sí se apilen las columnas. */
+    .activities-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    /* Apilado, la columna ya no tiene un alto fijo que rellenar: la lista
+       crece con su contenido hasta un tope y luego hace scroll. */
+    .log-scroll-area {
+        flex: none;
+        height: auto;
+        min-height: 0;
+        max-height: 70vh;
+    }
+
+    /* La tabla tiene 6 columnas: en pantallas angostas se desplaza de lado
+       dentro de su recuadro en vez de recortarse. */
+    .log-table-container {
+        overflow-x: auto;
+    }
+
+    .activities-table {
+        min-width: 560px;
+    }
 }

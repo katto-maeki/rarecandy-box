@@ -1,0 +1,105 @@
+/* ==========================================================
+   HALLOWEEN.CSS
+   Tema de temporada (octubre-noviembre). Lo carga theme.js y
+   solo sobrescribe colores: no modifica base.css ni los CSS de
+   cada página. Todas las reglas van bajo html.theme-halloween
+   para ganar en especificidad a los estilos normales.
+
+   Paleta (tomada del logo de Halloween):
+     fondo        #322838   cruces   #628224 (60%)
+     morado       #8f45e8   lila     #e6d6ff
+     naranja      #ff8a1f   amarillo #ffd84a
+     slime        #96e21f   texto    #2b1d33
+   ========================================================== */
+
+/* ===== Fondo con cruces ===== */
+html.theme-halloween .bg-main {
+  background-color: #322838;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 31 30' shape-rendering='crispEdges'%3E%3Cg fill='%23628224' fill-opacity='0.6'%3E%3Crect x='15' y='9' width='3' height='12'/%3E%3Crect x='10' y='14' width='12' height='3'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 20px 20px;
+}
+
+/* ===== Marco de pantalla ===== */
+html.theme-halloween .screen-frame {
+  background: #f3ebff;
+  box-shadow: 0 0 0 3px #96e21f, 0 10px 30px rgba(0, 0, 0, 0.55);
+}
+
+/* ===== Barras ===== */
+html.theme-halloween .top-bar,
+html.theme-halloween .bottom-bar {
+  background: #4f3a66;
+}
+
+html.theme-halloween .top-nav-btn-active,
+html.theme-halloween .info-tab-btn-active {
+  background: #ff8a1f;
+  color: #2b1406;
+}
+
+/* ===== Menú lateral ===== */
+html.theme-halloween .side-nav-content {
+  background: #f3ebff;
+}
+
+html.theme-halloween .menu-title,
+html.theme-halloween .close-btn {
+  color: #8f45e8;
+}
+
+html.theme-halloween .menu-link {
+  color: #2b1d33;
+}
+
+html.theme-halloween .menu-link:hover {
+  background: #ff8a1f;
+  color: #2b1406;
+}
+
+/* ===== Formularios ===== */
+html.theme-halloween .input {
+  border-color: #d9c3fa;
+}
+
+html.theme-halloween .input:focus {
+  border-color: #6fb51a;
+  box-shadow: 0 0 0 2px rgba(150, 226, 31, 0.35);
+}
+
+html.theme-halloween select.input {
+  background-image: linear-gradient(45deg, transparent 50%, #8f45e8 50%),
+    linear-gradient(135deg, #8f45e8 50%, transparent 50%);
+}
+
+/* ===== Botones ===== */
+html.theme-halloween .btn-primary,
+html.theme-halloween .btn-edit {
+  background: #ff8a1f;
+  color: #2b1406;
+}
+
+html.theme-halloween .btn-secondary,
+html.theme-halloween .btn-accent,
+html.theme-halloween .btn-danger {
+  background: #e6d6ff;
+  color: #2b1d33;
+}
+
+html.theme-halloween .info-tab-btn {
+  background: #ece0ff;
+  color: #2b1d33;
+}
+
+html.theme-halloween .info-tab-btn:hover {
+  background: #dfcbff;
+}
+
+/* ===== Login (index.html) ===== */
+html.theme-halloween .logo-img {
+  max-width: 260px;
+}
+
+html.theme-halloween .logo-text-accent {
+  color: #ff8a1f;
+}
