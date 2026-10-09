@@ -493,14 +493,6 @@ async function addHatchedPokemonToBox(speciesName, isShiny) {
   );
   if (upsertError) throw upsertError;
 
-  await bd.from("trainer_log").insert({
-    user_id: user.id,
-    activity_type: "box_add",
-    activity_name: `${newPoke.nombre} (Eclosión)`,
-    money_reward: 0,
-    xp_reward: 0,
-  });
-
   return newPoke;
 }
 
@@ -525,6 +517,14 @@ async function hatchIncubation(id) {
   const shiny = Math.random() < 0.10;
   await bd.from("trainer_incubations").update({ hatched: true, shiny, result_pokemon: winner }).eq("id", id);
   await loadIncubations();
+
+  await bd.from("trainer_log").insert({
+    user_id: user.id,
+    activity_type: "hatch",
+    activity_name: `${winner}${shiny ? " ✨" : ""} (Huevo ${formatEggType(inc.egg_type)})`,
+    money_reward: 0,
+    xp_reward: 0,
+  });
 
   let addedPoke = null;
   try {

@@ -7,6 +7,13 @@ const GAME_TABLE = "user_game_data";
 // Variables globales para el filtro
 let allSpecies = [];
 let allDiscoveries = [];
+// Las formas regionales comparten especie con la original (Vulpix de Alola es de la generación I),
+// así que su región sale del nombre ("Raichu-alola", "Ponyta Galar") antes que del dato guardado.
+const REGIONAL_FORMS = { alola: "Alola", galar: "Galar", hisui: "Hisui", paldea: "Paldea" };
+function regionOf(p) {
+    const m = String(p.name || "").toLowerCase().match(/[-\s](alola|galar|hisui|paldea)\b/);
+    return m ? REGIONAL_FORMS[m[1]] : (p.season || "Desconocida");
+}
 let trainerNameById = {}; // Nombre ACTUAL de cada usuario, indexado por su UUID
 
 // Configuración de Tipos (Español + Colores)
@@ -119,7 +126,7 @@ async function loadPokedex() {
 function populateRegionFilter() {
     const select = document.getElementById("region-filter");
     if (!select) return;
-    const regions = [...new Set(allSpecies.map(p => p.season || "Desconocida"))].sort();
+    const regions = [...new Set(allSpecies.map(regionOf))].sort();
     select.innerHTML = '<option value="all">Todas las regiones</option>';
     regions.forEach(region => {
         const option = document.createElement("option");
@@ -134,7 +141,7 @@ function applyFilter() {
     if (selectedRegion === "all") {
         renderGrid(allSpecies);
     } else {
-        const filtered = allSpecies.filter(p => (p.season || "Desconocida") === selectedRegion);
+        const filtered = allSpecies.filter(p => regionOf(p) === selectedRegion);
         renderGrid(filtered);
     }
 }
@@ -180,7 +187,7 @@ function renderDetail(poke, finders) {
     if(imgEl) imgEl.src = window.toCdnSpriteUrl(poke.image_url, "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/poke-ball.png");
     
     setTextById("detail-name", poke.name);
-    setTextById("detail-region", poke.season || "SORELLE");
+    setTextById("detail-region", poke.season ? regionOf(poke) : "SORELLE");
     
     const typesContainer = document.getElementById("detail-types-container");
     if (typesContainer) {

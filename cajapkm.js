@@ -981,36 +981,42 @@ function updateTrainingUI() {
     if (currentTotalXP < totalNeededXP) canEvolve = false;
     if (inputVal > currentInventory.xp) canEvolve = false;
     
-    if (requiresStone && (currentInventory.items.evoStone || 0) < 1) { 
-        canEvolve = false; 
-        errors.push("Piedra Evolutiva"); 
-    }
-    if (requiresFriendship && (currentInventory.items.friendship || 0) < 1) { 
-        canEvolve = false; 
-        errors.push("Pulsera Amistad"); 
-    }
-    if (requiresPassport && (currentInventory.items.passport || 0) < 1) { 
-        canEvolve = false; 
-        errors.push("Pasaporte Regional");
-    }
-    if (requiresStarCrystal && (currentInventory.items.starCrystal || 0) < 1) {
-        canEvolve = false;
-        const reason = selectedOption.dataset.starCrystalReason;
-        errors.push(reason ? `Cristal Estelar (evoluciona por ${reason})` : "Cristal Estelar");
-    }
+    // Ítems que consume la evolución: los que faltan bloquean, los que tiene se avisan
+    const starCrystalReason = selectedOption.dataset.starCrystalReason;
+    const requiredItems = [
+        { needed: requiresStone, key: "evoStone", label: "Piedra Evolutiva" },
+        { needed: requiresFriendship, key: "friendship", label: "Pulsera Amistad" },
+        { needed: requiresPassport, key: "passport", label: "Pasaporte Regional" },
+        { needed: requiresStarCrystal, key: "starCrystal", label: starCrystalReason ? `Cristal Estelar (evoluciona por ${starCrystalReason})` : "Cristal Estelar" }
+    ].filter(item => item.needed);
+    const itemsToUse = [];
+
+    requiredItems.forEach(item => {
+        if ((currentInventory.items[item.key] || 0) < 1) {
+            canEvolve = false;
+            errors.push(item.label);
+        } else {
+            itemsToUse.push(`1x ${item.label}`);
+        }
+    });
+    const useNotice = itemsToUse.length ? `Utilizarás: ${itemsToUse.join(", ")}` : "";
 
     if (errors.length > 0) {
         helpText.textContent = "Falta: " + errors.join(", ");
         helpText.style.display = "block";
         helpText.style.color = "#e53e3e";
     } else if (currentTrainingPoke.nivel >= targetLvlRequired) {
-        helpText.textContent = "¡Nivel máximo! Usa los ítems necesarios para evolucionar.";
+        helpText.textContent = useNotice || "¡Nivel máximo! Ya puedes evolucionar.";
         helpText.style.display = "block";
         helpText.style.color = "#2b6cb0";
     } else if (currentTotalXP < totalNeededXP) {
-        helpText.textContent = `Nivel insuficiente (Requiere Lv. ${targetLvlRequired})`;
+        helpText.textContent = `Nivel insuficiente (Requiere Lv. ${targetLvlRequired})` + (useNotice ? ` · ${useNotice}` : "");
         helpText.style.display = "block";
         helpText.style.color = "#e53e3e";
+    } else if (useNotice) {
+        helpText.textContent = useNotice;
+        helpText.style.display = "block";
+        helpText.style.color = "#2b6cb0";
     } else {
         helpText.style.display = "none";
     }

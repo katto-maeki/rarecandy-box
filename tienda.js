@@ -43,7 +43,7 @@ const SHOP_ITEMS_MAP = Object.fromEntries(SHOP_ITEMS.map(i => [i.key, i]));
 const defaultMeta = {
   xp: 0, achievements: "", pokedex: "0", notes: "",
   economy: { biIncome: 0, savings: 0, spent: 0 },
-  items: { egg: 0, tradeToken: 0, evoStone: 0, friendship: 0, starCrystal: 0, passport: 0, panquecito: 0, curry: 0 },
+  items: { egg: 0, tradeToken: 0, evoStone: 0, friendship: 0, starCrystal: 0, passport: 0, panquecito: 0, curry: 0, shinyTicket: 0, daycarePass: 0, refresco: 0 },
   balls: { poke: 0, super: 0, ultra: 0, master: 0 },
   lastUpdated: null,
 };

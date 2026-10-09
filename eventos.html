@@ -14,6 +14,7 @@
 
 <body class="bg-main">
   <div class="screen-frame">
+    <button type="button" class="music-toggle" id="music-toggle" aria-pressed="false" aria-label="Activar música de fondo" title="Música de fondo"><i class="fa fa-volume-off" aria-hidden="true"></i></button>
 
     <header class="top-bar">
       <div style="display: flex; align-items: center; gap: 12px;">
@@ -39,7 +40,7 @@
           <a href="perfil.html" class="menu-link"><i class="fa fa-user"></i> Perfil</a>
           <a href="social.html" class="menu-link"><i class="fa fa-users"></i> Plaza Sorelle</a>
           <a href="cajapkm.html" class="menu-link"><i class="fa fa-archive"></i> Caja pokémon</a>
-          <a href="trainer.html" class="menu-link"><i class="fa fa-money"></i> Inventario</a>
+          <a href="trainer.html" class="menu-link"><i class="fa fa-briefcase"></i> Inventario</a>
           <a href="actividades.html" class="menu-link"><i class="fa fa-list-alt"></i> Actividades</a>
           <a href="guarderia.html" class="menu-link"><i class="fa fa-asterisk"></i> Incubadora</a>
           <a href="tienda.html" class="menu-link"><i class="fa fa-shopping-cart"></i> Tienda Pokémon</a>
@@ -52,15 +53,47 @@
       </div>
     </nav>
 
-    <main class="event-empty-layout">
-      <div class="event-empty-card">
-        <i class="fa fa-star"></i>
-        <h2>Sin evento activo</h2>
-        <p>¡Espera por el próximo!</p>
-      </div>
+
+    <main class="promptober" id="promptober" aria-busy="true">
+      <h1 class="visually-hidden">Promptober</h1>
+      <div id="event-status" class="event-status" role="status" aria-live="polite">Cargando tu aventura…</div>
+      <div class="event-toolbar"><div class="event-tabs" role="tablist" aria-label="Secciones de Promptober">
+        <button id="tab-village" role="tab" aria-selected="true" aria-controls="panel-village" data-tab="village" tabindex="0" >El pueblo</button><button id="tab-prompts" role="tab" aria-selected="false" aria-controls="panel-prompts" data-tab="prompts" tabindex="-1" >Mis prompts</button><button id="tab-shop" role="tab" aria-selected="false" aria-controls="panel-shop" data-tab="shop" tabindex="-1" >Tienda misteriosa</button><button id="tab-admin" role="tab" aria-selected="false" aria-controls="panel-admin" data-tab="admin" tabindex="-1" hidden>Administrar</button>
+      </div><button class="event-button" data-dialog="prompt-dialog" id="register-prompt" disabled>＋ Registrar prompt</button></div>
+      <section id="panel-village" role="tabpanel" aria-labelledby="tab-village">
+        <div class="village-layout"><section class="event-card map-card" aria-labelledby="map-title">
+          <div class="card-heading"><h2 id="map-title">⌖ Bosque Solterra</h2><span>1 ficha por visita</span></div>
+          <div class="village-map" id="village-map" aria-label="Elige una casa"><svg class="map-path" viewBox="0 0 600 330" preserveAspectRatio="none" aria-hidden="true"><path d="M100 100 V160 H500 V280 H300 V100 M100 280 V160"/></svg><span class="map-moon" aria-hidden="true">☾</span><img class="map-tree tree-one" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/92.png" alt="" aria-hidden="true"><img class="map-tree tree-two" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/355.png" alt="" aria-hidden="true"></div>
+        </section><aside class="event-sidebar">
+          <section class="event-card backpack"><h2>Tu mochila</h2><div class="wallet"><div><img src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/relic-gold.png" alt="" aria-hidden="true"><strong id="balance-tokens">—</strong><small>Fichas</small></div><div><img src="https://cdn.jsdelivr.net/gh/msikma/pokesprite@master/items/key-item/crown-pass.png" alt="" aria-hidden="true"><strong id="balance-tickets">—</strong><small>Tickets</small></div><div><img src="https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/rare-candy.png" alt="" aria-hidden="true"><strong id="balance-candies">—</strong><small>Dulces</small></div></div><p><strong id="visit-count">—</strong> casas visitadas · <strong id="prompt-count">—</strong>/31 prompts</p></section>
+          <section class="event-card encounter" aria-labelledby="house-title"><h2 id="house-title">Casa 1 · El farol</h2><div id="encounter-art" class="encounter-art" aria-hidden="true"><span class="door-art"></span></div><p id="encounter-text" aria-live="polite">¿Quién estará detrás de la puerta?</p><button id="knock-door" class="event-button" disabled>Llamar a la puerta · 1 ficha</button></section>
+        </aside></div>
+        <section class="event-card milestones"><div class="card-heading"><h2>Tu recorrido</h2><span>Los sustos también cuentan</span></div><div id="milestone-list" class="milestone-list"></div></section>
+      </section>
+      <section id="panel-prompts" role="tabpanel" aria-labelledby="tab-prompts" hidden><div class="section-intro"><h2>Tus 31 prompts</h2><p>Narrativa, edit o dibujo. Cada prompt aprobado entrega <strong>3 fichas + 10 tickets</strong>, una sola vez.</p></div><div id="prompt-grid" class="prompt-grid"></div><p class="event-hint">Gris: puedes enviarlo a revisión · Amarillo: en revisión · Verde: aprobado · Rojo: necesita corrección. Puedes recuperar prompts atrasados.</p><section class="event-card prompt-feed" aria-labelledby="feed-title"><div class="card-heading"><h2 id="feed-title">Bitácora de prompts</h2><span>Últimos aprobados del pueblo</span></div><ul id="prompt-feed" class="prompt-feed-list"></ul></section></section>
+      <section id="panel-shop" role="tabpanel" aria-labelledby="tab-shop" hidden><div class="section-intro"><h2>Tienda misteriosa</h2><p id="shop-lock">Disponible con 15 prompts aprobados.</p></div><div id="shop-catalog" class="shop-catalog"></div></section>
+      <section id="panel-admin" role="tabpanel" aria-labelledby="tab-admin" hidden><div class="section-intro"><h2>Revisión de participaciones</h2><p>Aprobar entrega fichas y tickets. Rechazar permite corregir el enlace.</p></div><button class="event-button secondary" id="refresh-admin">Actualizar pendientes</button><div id="review-list" class="submission-list"></div><section class="event-card admin-codes"><h2>Códigos de regalo</h2><p>Cada canasta da 10 % truco y 18 % para cada premio de 1 a 5 dulces. <strong>Público:</strong> cada participante puede canjearlo una vez. <strong>Único:</strong> solo lo canjea la primera persona que lo use.</p><form id="code-create-form"><label>Código<input id="new-code" required pattern="[A-Za-z0-9-]{4,40}" minlength="4" maxlength="40" placeholder="LAVANDA-2026" autocomplete="off"></label><label>Tipo<select id="code-type"><option value="public">Público · una vez por persona</option><option value="single">Único · una sola vez en total</option></select></label><label>Vence el (hora local)<input id="code-expiry" type="datetime-local" required></label><button class="event-button">Crear código</button></form><div id="admin-code-list"></div></section></section>
+      <noscript>Activa JavaScript para participar en Promptober.</noscript>
     </main>
+
+    <footer class="bottom-bar">
+      <div class="bottom-hint">Promptober · ¡Feliz Halloween! 🎃</div>
+      <div class="bottom-actions">
+        <button class="top-help-btn" data-dialog="rules-dialog">Cómo jugar</button>
+        <button class="top-help-btn" data-dialog="history-dialog">Historial</button>
+        <button class="top-help-btn" data-dialog="gift-dialog">🎁 Canjear código</button>
+      </div>
+    </footer>
   </div>
 
+  <dialog class="event-dialog" id="prompt-dialog" aria-labelledby="prompt-title"><div class="dialog-heading"><h2 id="prompt-title">Registrar prompt</h2><button type="button" data-close aria-label="Cerrar">×</button></div><p>Publica tu participación en el foro y envíala a revisión.</p><form id="prompt-form"><label>Número del prompt<select id="prompt-number" required></select></label><label>Modalidad<select id="prompt-format" required><option value="narrativa">Narrativa</option><option value="edit">Edit / diseño</option><option value="dibujo">Dibujo</option></select></label><label>Enlace a tu publicación<input id="prompt-url" type="url" required maxlength="2000" placeholder="https://tu-foro.com/tema#publicacion"></label><p class="event-hint">Recibirás 3 fichas y 10 tickets al aprobarse. No se admite drabble.</p><button class="event-button">Enviar a revisión</button></form></dialog>
+  <dialog class="event-dialog" id="gift-dialog" aria-labelledby="gift-title"><div class="dialog-heading"><h2 id="gift-title">Una canasta sorpresa</h2><button type="button" data-close aria-label="Cerrar">×</button></div><form id="gift-form"><label>Código de regalo<input id="gift-code" required minlength="4" maxlength="40" autocomplete="off" placeholder="ESCRIBE-TU-CÓDIGO"></label><button class="event-button">Abrir mi canasta</button></form></dialog>
+  <dialog class="event-dialog" id="rules-dialog" aria-labelledby="rules-title"><div class="dialog-heading"><h2 id="rules-title">Cómo jugar</h2><button type="button" data-close aria-label="Cerrar">×</button></div><ol class="event-rules"><li>Registra el enlace a uno de los 31 prompts en narrativa, edit o dibujo. Cada número se premia una sola vez tras su revisión.</li><li>Cada aprobación da <strong>3 fichas y 10 tickets</strong>. Máximo: 93 fichas y 310 tickets.</li><li>Elige cualquiera de las seis casas y gasta una ficha. Puedes repetir casa: todas tienen las mismas probabilidades.</li><li>Recibe de <strong>0 a 10 dulces</strong>. Un truco da cero, sin restar dulces ni exigir reflejos.</li><li>A las <strong>9, 21 y 36 visitas</strong> recibes, respectivamente, 2 Poké Balls, 2 Super Balls y 2 Ultra Balls en tu inventario.</li><li>Con <strong>15 prompts aprobados</strong> se abre la tienda. Con <strong>200 dulces</strong> canjeas un Pokémon Fantasma una sola vez, independientemente de la tienda.</li><li>Los códigos dan de 0 a 5 dulces extra. No hay compensación automática por mala suerte.</li></ol><details><summary>Probabilidades de dulces</summary><p class="event-hint">0: 20 % · 1: 15 % · 2: 15 % · 3: 15 % · 4: 10 % · 5: 10 % · 6: 5 % · 7: 4 % · 8: 3 % · 9: 2 % · 10: 1 %. Media: 2,9 dulces por visita.</p></details></dialog>
+  <dialog class="event-dialog item-info-dialog" id="item-info-dialog" aria-labelledby="item-info-title"><div class="dialog-heading"><h2 id="item-info-title">Objeto</h2><button type="button" data-close aria-label="Cerrar">×</button></div><div class="item-info-body"><img id="item-info-image" src="" alt=""><p id="item-info-text"></p></div><div class="confirm-actions"><button type="button" class="event-button" data-close>Entendido</button></div></dialog>
+  <dialog class="event-dialog" id="history-dialog" aria-labelledby="history-title"><div class="dialog-heading"><h2 id="history-title">Últimos movimientos</h2><button type="button" data-close aria-label="Cerrar">×</button></div><div id="event-history"></div></dialog>
+  <dialog class="event-dialog" id="confirm-dialog" aria-labelledby="confirm-title"><div class="dialog-heading"><h2 id="confirm-title">Confirmar canje</h2><button type="button" data-close aria-label="Cerrar">×</button></div><p id="confirm-description"></p><div class="confirm-actions"><button class="event-button secondary" data-close>Cancelar</button><button class="event-button" id="confirm-purchase">Confirmar</button></div></dialog>
+  <dialog class="event-dialog" id="submission-dialog" aria-labelledby="submission-title"><div class="dialog-heading"><h2 id="submission-title">Prompt</h2><button type="button" data-close aria-label="Cerrar">×</button></div><p id="submission-status"></p><div id="submission-note" class="submission-note" hidden><strong>Nota de corrección</strong><p id="submission-note-text"></p></div><p id="submission-help" class="event-hint" hidden>Si crees que ha habido una confusión, acércate con un poke-guía.</p><div class="confirm-actions"><button type="button" class="event-button secondary" data-close>Continuar</button><button type="button" class="event-button" id="submission-resend" hidden>Corregir y enviar a revisión</button></div></dialog>
+  <dialog class="event-dialog ghost-dialog" id="ghost-dialog" aria-labelledby="ghost-title"><div class="dialog-heading"><div><p class="event-eyebrow">UN COMPAÑERO DEL OTRO LADO</p><h2 id="ghost-title">Tu Pokémon Fantasma</h2></div><button type="button" data-close aria-label="Cerrar">×</button></div><p>200 dulces · Un canje por participante. Llega a tu caja automáticamente, en nivel 1, con género y personalidad al azar.</p><form id="ghost-form"><fieldset class="ghost-fieldset"><legend>Elige a tu compañero</legend><div id="ghost-choice" class="ghost-grid"></div></fieldset><div class="ghost-actions"><p id="ghost-status" class="event-hint"></p><div class="ghost-buttons"><button type="button" class="event-button secondary" data-close>Cancelar</button><button class="event-button" id="claim-ghost" disabled>Canjear 200 dulces</button></div></div></form></dialog>
   <div class="modal-backdrop hidden" id="modal-view-proposal">
     <div class="modal" style="width: 520px; max-width: 95%;">
       <h3 class="modal-title">📬 Propuesta de Intercambio Entrante</h3>
@@ -106,9 +139,11 @@
     </div>
   </div>
 
+  <audio id="event-music" loop preload="none" src="https://archive.org/download/pok-dreams-blue-version-wklm6r/Brickmason%20-%20Pok%E2%80%8B%C3%A9%E2%80%8BDreams-%20Blue%20Version%20-%2003%20%E3%82%B7%E3%82%AA%E3%83%B3%E3%82%BF%E3%82%A6%E3%83%B3%20lavender%20town.mp3"></audio>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./core.js"></script>
   <script src="./notifications.js"></script>
   <script src="./eventos.js"></script>
 </body>
 </html>
+

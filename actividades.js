@@ -221,7 +221,8 @@ async function loadActivityLog() {
             "otros_manual",
             "otros", // <-- "Otros" generado fuera del formulario manual (ej. regalos de ítems en Mochila)
             "trade_narrative", // <-- Cambiado de "trade" a "trade_narrative"
-            "logros"
+            "logros",
+            "promptober" // <-- Registrado automáticamente al aprobarse un prompt en Eventos
         ];
 
         const data = rawData ? rawData.filter(act => allowedTypes.includes(act.activity_type)) : [];
@@ -237,7 +238,7 @@ async function loadActivityLog() {
             passport: "Passport", evolution_narrative: "Evolución", trade_narrative: "Intercambio", // <-- Mapeado aquí
             checkpoint: "Checkpoint", otros_manual: "Otros", otros: "Otros",
             exploration: "Exploración", coloring: "Coloreo",
-            egg_challenge: "Reto Huevo", safari: "Safari", logros: "Logros"
+            egg_challenge: "Reto Huevo", safari: "Safari", logros: "Logros", promptober: "Promptober"
         };
 
         let tableHTML = `

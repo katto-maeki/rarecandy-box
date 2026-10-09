@@ -9,7 +9,9 @@ const DISC_TABLE = "sorelle_discoveries";
 const LABELS = {
     egg: "Huevo", tradeToken: "Ticket Intercambio", evoStone: "Piedra Evo",
     friendship: "Pulsera Amistad", starCrystal: "Cristal Estelar", passport: "Pasaporte Regional", panquecito: "Panquecito", curry: "Curry",
-    poke: "Poké Ball", super: "Super Ball", ultra: "Ultra Ball", master: "Master Ball"
+    poke: "Poké Ball", super: "Super Ball", ultra: "Ultra Ball", master: "Master Ball",
+    shinyTicket: "Ticket Shiny", daycarePass: "Pase Guardería", refresco: "Refresco",
+    fossilHelix: "Fósil Hélix", fossilDome: "Fósil Domo", oldAmber: "Ámbar Viejo", fossilRoot: "Fósil Raíz", fossilClaw: "Fósil Garra", fossilSkull: "Fósil Cráneo", fossilArmor: "Fósil Coraza", fossilCover: "Fósil Tapa", fossilPlume: "Fósil Pluma", fossilJaw: "Fósil Mandíbula", fossilSail: "Fósil Aleta"
 };
 
 const REGION_MAP = {
@@ -46,7 +48,8 @@ const ACTIVITY_TYPE_INFO = {
     otros_manual:         { label: "Otros (Manual)",         color: "#4b5563", icon: "📝" },
     otros:                { label: "Otros (Sistema)",        color: "#4b5563", icon: "📝" },
     incubation:           { label: "Incubación",             color: "#d97706", icon: "🥚" },
-    box_add:              { label: "Ingreso a Caja",         color: "#0369a1", icon: "📥" },
+    hatch:                { label: "Eclosión",               color: "#d97706", icon: "🐣" },
+    box_add:              { label: "Ingreso a Caja",        color: "#0369a1", icon: "📥" },
     purchase:             { label: "Compra",                  color: "#e53e3e", icon: "🛍️" },
     gift:                 { label: "Regalo (Tienda)",         color: "#0fb86b", icon: "🎁" },
     consume:              { label: "Consumo de Ítem",        color: "#4b5563", icon: "🎒" },
@@ -659,7 +662,11 @@ async function handleApiSearch() {
         try {
             const resSpec = await fetch(data.species.url);
             const dataSpec = await resSpec.json();
-            document.getElementById("poke-input-season").value = REGION_MAP[dataSpec.generation.name] || "Desconocida";
+            // Las formas regionales (raichu-alola, ponyta-galar…) heredan la generación de su especie: se usa el sufijo.
+            const regional = data.name.match(/-(alola|galar|hisui|paldea)\b/);
+            document.getElementById("poke-input-season").value = regional
+                ? regional[1].charAt(0).toUpperCase() + regional[1].slice(1)
+                : (REGION_MAP[dataSpec.generation.name] || "Desconocida");
         } catch (e) {
             document.getElementById("poke-input-season").value = "Variante Especial";
         }

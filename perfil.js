@@ -632,7 +632,7 @@ function renderHistoryPanels(logs) {
     encounter: "Encounter", safari: "Safari", quest: "Quest", pokedex_comu: "Pokédex Comu.",
     pokedex_legen: "Pokédex Leg.", pokewords: "Pokéwords", freemode: "Freemode",
     passport: "Passport", checkpoint: "Checkpoint Mensual", trade: "Intercambio",
-    consume: "Consumo", bimonthly_close: "Cierre Bimestral", otros: "Otros"
+    consume: "Consumo", bimonthly_close: "Cierre Bimestral", otros: "Otros", promptober: "Promptober"
   };
 
   if (!logs || logs.length === 0) {
@@ -696,6 +696,9 @@ function renderHistoryPanels(logs) {
       }
       case "incubation":
         logContent = `🥚 <strong>Incubadora:</strong> Puso a incubar un ${log.activity_name}`;
+        break;
+      case "hatch":
+        logContent = `🐣 <strong>Incubadora:</strong> Su huevo eclosionó y obtuvo a ${log.activity_name}`;
         break;
       case "box_add":
         logContent = `📦 <strong>Caja Pokémon:</strong> Añadió a ${log.activity_name} a su colección`;

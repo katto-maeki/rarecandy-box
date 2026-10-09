@@ -160,7 +160,7 @@ async function loadAndRenderGlobalFeed() {
   const typeNames = {
     encounter: "Encounter", safari: "Safari", quest: "Quest", pokedex_comu: "Pokédex Comu.",
     pokedex_legen: "Pokédex Leg.", pokewords: "Pokéwords", freemode: "Freemode",
-    passport: "Passport", checkpoint: "Checkpoint", trade: "Intercambio", consume: "Consumo", otros: "Otros"
+    passport: "Passport", checkpoint: "Checkpoint", trade: "Intercambio", consume: "Consumo", otros: "Otros", promptober: "Promptober"
   };
 
   logs.forEach(log => {
@@ -207,7 +207,10 @@ let logContent = "";
         break;
       }
       case "incubation":
-        logContent = `🥚 ${authorPrefix} activó su incubator con un <strong>${log.activity_name}</strong>`;
+        logContent = `🥚 ${authorPrefix} puso a incubar un <strong>${log.activity_name}</strong>`;
+        break;
+      case "hatch":
+        logContent = `🐣 ¡El huevo de ${authorPrefix} eclosionó! Obtuvo a <strong>${log.activity_name}</strong>`;
         break;
       case "box_add":
         logContent = `📦 ${authorPrefix} guardó a <strong>${log.activity_name}</strong> en su caja`;

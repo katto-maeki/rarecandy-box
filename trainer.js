@@ -16,7 +16,10 @@ const ITEM_PRICES = {
 const ITEM_LABELS_MAP = {
   egg: "Huevo Pokémon", tradeToken: "Ticket de Intercambio", evoStone: "Piedra Evolución", 
   friendship: "Pulsera Amistad", starCrystal: "Cristal Estelar", passport: "Pasaporte Regional", panquecito: "Panquecito", curry: "Curry", poke: "Poké Ball", 
-  super: "Super Ball", ultra: "Ultra Ball", master: "Master Ball"
+  super: "Super Ball", ultra: "Ultra Ball", master: "Master Ball",
+  // Objetos de evento (Promptober): no se venden en la Tienda.
+  shinyTicket: "Ticket Shiny", daycarePass: "Pase Guardería", refresco: "Refresco",
+  fossilHelix: "Fósil Hélix", fossilDome: "Fósil Domo", oldAmber: "Ámbar Viejo", fossilRoot: "Fósil Raíz", fossilClaw: "Fósil Garra", fossilSkull: "Fósil Cráneo", fossilArmor: "Fósil Coraza", fossilCover: "Fósil Tapa", fossilPlume: "Fósil Pluma", fossilJaw: "Fósil Mandíbula", fossilSail: "Fósil Aleta"
 };
 
 // ESTADO GLOBAL
@@ -25,7 +28,7 @@ let currentMeta = null;
 const defaultMeta = {
   xp: 0, achievements: "", pokedex: "0", notes: "",
   economy: { biIncome: 0, savings: 0, spent: 0 },
-  items: { egg: 0, tradeToken: 0, evoStone: 0, friendship: 0, starCrystal: 0, passport: 0, panquecito: 0, curry: 0 },
+  items: { egg: 0, tradeToken: 0, evoStone: 0, friendship: 0, starCrystal: 0, passport: 0, panquecito: 0, curry: 0, shinyTicket: 0, daycarePass: 0, refresco: 0 },
   balls: { poke: 0, super: 0, ultra: 0, master: 0 },
   lastUpdated: null,
 };
@@ -44,6 +47,21 @@ const INVENTORY_ITEMS_VISUAL = [
   { key: "super", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/great-ball.png" },
   { key: "ultra", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/ultra-ball.png" },
   { key: "master", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/master-ball.png" },
+  { key: "shinyTicket", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/mysticticket.png" },
+  { key: "daycarePass", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/card-key.png" },
+  { key: "refresco", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/soda-pop.png" },
+  // Fósiles: solo aparecen en la mochila cuando se tiene al menos uno.
+  { key: "fossilHelix", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/helix-fossil.png", onlyIfOwned: true },
+  { key: "fossilDome", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/dome-fossil.png", onlyIfOwned: true },
+  { key: "oldAmber", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/old-amber.png", onlyIfOwned: true },
+  { key: "fossilRoot", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/root-fossil.png", onlyIfOwned: true },
+  { key: "fossilClaw", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/claw-fossil.png", onlyIfOwned: true },
+  { key: "fossilSkull", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/skull-fossil.png", onlyIfOwned: true },
+  { key: "fossilArmor", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/armor-fossil.png", onlyIfOwned: true },
+  { key: "fossilCover", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/cover-fossil.png", onlyIfOwned: true },
+  { key: "fossilPlume", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/plume-fossil.png", onlyIfOwned: true },
+  { key: "fossilJaw", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/jaw-fossil.png", onlyIfOwned: true },
+  { key: "fossilSail", iconUrl: "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/items/sail-fossil.png", onlyIfOwned: true },
 ];
 
 // Cantidad de casillas vacías decorativas que se agregan al final del grid (estilo inventario RPG).
@@ -207,6 +225,7 @@ function renderInventoryGrid() {
 
   INVENTORY_ITEMS_VISUAL.forEach(i => {
     const qty = getItemCount(i.key);
+    if (i.onlyIfOwned && qty <= 0) return;
     const slot = document.createElement("div");
     slot.className = "inv-slot inv-slot-item" + (qty <= 0 ? " inv-slot-empty-qty" : "") + (selectedItemKey === i.key ? " selected" : "");
     slot.dataset.key = i.key;
@@ -247,7 +266,7 @@ function selectInventoryItem(key) {
   if (iconEl) { iconEl.src = item.iconUrl; iconEl.alt = ITEM_LABELS_MAP[key]; }
 
   setText("inv-detail-name", ITEM_LABELS_MAP[key]);
-  setText("inv-detail-price", `₽${(ITEM_PRICES[key] || 0).toLocaleString()}`);
+  setText("inv-detail-price", ITEM_PRICES[key] ? `₽${ITEM_PRICES[key].toLocaleString()}` : "Objeto de evento");
   setText("inv-detail-qty", qty);
   setText("inv-detail-desc", ITEM_DESCRIPTIONS[key] || "");
 
